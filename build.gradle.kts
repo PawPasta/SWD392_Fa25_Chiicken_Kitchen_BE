@@ -7,7 +7,7 @@ plugins {
     kotlin("kapt") version "2.2.20"
 }
 
-group = "com.Chicken_Kitchen"
+group = "com.ChickenKitchen"
 version = "0.0.1-SNAPSHOT"
 description = "Step-by-step ordering suggestion system integrated with Chicken Kitchen"
 
