@@ -25,15 +25,15 @@ Before setting up the project, ensure you have the following installed:
    ```
 
 2. **Set up the database**:
-    - Create a PostgreSQL database:
+    - Create a MySQL database:
       ```sql
-      CREATE DATABASE kitchen_chicken_db;
+      CREATE DATABASE IF NOT EXISTS chicken_kitchen_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
       ```
     - Update the database configuration in `src/main/resources/application.properties`:
       ```properties
-      spring.datasource.url=jdbc:postgresql://localhost:5432/food_ordering_db
-      spring.datasource.username=your_username
-      spring.datasource.password=your_password
+      spring.datasource.url=jdbc:mysql://localhost:3306/kitchen_chicken_db
+      spring.datasource.username=root
+      spring.datasource.password=1234
       spring.jpa.hibernate.ddl-auto=update
       ```
 
