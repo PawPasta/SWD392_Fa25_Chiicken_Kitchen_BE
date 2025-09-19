@@ -1,4 +1,4 @@
-package com.Chicken_Kitchen.SWD392_Fa25_Chiicken_Kitchen_BE
+package com.Chicken_Kitchen.SWD392_Fa25_Chiicken_Kitchen_BE.SWD392_Fa25_Chiicken_Kitchen_BE
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
