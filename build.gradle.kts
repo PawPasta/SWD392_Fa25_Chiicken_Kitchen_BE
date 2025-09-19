@@ -4,6 +4,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
+    kotlin("kapt") version "2.2.20"
 }
 
 group = "com.Chicken_Kitchen"
@@ -26,6 +27,24 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+	implementation("org.springframework.boot:spring-boot-starter-jdbc")
+	compileOnly("org.projectlombok:lombok")
+	runtimeOnly("com.mysql:mysql-connector-j")
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+	annotationProcessor("org.projectlombok:lombok")
+
+	implementation("org.springframework.boot:spring-boot-starter-mail")
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	kapt("org.mapstruct:mapstruct-processor:1.5.5.Final")
+	kapt("org.springframework.boot:spring-boot-configuration-processor")
+	kapt("org.hibernate:hibernate-jpamodelgen:6.5.2.Final") 
+
+
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
