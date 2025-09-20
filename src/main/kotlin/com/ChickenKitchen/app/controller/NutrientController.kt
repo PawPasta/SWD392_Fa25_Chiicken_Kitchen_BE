@@ -23,28 +23,28 @@ class NutrientController(
     private val nutrientService: NutrientService
 ) {
 
-    // Chỉ có Admin mới có thể truy cập những endpoint này.
+    // Endpoint này public mọi người đều có thể truy cập được.
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all nutrients (Admin only)")
+    @Operation(summary = "Get all nutrients")
     @GetMapping("")
-    fun getAllUsers(): ResponseEntity<ResponseModel> {
+    fun getAllNutrients(): ResponseEntity<ResponseModel> {
         val nutrients = nutrientService.getAll()
         return ResponseEntity.ok(ResponseModel.success(nutrients, "Get all nutrients successfully!"))
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get nutrient by ID (Admin only)")
+    
+    @Operation(summary = "Get nutrient by ID")
     @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+    fun getNutrientById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val nutrient = nutrientService.getById(id)
         return ResponseEntity.ok(ResponseModel.success(nutrient, "Get nutrient successfully!"))
     }
 
+    // Chỉ có Admin mới có thể truy cập những endpoint dưới đây.
+
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new nutrient (Admin only)") 
     @PostMapping("")
-    fun createUser(@RequestBody req: CreateNutrientRequest): ResponseEntity<ResponseModel> {
+    fun createNutrient(@RequestBody req: CreateNutrientRequest): ResponseEntity<ResponseModel> {
         val nutrient = nutrientService.create(req)
         return ResponseEntity.ok(ResponseModel.success(nutrient, "Create nutrient successfully!"))
     } 
@@ -52,7 +52,7 @@ class NutrientController(
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update nutrient by ID (Admin only)")
     @PutMapping("/{id}")
-    fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateNutrientRequest): ResponseEntity<ResponseModel> {
+    fun updateNutrient(@PathVariable id: Long, @RequestBody req: UpdateNutrientRequest): ResponseEntity<ResponseModel> {
         val nutrient = nutrientService.update(id, req)
         return ResponseEntity.ok(ResponseModel.success(nutrient, "Update nutrient successfully!"))
     }
@@ -60,7 +60,7 @@ class NutrientController(
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete nutrient by ID (Admin only)")
     @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+    fun deleteNutrient(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         nutrientService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "Delete nutrient successfully!"))
     }

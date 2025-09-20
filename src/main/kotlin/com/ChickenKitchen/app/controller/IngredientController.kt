@@ -23,28 +23,28 @@ class IngredientController(
     private val ingredientService: IngredientService
 ) {
 
-    // Chỉ có Admin mới có thể truy cập những endpoint này.
+    // Public mọi nhà
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all ingredients (Admin only)")
+    @Operation(summary = "Get all ingredients")
     @GetMapping("")
-    fun getAllUsers(): ResponseEntity<ResponseModel> {
+    fun getAllIngredients(): ResponseEntity<ResponseModel> {
         val ingredients = ingredientService.getAll()
         return ResponseEntity.ok(ResponseModel.success(ingredients, "Get all ingredients successfully!"))
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get ingredient by ID (Admin only)")
+    @Operation(summary = "Get ingredient by ID")
     @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+    fun getIngredientById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.getById(id)
         return ResponseEntity.ok(ResponseModel.success(ingredient, "Get ingredient successfully!"))
     }
 
+    // Chỉ có Admin mới có thể truy cập những endpoint này.
+
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new ingredient (Admin only)") 
     @PostMapping("")
-    fun createUser(@RequestBody req: CreateIngredientRequest): ResponseEntity<ResponseModel> {
+    fun createIngredient(@RequestBody req: CreateIngredientRequest): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.create(req)
         return ResponseEntity.ok(ResponseModel.success(ingredient, "Create ingredient successfully!"))
     } 
@@ -52,7 +52,7 @@ class IngredientController(
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update ingredient by ID (Admin only)")
     @PutMapping("/{id}")
-    fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateIngredientRequest): ResponseEntity<ResponseModel> {
+    fun updateIngredient(@PathVariable id: Long, @RequestBody req: UpdateIngredientRequest): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.update(id, req)
         return ResponseEntity.ok(ResponseModel.success(ingredient, "Update ingredient successfully!"))
     }
@@ -60,7 +60,7 @@ class IngredientController(
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete ingredient by ID (Admin only)")
     @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+    fun deleteIngredient(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         ingredientService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "Delete ingredient successfully!"))
     }

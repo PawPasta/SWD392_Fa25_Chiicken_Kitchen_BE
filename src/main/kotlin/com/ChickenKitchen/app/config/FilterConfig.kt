@@ -28,7 +28,15 @@ class FilterConfig(
         "/api/auth/login",
         "/api/auth/verify",
         "/api/auth/forgot-password",
-        "/api/auth/reset-password"
+        "/api/auth/reset-password",
+        "/api/nutrient",
+        "/api/nutrient/",
+        "/api/ingredient",
+        "/api/ingredient/",
+        "/api/cooking-method",
+        "/api/cooking-method/",
+        "/api/cooking-effect",
+        "/api/cooking-effect/"
     )
 
     override fun doFilterInternal(

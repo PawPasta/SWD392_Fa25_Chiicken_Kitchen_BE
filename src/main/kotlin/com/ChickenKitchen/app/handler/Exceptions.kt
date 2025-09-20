@@ -29,5 +29,16 @@ class NutrientAlreadyExistsException(message: String) : RuntimeException(message
 
 // =================== Recipe Exceptions ====================
 
+
+// =================== Cooking Method Exceptions ====================
+class CookingMethodNotFoundException(message: String) : RuntimeException(message)
+
+class CookingMethodAlreadyExistsException(message: String) : RuntimeException(message)
+
+// =================== Cooking Effect Exceptions ====================
+class CookingEffectNotFoundException(message: String) : RuntimeException(message)
+
+class CookingEffectAlreadyExistsException(message: String) : RuntimeException(message)
+
 // class RecipeNotFoundException(message: String) : RuntimeException(message)
 // class RecipeAlreadyExistsException(message: String) : RuntimeException(message)

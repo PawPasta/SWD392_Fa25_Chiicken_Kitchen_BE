@@ -12,6 +12,4 @@ data class NutrientDetailResponse(
     val id: Long,
     val name: String,
     val baseUnit: UnitEnum,
-    val createdAt: String,
-    val updatedAt: String
 )

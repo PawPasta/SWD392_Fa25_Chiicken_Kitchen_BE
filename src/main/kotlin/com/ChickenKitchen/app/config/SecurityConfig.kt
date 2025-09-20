@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.authentication.AuthenticationManager
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.http.HttpMethod
 
 @EnableMethodSecurity(prePostEnabled = true)
 @Configuration
@@ -33,11 +34,27 @@ class SecurityConfig(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
+                ).permitAll()
+                it.requestMatchers( // Endpoint Auth
                     "/api/auth/register",
                     "/api/auth/login",
                     "/api/auth/verify",
                     "/api/auth/forgot-password",
-                    "/api/auth/reset-password"
+                    "/api/auth/reset-password",
+                ).permitAll()
+                it.requestMatchers( // Endpoint Ingredient
+                    HttpMethod.GET, 
+                    "/api/nutrient", 
+                    "/api/nutrient/*",
+                    "/api/ingredient",
+                    "/api/ingredient/*",
+                ).permitAll() 
+                it.requestMatchers( // Endpoint Cooking 
+                    HttpMethod.GET,
+                    "/api/cooking-method",
+                    "/api/cooking-method/*",
+                    "/api/cooking-effect",
+                    "/api/cooking-effect/*",
                 ).permitAll()
                 .anyRequest().authenticated()
             }

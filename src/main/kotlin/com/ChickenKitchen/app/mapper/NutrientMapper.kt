@@ -15,8 +15,6 @@ fun Nutrient.toNutrientDetailResponse() = NutrientDetailResponse(
     id = this.id!!,
     name = this.name,
     baseUnit = this.baseUnit,
-    createdAt = this.toString(), // TODO: thay bằng createdAt thực tế nếu có
-    updatedAt = this.toString()
 )
 
 fun List<Nutrient>.toNutrientResponseList() = this.map { it.toNutrientResponse() }
