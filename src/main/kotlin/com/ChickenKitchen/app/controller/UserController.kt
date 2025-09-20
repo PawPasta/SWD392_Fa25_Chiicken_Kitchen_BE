@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.DeleteMapping
 import com.ChickenKitchen.app.model.dto.request.UpdateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest
-
+import org.springframework.security.access.prepost.PreAuthorize
 
 @RestController
 @RequestMapping("/api/user")
@@ -26,6 +26,7 @@ class UserController(
 
     // Chỉ có Admin mới có thể truy cập những endpoint này.
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users (Admin only)")
     @GetMapping("")
     fun getAllUsers(): ResponseEntity<ResponseModel> {
@@ -33,6 +34,7 @@ class UserController(
         return ResponseEntity.ok(ResponseModel.success(users, "Get all users successfully!"))
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get user by ID (Admin only)")
     @GetMapping("/{id}")
     fun getUserById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
@@ -40,6 +42,7 @@ class UserController(
         return ResponseEntity.ok(ResponseModel.success(user, "Get user successfully!"))
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new user (Admin only)") 
     @PostMapping("")
     fun createUser(@RequestBody req: CreateUserRequest): ResponseEntity<ResponseModel> {
@@ -47,6 +50,7 @@ class UserController(
         return ResponseEntity.ok(ResponseModel.success(newUser, "Create user successfully!"))
     } 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update user by ID (Admin only)")
     @PutMapping("/{id}")
     fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateUserRequest): ResponseEntity<ResponseModel> {
@@ -54,6 +58,7 @@ class UserController(
         return ResponseEntity.ok(ResponseModel.success(updatedUser, "Update user successfully!"))
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete user by ID (Admin only)")
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
@@ -61,6 +66,7 @@ class UserController(
         return ResponseEntity.ok(ResponseModel.success(null, "Delete user successfully!"))
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Change user active status (Admin only)")
     @PatchMapping("/{id}/status")
     fun changeUserStatus(@PathVariable id: Long): ResponseEntity<ResponseModel> {

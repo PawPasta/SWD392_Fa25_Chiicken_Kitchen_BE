@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.handler.UserNotFoundException
+import org.springframework.security.core.userdetails.User
 
 @Service
 class CustomUserDetailsService(
@@ -16,10 +17,10 @@ class CustomUserDetailsService(
         val user = userRepository.findByUsername(username)
             ?: throw UserNotFoundException("User not found: $username")
 
-        return org.springframework.security.core.userdetails.User(
+        return User(
             user.username,
             user.password,
-            listOf(SimpleGrantedAuthority(user.role.name))
+            listOf(SimpleGrantedAuthority("ROLE_${user.role.name}"))
         )
     }
 }

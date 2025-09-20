@@ -12,7 +12,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.authentication.AuthenticationManager
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 
+@EnableMethodSecurity(prePostEnabled = true)
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
