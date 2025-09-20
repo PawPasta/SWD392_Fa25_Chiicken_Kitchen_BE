@@ -16,3 +16,18 @@ class EmailSendException(message: String, cause: Throwable? = null) : RuntimeExc
 // ==================== Wallet Exceptions ====================
 
 class WalletNotFoundException(message: String) : RuntimeException(message)
+
+// ==================== Ingredient Exceptions ====================
+
+class IngredientNotFoundException(message: String) : RuntimeException(message)
+
+// =================== Nutrient Exceptions ====================
+
+class NutrientNotFoundException(message: String) : RuntimeException(message)
+
+class NutrientAlreadyExistsException(message: String) : RuntimeException(message)
+
+// =================== Recipe Exceptions ====================
+
+// class RecipeNotFoundException(message: String) : RuntimeException(message)
+// class RecipeAlreadyExistsException(message: String) : RuntimeException(message)

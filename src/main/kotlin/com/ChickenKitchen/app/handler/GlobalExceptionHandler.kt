@@ -50,6 +50,21 @@ class GlobalExceptionHandler {
     fun handleWalletNotFound(e: WalletNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Wallet not found")
 
+    // ========== Ingredient Exceptions ==========
+
+    @ExceptionHandler(IngredientNotFoundException::class)
+    fun handleIngredientNotFound(e: IngredientNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Ingredient not found")
+
+    // ========== Nutrient Exceptions ==========
+    @ExceptionHandler(NutrientNotFoundException::class)
+    fun handleNutrientNotFound(e: NutrientNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Nutrient not found")
+
+    @ExceptionHandler(NutrientAlreadyExistsException::class)
+    fun handleNutrientAlreadyExists(e: NutrientAlreadyExistsException) =
+        buildError(HttpStatus.CONFLICT, e.message ?: "Nutrient already exists")
+
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {
         return ResponseEntity(

@@ -7,5 +7,6 @@ import java.util.*
 
 @Repository
 interface NutrientRepository : JpaRepository<Nutrient, Long> {
-    fun findByName(name: String): Optional<Nutrient>
+    fun findByName(name: String): Nutrient?
+    fun existsByName(name: String): Boolean
 }

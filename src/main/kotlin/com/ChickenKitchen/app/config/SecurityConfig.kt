@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity(prePostEnabled = true)
 @Configuration
 @EnableWebSecurity
-class SecurityConfig(
+class SecurityConfig( 
     private val filterConfig: FilterConfig
 ) {
 
