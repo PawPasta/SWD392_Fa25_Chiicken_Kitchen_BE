@@ -13,3 +13,5 @@ class AccessDeniedException(message: String) : RuntimeException(message)
 
 class EmailSendException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
+// ==================== User Exceptions ====================
+

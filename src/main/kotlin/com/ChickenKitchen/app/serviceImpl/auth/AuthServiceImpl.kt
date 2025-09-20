@@ -206,6 +206,7 @@ class AuthServiceImpl (
         userSession[0].isCanceled = true
         
         userSessionRepository.saveAll(userSession)
-
+        
+        SecurityContextHolder.clearContext()
     }
 }

@@ -25,7 +25,7 @@ class User(
     var role: Role = Role.USER,
 
     @Column(nullable = false, unique = true)
-    val username: String,
+    var username: String,
 
     @Column(nullable = false, unique = true)
     var email: String,
