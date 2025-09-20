@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.ingredient
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 
 @Entity
 @Table(name = "ingredient_nutrients")
@@ -17,5 +18,5 @@ class IngredientNutrient(
     var nutrient: Nutrient,
 
     @Column(nullable = false)
-    var amount: Int
+    var amount: BigDecimal
 )

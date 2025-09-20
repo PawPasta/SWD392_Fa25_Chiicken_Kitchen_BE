@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.model.entity.ingredient
 import jakarta.persistence.*
 import java.math.BigDecimal
 import com.ChickenKitchen.app.enum.IngredientCategory
+import com.ChickenKitchen.app.enum.UnitEnum
 import com.ChickenKitchen.app.model.entity.recipe.RecipeIngredient
 
 @Entity
@@ -15,7 +16,7 @@ class Ingredient(
     var name: String,
 
     @Column(nullable = false)
-    var baseUnit: String, // ví dụ: g, ml, cái...
+    var baseUnit: UnitEnum, // ví dụ: g, ml, cái...
 
     @Column(nullable = false)
     var baseQuantity: Int, // ví dụ: 100g

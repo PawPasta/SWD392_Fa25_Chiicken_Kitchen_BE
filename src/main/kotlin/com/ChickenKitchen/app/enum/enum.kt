@@ -14,12 +14,12 @@ enum class ItemType { RECIPE, CUSTOM }
 
 enum class IngredientCategory { GRAIN, VEGETABLE, FRUIT, MEAT, SEAFOOD, SAUCE, SPICE, OTHER }
 
-enum class UnitEnum { G, ML, PIECE }            // đơn vị hiển thị chung
+enum class UnitEnum { MG, G, ML, PIECE }            // đơn vị hiển thị chung
 
 enum class EffectType { INCREASE, DECREASE }     // cooking_effects
 
 enum class PaymentMethodType { CREDIT_CARD, DEBIT_CARD, PAYPAL, CASH_ON_DELIVERY, BANK_TRANSFER }
 
-enum class RecipeCategory { CHICKEN, BEEF, PORK, SEAFOOD, VEGETARIAN, SNACKS, BEVERAGES }
+enum class RecipeCategory { MAIN, APPETIZER, DESSERT, BEVERAGE, SNACK, SALAD, SOUP, SAUCE, OTHER }
 
 enum class MailType { VERIFY_EMAIL, RESET_PASSWORD }
