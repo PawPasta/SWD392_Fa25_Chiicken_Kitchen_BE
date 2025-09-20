@@ -6,10 +6,12 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.beans.factory.annotation.Value
 import com.ChickenKitchen.app.model.entity.user.User
+import com.ChickenKitchen.app.model.entity.user.Wallet
 import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.dto.request.RegisterRequest
 import com.ChickenKitchen.app.repository.user.UserRepository
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import com.ChickenKitchen.app.repository.auth.UserSessionRepository
 import com.ChickenKitchen.app.model.dto.request.LoginRequest
 import com.ChickenKitchen.app.model.dto.response.TokenResponse
@@ -31,12 +33,14 @@ import com.ChickenKitchen.app.enum.MailType
 import java.util.UUID
 import java.util.Date
 import java.sql.Timestamp
+import java.math.BigDecimal
 
 @Service
 class AuthServiceImpl (
     private val userRepository: UserRepository,
     private val mailTokenRepository: MailTokenRepository,
     private val userSessionRepository: UserSessionRepository,
+    private val walletRepository: WalletRepository,
     private val passwordEncoder: PasswordEncoder,
     private val emailUtil: EmailUtil,
     private val jwtService: JwtServiceImpl,
@@ -54,6 +58,9 @@ class AuthServiceImpl (
         val user = userRepository.save(
             User(username = req.username, email = req.email, password = passwordEncoder.encode(req.password))
         )
+
+        // Khi đăng kí thành cũng tạo luôn ví nhé!
+        walletRepository.save(Wallet(user = user, balance = BigDecimal("0.00")))
 
         val token = UUID.randomUUID().toString()
         val expiredAt = Timestamp(System.currentTimeMillis() + expiration)

@@ -44,6 +44,11 @@ class GlobalExceptionHandler {
     fun handleUserNotFound(e: UserNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "User not found")
 
+    // ========== Wallet Exceptions ==========
+
+    @ExceptionHandler(WalletNotFoundException::class)
+    fun handleWalletNotFound(e: WalletNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Wallet not found")
 
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {

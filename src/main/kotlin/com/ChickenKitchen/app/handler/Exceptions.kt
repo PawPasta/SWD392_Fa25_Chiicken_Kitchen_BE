@@ -13,5 +13,6 @@ class AccessDeniedException(message: String) : RuntimeException(message)
 
 class EmailSendException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-// ==================== User Exceptions ====================
+// ==================== Wallet Exceptions ====================
 
+class WalletNotFoundException(message: String) : RuntimeException(message)

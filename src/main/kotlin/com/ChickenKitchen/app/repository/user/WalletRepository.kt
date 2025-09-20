@@ -7,5 +7,6 @@ import java.util.*
 
 @Repository
 interface WalletRepository : JpaRepository<Wallet, Long> {
-    fun findByUserId(userId: Long): Optional<Wallet>
+    fun findByUserId(userId: Long): Wallet?
+    fun findByUserUsername(username: String): Wallet?
 }

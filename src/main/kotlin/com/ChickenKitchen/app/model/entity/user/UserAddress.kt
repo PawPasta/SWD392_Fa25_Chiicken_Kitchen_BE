@@ -25,7 +25,9 @@ class UserAddress(
     @Column(nullable = false)
     var addressLine: String,
 
-    var city: String? = null,
+    @Column(nullable = false)
+    var city: String,
+    
     var isDefault: Boolean = false,
 
     @CreationTimestamp

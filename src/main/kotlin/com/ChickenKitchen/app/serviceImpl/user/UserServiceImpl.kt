@@ -11,15 +11,18 @@ import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest
 import com.ChickenKitchen.app.model.dto.response.UserProfileResponse
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.user.UserRepository
+import com.ChickenKitchen.app.repository.auth.UserSessionRepository
 import com.ChickenKitchen.app.mapper.toUserResponseList
 import com.ChickenKitchen.app.mapper.toUserResponse
 import com.ChickenKitchen.app.mapper.toUserDetailResponse
 import com.ChickenKitchen.app.mapper.toUserProfileResponse
 import com.ChickenKitchen.app.handler.UserNotFoundException
+import java.sql.Timestamp
 
 @Service
 class UserServiceImpl (
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val userSessionRepository: UserSessionRepository
 ): UserService {
 
     override fun getAll() : List<UserResponse>? {
@@ -85,6 +88,11 @@ class UserServiceImpl (
         return updatedUser.toUserDetailResponse()
     }
 
+    override fun delete(id: Long) {
+        val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
+        userRepository.delete(user)
+    }
+
     override fun changeStatus(id: Long) : UserResponse {
         val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
         user.isActive = !user.isActive
@@ -113,6 +121,10 @@ class UserServiceImpl (
         }
 
         val updatedUser = userRepository.save(user)
+        val userSessions = userSessionRepository.findAllByUserUsernameAndIsCanceledFalse(username)
+        userSessions[0].lastActivity = Timestamp(System.currentTimeMillis())
+        userSessionRepository.saveAll(userSessions)
+
         return updatedUser.toUserProfileResponse()
     }
 

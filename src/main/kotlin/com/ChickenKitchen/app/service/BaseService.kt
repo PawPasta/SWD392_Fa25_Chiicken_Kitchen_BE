@@ -5,6 +5,7 @@ interface BaseService<R, D, C, U, ID> {
     fun getById(id: ID): D?
     fun create(req: C): D
     fun update(id: ID, req: U): D
+    fun delete(id: ID)
 }
 
 // R: Name of the response when get all

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.DeleteMapping
 import com.ChickenKitchen.app.model.dto.request.UpdateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest
 
@@ -51,6 +52,13 @@ class UserController(
     fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateUserRequest): ResponseEntity<ResponseModel> {
         val updatedUser = userService.update(id, req)
         return ResponseEntity.ok(ResponseModel.success(updatedUser, "Update user successfully!"))
+    }
+
+    @Operation(summary = "Delete user by ID (Admin only)")
+    @DeleteMapping("/{id}")
+    fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+        userService.delete(id)
+        return ResponseEntity.ok(ResponseModel.success(null, "Delete user successfully!"))
     }
 
     @Operation(summary = "Change user active status (Admin only)")
