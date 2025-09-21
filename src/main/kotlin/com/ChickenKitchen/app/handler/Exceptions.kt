@@ -21,6 +21,10 @@ class WalletNotFoundException(message: String) : RuntimeException(message)
 
 class IngredientNotFoundException(message: String) : RuntimeException(message)
 
+class IngredientAlreadyExistsException(message: String) : RuntimeException(message)
+
+class DuplicateNutrientInIngredientException(message: String) : RuntimeException(message)
+
 // =================== Nutrient Exceptions ====================
 
 class NutrientNotFoundException(message: String) : RuntimeException(message)
@@ -42,3 +46,12 @@ class CookingEffectAlreadyExistsException(message: String) : RuntimeException(me
 
 // class RecipeNotFoundException(message: String) : RuntimeException(message)
 // class RecipeAlreadyExistsException(message: String) : RuntimeException(message)
+
+// =================== Common Exceptions ====================
+class QuantityMustBeNonNegativeException(message: String) : RuntimeException(message)
+
+class PriceMustBeNonNegativeException(message: String) : RuntimeException(message)
+
+class CategoryMustNotBeNullException(message: String) : RuntimeException(message)
+
+class UnitMustNotBeNullException(message: String) : RuntimeException(message)

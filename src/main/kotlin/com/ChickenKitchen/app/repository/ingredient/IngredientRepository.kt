@@ -9,4 +9,5 @@ import java.util.*
 interface IngredientRepository : JpaRepository<Ingredient, Long> {
     fun findByName(name: String): Optional<Ingredient>
     fun findAllByIsActive(isActive: Boolean = true): List<Ingredient>
+    fun existsByName(name: String): Boolean
 }

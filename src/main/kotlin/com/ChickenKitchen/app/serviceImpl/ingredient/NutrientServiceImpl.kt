@@ -24,7 +24,7 @@ class NutrientServiceImpl(
         return list.toNutrientResponseList()
     }
 
-    override fun getById(id: Long): NutrientDetailResponse? {
+    override fun getById(id: Long): NutrientDetailResponse {
         val nutrient = nutrientRepository.findById(id).orElse(null)
             ?: throw NutrientNotFoundException("Nutrient with id $id not found")
         return nutrient.toNutrientDetailResponse()

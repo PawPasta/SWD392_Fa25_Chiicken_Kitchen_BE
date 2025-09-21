@@ -2,7 +2,7 @@ package com.ChickenKitchen.app.service
 
 interface BaseService<R, D, C, U, ID> {
     fun getAll(): List<R>?
-    fun getById(id: ID): D?
+    fun getById(id: ID): D
     fun create(req: C): D
     fun update(id: ID, req: U): D
     fun delete(id: ID)

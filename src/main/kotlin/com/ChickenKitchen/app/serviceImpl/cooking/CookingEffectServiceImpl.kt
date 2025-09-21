@@ -26,8 +26,8 @@ class CookingEffectServiceImpl(
         return list.toCookingEffectResponseList()
     }
 
-    override fun getById(id: Long): CookingEffectDetailResponse? {
-        val effect = cookingEffectRepository.findById(id).orElse(null)
+    override fun getById(id: Long): CookingEffectDetailResponse {
+        val effect = cookingEffectRepository.findById(id).orElse(null) 
             ?: throw CookingEffectNotFoundException("CookingEffect with id $id not found")
         return effect.toCookingEffectDetailResponse()
     }

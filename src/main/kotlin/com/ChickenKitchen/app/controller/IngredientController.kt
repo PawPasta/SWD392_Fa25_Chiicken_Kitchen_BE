@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.GetMapping
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.parameters.RequestBody
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.http.ResponseEntity
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.model.dto.request.UpdateIngredientRequest
@@ -32,7 +32,7 @@ class IngredientController(
         return ResponseEntity.ok(ResponseModel.success(ingredients, "Get all ingredients successfully!"))
     }
 
-    @Operation(summary = "Get ingredient by ID")
+    @Operation(summary = "Get ingredient by ID") // Lấy thông tin ingredient kèm nutrient
     @GetMapping("/{id}")
     fun getIngredientById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.getById(id)
@@ -42,7 +42,7 @@ class IngredientController(
     // Chỉ có Admin mới có thể truy cập những endpoint này.
 
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create new ingredient (Admin only)") 
+    @Operation(summary = "Create new ingredient (Admin only)") // Có thể tạo ingredient và thêm mối liên hệ với nutrient cùng lúc
     @PostMapping("")
     fun createIngredient(@RequestBody req: CreateIngredientRequest): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.create(req)
@@ -50,7 +50,7 @@ class IngredientController(
     } 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update ingredient by ID (Admin only)")
+    @Operation(summary = "Update ingredient by ID (Admin only)") // Hoặc là tạo xong thì thêm sau ở đây
     @PutMapping("/{id}")
     fun updateIngredient(@PathVariable id: Long, @RequestBody req: UpdateIngredientRequest): ResponseEntity<ResponseModel> {
         val ingredient = ingredientService.update(id, req)

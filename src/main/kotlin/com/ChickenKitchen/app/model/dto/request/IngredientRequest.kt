@@ -8,11 +8,12 @@ import java.math.BigDecimal
 data class CreateIngredientRequest(
     val name: String,
     val baseUnit: UnitEnum,
-    val baseQuantity: Int,
+    val baseQuantity: Int = 100,
     val basePrice: BigDecimal,
     val image: String? = null,
     val category: IngredientCategory? = null,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val nutrients: List<IngredientNutrientRequest>? = null
 )
 
 data class UpdateIngredientRequest(
@@ -22,5 +23,11 @@ data class UpdateIngredientRequest(
     val basePrice: BigDecimal? = null,
     val image: String? = null,
     val category: IngredientCategory? = null,
-    val isActive: Boolean? = null
+    val isActive: Boolean? = null,
+    val nutrients: List<IngredientNutrientRequest>? = null
+)
+
+data class IngredientNutrientRequest(
+    val nutrientId: Long,
+    val amount: BigDecimal
 )

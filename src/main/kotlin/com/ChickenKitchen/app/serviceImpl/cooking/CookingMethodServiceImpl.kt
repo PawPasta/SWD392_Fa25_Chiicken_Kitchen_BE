@@ -24,7 +24,7 @@ class CookingMethodServiceImpl(
         return list.toCookingMethodResponseList()
     }
 
-    override fun getById(id: Long): CookingMethodDetailResponse? {
+    override fun getById(id: Long): CookingMethodDetailResponse { 
         val method = cookingMethodRepository.findById(id).orElse(null)
             ?: throw CookingMethodNotFoundException("CookingMethod with id $id not found")
         return method.toCookingMethodDetailResponse()

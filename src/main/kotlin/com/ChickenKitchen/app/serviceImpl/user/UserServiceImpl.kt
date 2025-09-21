@@ -31,7 +31,7 @@ class UserServiceImpl (
         return users.toUserResponseList()
     }
 
-    override fun getById(id: Long) : UserDetailResponse? {
+    override fun getById(id: Long) : UserDetailResponse {
         val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
         return user.toUserDetailResponse()
     }

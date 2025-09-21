@@ -56,6 +56,14 @@ class GlobalExceptionHandler {
     fun handleIngredientNotFound(e: IngredientNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Ingredient not found")
 
+    @ExceptionHandler(IngredientAlreadyExistsException::class)
+    fun handleIngredientAlreadyExists(e: IngredientAlreadyExistsException) =
+        buildError(HttpStatus.CONFLICT, e.message ?: "Ingredient already exists")
+
+    @ExceptionHandler(DuplicateNutrientInIngredientException::class)
+    fun handleDuplicateNutrientInIngredient(e: DuplicateNutrientInIngredientException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Duplicate nutrient in ingredient")
+
     // ========== Nutrient Exceptions ==========
     @ExceptionHandler(NutrientNotFoundException::class)
     fun handleNutrientNotFound(e: NutrientNotFoundException) =
@@ -82,6 +90,23 @@ class GlobalExceptionHandler {
     @ExceptionHandler(CookingEffectAlreadyExistsException::class)
     fun handleCookingEffectAlreadyExists(e: CookingEffectAlreadyExistsException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Cooking effect already exists")
+
+    // ========== Common Exceptions ==========
+    @ExceptionHandler(QuantityMustBeNonNegativeException::class)
+    fun handleQuantityNonNegative(e: QuantityMustBeNonNegativeException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Quantity must be non-negative")
+
+    @ExceptionHandler(PriceMustBeNonNegativeException::class)
+    fun handlePriceNonNegative(e: PriceMustBeNonNegativeException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Price must be non-negative")
+
+    @ExceptionHandler(CategoryMustNotBeNullException::class)
+    fun handleCategoryNotNull(e: CategoryMustNotBeNullException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Category must not be null")
+
+    @ExceptionHandler(UnitMustNotBeNullException::class)
+    fun handleUnitNotNull(e: UnitMustNotBeNullException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Unit must not be null")
 
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {

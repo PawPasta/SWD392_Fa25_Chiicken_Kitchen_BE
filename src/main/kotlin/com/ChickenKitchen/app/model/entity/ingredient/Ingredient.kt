@@ -12,7 +12,7 @@ class Ingredient(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     var name: String,
 
     @Column(nullable = false)
@@ -27,7 +27,7 @@ class Ingredient(
     var image: String? = null,
 
     @Enumerated(EnumType.STRING)
-    var category: IngredientCategory? = null, // Enum: vegetable, meat, grain...
+    var category: IngredientCategory, // Enum: vegetable, meat, grain...
 
     @Column(nullable = false)
     var isActive: Boolean = true,
