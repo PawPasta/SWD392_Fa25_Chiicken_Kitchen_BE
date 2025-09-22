@@ -32,7 +32,9 @@ class NutrientNotFoundException(message: String) : RuntimeException(message)
 class NutrientAlreadyExistsException(message: String) : RuntimeException(message)
 
 // =================== Recipe Exceptions ====================
+class RecipeNotFoundException(message: String) : RuntimeException(message)
 
+class RecipeAlreadyExistsException(message: String) : RuntimeException(message)
 
 // =================== Cooking Method Exceptions ====================
 class CookingMethodNotFoundException(message: String) : RuntimeException(message)

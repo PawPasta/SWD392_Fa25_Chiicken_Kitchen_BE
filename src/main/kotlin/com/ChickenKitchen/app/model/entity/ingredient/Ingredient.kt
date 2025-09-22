@@ -24,6 +24,9 @@ class Ingredient(
     @Column(nullable = false, precision = 15, scale = 2)
     var basePrice: BigDecimal, // giá theo baseQuantity
 
+    @Column(nullable = false)
+    var baseCal: Int, // calories tương ứng với baseQuantity
+
     var image: String? = null,
 
     @Enumerated(EnumType.STRING)

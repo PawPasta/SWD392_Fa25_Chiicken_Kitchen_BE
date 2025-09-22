@@ -56,6 +56,11 @@ class SecurityConfig(
                     "/api/cooking-effect",
                     "/api/cooking-effect/*",
                 ).permitAll()
+                it.requestMatchers( // Endpoint Recipe 
+                    HttpMethod.GET,
+                    "/api/recipe",
+                    "/api/recipe/*",
+                ).permitAll()
                 .anyRequest().authenticated()
             }
             .sessionManagement {

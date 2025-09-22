@@ -10,6 +10,7 @@ data class IngredientResponse(
     val baseUnit: UnitEnum,
     val baseQuantity: Int,
     val basePrice: BigDecimal,
+    val baseCal: Int,
     val image: String?,
     val category: IngredientCategory?,
     val isActive: Boolean
@@ -21,6 +22,7 @@ data class IngredientDetailResponse(
     val baseUnit: UnitEnum,
     val baseQuantity: Int,
     val basePrice: BigDecimal,
+    val baseCal: Int,
     val image: String?,
     val category: IngredientCategory?,
     val isActive: Boolean,

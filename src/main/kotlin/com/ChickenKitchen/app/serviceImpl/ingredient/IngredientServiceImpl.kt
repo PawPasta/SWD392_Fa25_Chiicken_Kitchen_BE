@@ -64,6 +64,7 @@ class IngredientServiceImpl(
                 baseUnit = req.baseUnit,
                 baseQuantity = req.baseQuantity,
                 basePrice = req.basePrice,
+                baseCal = req.baseCal,
                 image = req.image,
                 category = req.category,
                 isActive = req.isActive
@@ -85,6 +86,7 @@ class IngredientServiceImpl(
         req.baseUnit?.let { ingredient.baseUnit = it }
         req.baseQuantity?.let { ingredient.baseQuantity = it }
         req.basePrice?.let { ingredient.basePrice = it }
+        req.baseCal?.let { ingredient.baseCal = it }
         req.image?.let { ingredient.image = it }
         req.category?.let { ingredient.category = it }
         req.isActive?.let { ingredient.isActive = it }

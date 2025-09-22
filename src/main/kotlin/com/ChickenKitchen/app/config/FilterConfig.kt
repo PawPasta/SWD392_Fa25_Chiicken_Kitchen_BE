@@ -36,7 +36,9 @@ class FilterConfig(
         "/api/cooking-method",
         "/api/cooking-method/",
         "/api/cooking-effect",
-        "/api/cooking-effect/"
+        "/api/cooking-effect/",
+        "/api/recipe",
+        "/api/recipe/",
     )
 
     override fun doFilterInternal(
