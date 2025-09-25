@@ -61,6 +61,16 @@ class SecurityConfig(
                     "/api/promotion",
                     "/api/promotion/*",
                 ).permitAll()
+                it.requestMatchers( // Endpoint Payment Method
+                    HttpMethod.GET,
+                    "/api/payment-method",
+                    "/api/payment-method/*",
+                ).permitAll()
+                it.requestMatchers( // Endpoint Combo
+                    HttpMethod.GET,
+                    "/api/combo",
+                    "/api/combo/*",
+                ).permitAll()
                 .anyRequest().authenticated()
             }
             .sessionManagement {

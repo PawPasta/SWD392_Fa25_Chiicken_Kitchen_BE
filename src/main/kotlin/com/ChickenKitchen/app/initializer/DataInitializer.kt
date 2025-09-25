@@ -23,14 +23,26 @@ import com.ChickenKitchen.app.repository.ingredient.IngredientNutrientRepository
 import com.ChickenKitchen.app.repository.recipe.RecipeRepository
 import com.ChickenKitchen.app.repository.recipe.RecipeIngredientRepository
 import com.ChickenKitchen.app.repository.category.CategoryRepository
+import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
+import com.ChickenKitchen.app.repository.combo.ComboRepository
+import com.ChickenKitchen.app.repository.combo.ComboItemRepository
+import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.enum.Role
 import com.ChickenKitchen.app.enum.UnitEnum
 import com.ChickenKitchen.app.enum.RecipeCategory
+import com.ChickenKitchen.app.enum.PaymentMethodType
+import com.ChickenKitchen.app.enum.DiscountType
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.math.BigDecimal
 import java.math.RoundingMode
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import com.ChickenKitchen.app.model.entity.combo.Combo
+import com.ChickenKitchen.app.model.entity.combo.ComboItem
+import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
+import com.ChickenKitchen.app.model.entity.promotion.Promotion
+import java.sql.Timestamp
 
 @Configuration
 class DataInitializer {
@@ -47,6 +59,10 @@ class DataInitializer {
         recipeIngredientRepository: RecipeIngredientRepository,
         ingredientNutrientRepository: IngredientNutrientRepository,
         transactionManager: PlatformTransactionManager,
+        paymentMethodRepository: PaymentMethodRepository,
+        comboRepository: ComboRepository,
+        comboItemRepository: ComboItemRepository,
+        promotionRepository: PromotionRepository,
         passwordEncoder: PasswordEncoder
     ) = CommandLineRunner {
 
@@ -439,6 +455,112 @@ class DataInitializer {
             }
 
             println("✅ Inserted $insertedRecipes recipes (total now ${recipeRepository.count()})")
+        }
+
+        // ===== PAYMENT METHODS =====
+        if (paymentMethodRepository.count() == 0L) {
+            val methods = PaymentMethodType.entries.map {
+                PaymentMethod(name = it, description = it.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.titlecase() })
+            }
+            paymentMethodRepository.saveAll(methods)
+            println("✅ Inserted ${methods.size} payment methods")
+        }
+
+        // ===== PROMOTIONS =====
+        if (promotionRepository.count() == 0L) {
+            val now = LocalDateTime.now()
+            val promos = listOf(
+                Promotion(
+                    name = "Welcome 10%",
+                    description = "Giảm 10% cho đơn đầu tiên",
+                    discountType = DiscountType.PERCENT,
+                    discountValue = BigDecimal("10.00"),
+                    isActive = true,
+                    startDate = Timestamp.valueOf(now.minusDays(1)),
+                    endDate = Timestamp.valueOf(now.plusMonths(1)),
+                    quantity = 100
+                ),
+                Promotion(
+                    name = "Giảm 20k cuối tuần",
+                    description = "Áp dụng thứ 6 - CN",
+                    discountType = DiscountType.AMOUNT,
+                    discountValue = BigDecimal("20000.00"),
+                    isActive = true,
+                    startDate = Timestamp.valueOf(now.minusDays(1)),
+                    endDate = Timestamp.valueOf(now.plusWeeks(2)),
+                    quantity = 200
+                ),
+                Promotion(
+                    name = "Member 15%",
+                    description = "Ưu đãi thành viên",
+                    discountType = DiscountType.PERCENT,
+                    discountValue = BigDecimal("15.00"),
+                    isActive = true,
+                    startDate = Timestamp.valueOf(now.minusDays(1)),
+                    endDate = Timestamp.valueOf(now.plusMonths(2)),
+                    quantity = 150
+                ),
+                Promotion(
+                    name = "Flash sale -50k",
+                    description = "Đã kết thúc",
+                    discountType = DiscountType.AMOUNT,
+                    discountValue = BigDecimal("50000.00"),
+                    isActive = false,
+                    startDate = Timestamp.valueOf(now.minusMonths(1)),
+                    endDate = Timestamp.valueOf(now.minusDays(5)),
+                    quantity = 0
+                )
+            )
+            promotionRepository.saveAll(promos)
+            println("✅ Inserted ${promos.size} promotions")
+        }
+
+        // ===== COMBOS =====
+        if (comboRepository.count() == 0L) {
+            val rmap = recipeRepository.findAll().associateBy { it.name }
+            fun r(name: String) = rmap[name]
+            data class CI(val r: String, val q: Int = 1)
+            data class ComboDef(val name: String, val items: List<CI>)
+
+            val combos = listOf(
+                ComboDef("Classic Chicken Combo", listOf(CI("Grilled Chicken Bowl"), CI("Garden Salad"), CI("Tomato Soup"))),
+                ComboDef("Seafood Delight Combo", listOf(CI("Shrimp Pasta"), CI("Seafood Soup"), CI("Mediterranean Salad"))),
+                ComboDef("Beef Lover Combo", listOf(CI("Beef Stir Fry"), CI("Beef Noodles"), CI("Mushroom Soup"))),
+                ComboDef("Light & Fresh Combo", listOf(CI("Spinach Avocado Salad"), CI("Vegetable Soup"), CI("Fruit Mix"))),
+                ComboDef("Sandwich Snack Combo", listOf(CI("BBQ Pork Sandwich"), CI("Garlic Bread"), CI("Yogurt Parfait"))),
+                ComboDef("Pasta Feast Combo", listOf(CI("Ham Cheese Pasta"), CI("Shrimp Pasta"), CI("Bruschetta"))),
+                ComboDef("Chicken Rice Duo", listOf(CI("Chicken Fried Rice"), CI("Garden Salad"))),
+                ComboDef("Salmon Healthy Set", listOf(CI("Salmon Quinoa"), CI("Kale Quinoa Salad")))
+            )
+
+            var insertedCombos = 0
+            combos.forEach { def ->
+                if (comboRepository.findByName(def.name).isEmpty) {
+                    val items = def.items.mapNotNull { ci ->
+                        val recipe = r(ci.r)
+                        if (recipe == null) {
+                            println("⚠️ Missing recipe for combo '${def.name}': ${ci.r}")
+                            null
+                        } else Pair(recipe, ci.q)
+                    }
+                    if (items.isEmpty()) return@forEach
+
+                    val sumPrice = items.fold(BigDecimal.ZERO) { acc, (rec, q) -> acc + rec.price.multiply(BigDecimal(q)) }
+                    val sumCal = items.sumOf { (rec, q) -> rec.cal * q }
+                    val combo = Combo(
+                        name = def.name,
+                        price = sumPrice.multiply(BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP), // 10% off
+                        cal = sumCal,
+                        isActive = true
+                    )
+                    items.forEach { (rec, q) ->
+                        combo.combo_items.add(ComboItem(combo = combo, recipe = rec, quantity = q))
+                    }
+                    comboRepository.save(combo)
+                    insertedCombos++
+                }
+            }
+            println("✅ Inserted $insertedCombos combos (total now ${comboRepository.count()})")
         }
 
         // ===== INGREDIENT NUTRIENTS (populate if missing) =====

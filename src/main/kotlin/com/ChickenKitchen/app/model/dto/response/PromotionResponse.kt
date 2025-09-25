@@ -6,6 +6,8 @@ import java.sql.Timestamp
 
 data class PromotionResponse(
     val id: Long,
+    val name: String,
+    val description: String?,
     val discountType: DiscountType,
     val discountValue: BigDecimal,
     val isActive: Boolean,
@@ -16,6 +18,8 @@ data class PromotionResponse(
 
 data class PromotionDetailResponse(
     val id: Long,
+    val name: String,
+    val description: String?,
     val discountType: DiscountType,
     val discountValue: BigDecimal,
     val isActive: Boolean,
@@ -23,4 +27,3 @@ data class PromotionDetailResponse(
     val endDate: Timestamp,
     val quantity: Int
 )
-

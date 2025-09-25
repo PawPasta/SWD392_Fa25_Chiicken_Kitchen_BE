@@ -39,6 +39,10 @@ class FilterConfig(
         "/api/recipe/",
         "/api/promotion",
         "/api/promotion/",
+        "/api/combo",
+        "/api/combo/",
+        "/api/payment-method",
+        "/api/payment-method/",
     )
 
     override fun doFilterInternal(

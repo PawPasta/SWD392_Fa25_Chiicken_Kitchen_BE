@@ -6,6 +6,8 @@ import java.sql.Timestamp
 
 // Request dùng cho admin để CRUD Promotion
 data class CreatePromotionRequest(
+    val name: String,
+    val description: String? = null,
     val discountType: DiscountType,
     val discountValue: BigDecimal,
     val startDate: Timestamp,
@@ -15,6 +17,8 @@ data class CreatePromotionRequest(
 )
 
 data class UpdatePromotionRequest(
+    val name: String? = null,
+    val description: String? = null,
     val discountType: DiscountType? = null,
     val discountValue: BigDecimal? = null,
     val startDate: Timestamp? = null,
@@ -22,4 +26,3 @@ data class UpdatePromotionRequest(
     val quantity: Int? = null,
     val isActive: Boolean? = null
 )
-

@@ -6,6 +6,8 @@ import com.ChickenKitchen.app.model.entity.promotion.Promotion
 
 fun Promotion.toPromotionResponse() = PromotionResponse(
     id = this.id!!,
+    name = this.name,
+    description = this.description,
     discountType = this.discountType,
     discountValue = this.discountValue,
     isActive = this.isActive,
@@ -16,6 +18,8 @@ fun Promotion.toPromotionResponse() = PromotionResponse(
 
 fun Promotion.toPromotionDetailResponse() = PromotionDetailResponse(
     id = this.id!!,
+    name = this.name,
+    description = this.description,
     discountType = this.discountType,
     discountValue = this.discountValue,
     isActive = this.isActive,
@@ -25,4 +29,3 @@ fun Promotion.toPromotionDetailResponse() = PromotionDetailResponse(
 )
 
 fun List<Promotion>.toPromotionResponseList() = this.map { it.toPromotionResponse() }
-

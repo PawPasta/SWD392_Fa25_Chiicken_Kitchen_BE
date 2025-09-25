@@ -11,6 +11,12 @@ class Promotion(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(nullable = false, length = 100)
+    var name: String,
+
+    @Column(length = 500)
+    var description: String? = null,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var discountType: DiscountType,   // Enum: PERCENT, AMOUNT...

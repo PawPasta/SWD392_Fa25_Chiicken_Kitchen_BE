@@ -33,6 +33,8 @@ class PromotionServiceImpl(
     override fun create(req: CreatePromotionRequest): PromotionDetailResponse {
         val newPromo = promotionRepository.save(
             Promotion(
+                name = req.name,
+                description = req.description,
                 discountType = req.discountType,
                 discountValue = req.discountValue,
                 isActive = req.isActive,
@@ -48,6 +50,8 @@ class PromotionServiceImpl(
         val promo = promotionRepository.findById(id).orElse(null)
             ?: throw IngredientNotFoundException("Promotion with id $id not found")
 
+        req.name?.let { promo.name = it }
+        req.description?.let { promo.description = it }
         req.discountType?.let { promo.discountType = it }
         req.discountValue?.let { promo.discountValue = it }
         req.startDate?.let { promo.startDate = it }
@@ -73,4 +77,3 @@ class PromotionServiceImpl(
         return updated.toPromotionResponse()
     }
 }
-
