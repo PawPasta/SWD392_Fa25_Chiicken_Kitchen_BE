@@ -48,6 +48,8 @@ class SecurityConfig(
                     "/api/nutrient/*",
                     "/api/ingredient",
                     "/api/ingredient/*",
+                    "/api/category",
+                    "/api/category/*",
                 ).permitAll() 
                 it.requestMatchers( // Endpoint Recipe 
                     HttpMethod.GET,

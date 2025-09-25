@@ -33,6 +33,8 @@ class FilterConfig(
         "/api/nutrient/",
         "/api/ingredient",
         "/api/ingredient/",
+        "/api/category",
+        "/api/category/",
         "/api/recipe",
         "/api/recipe/",
     )
