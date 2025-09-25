@@ -22,10 +22,10 @@ class Recipe(
     var isCustomizable: Boolean = true,
 
     @Column(nullable = false, precision = 15, scale = 2)
-    var basePrice: BigDecimal = BigDecimal.ZERO,
+    var price: BigDecimal = BigDecimal.ZERO,
 
     @Column(nullable = false)
-    var baseCal: Int,
+    var cal: Int,
 
     @Column(columnDefinition = "JSON")
     var ingredientSnapshot: String? = null,
@@ -37,9 +37,6 @@ class Recipe(
 
     @Enumerated(EnumType.STRING)
     var category: RecipeCategory? = null,   // Enum bạn định nghĩa
-
-    @OneToMany(mappedBy = "recipe", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
-    var order_items: MutableList<OrderItem> = mutableListOf(),
 
     @OneToMany(mappedBy = "recipe", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var recipe_ingredients: MutableList<RecipeIngredient> = mutableListOf(),

@@ -33,10 +33,6 @@ class FilterConfig(
         "/api/nutrient/",
         "/api/ingredient",
         "/api/ingredient/",
-        "/api/cooking-method",
-        "/api/cooking-method/",
-        "/api/cooking-effect",
-        "/api/cooking-effect/",
         "/api/recipe",
         "/api/recipe/",
     )

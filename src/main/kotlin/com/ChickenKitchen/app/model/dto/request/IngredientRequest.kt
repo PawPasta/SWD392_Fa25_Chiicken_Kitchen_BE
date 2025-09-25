@@ -12,7 +12,7 @@ data class CreateIngredientRequest(
     val basePrice: BigDecimal,
     val baseCal: Int,
     val image: String? = null,
-    val category: IngredientCategory? = null,
+    val category: String? = null,
     val isActive: Boolean = true,
     val nutrients: List<IngredientNutrientRequest>? = null
 )
@@ -24,7 +24,7 @@ data class UpdateIngredientRequest(
     val basePrice: BigDecimal? = null,
     val baseCal: Int? = null,
     val image: String? = null,
-    val category: IngredientCategory? = null,
+    val category: String? = null,
     val isActive: Boolean? = null,
     val nutrients: List<IngredientNutrientRequest>? = null
 )

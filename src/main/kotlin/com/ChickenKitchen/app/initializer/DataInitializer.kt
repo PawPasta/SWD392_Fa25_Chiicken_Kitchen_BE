@@ -11,26 +11,26 @@ import com.ChickenKitchen.app.model.entity.user.Wallet
 import com.ChickenKitchen.app.model.entity.ingredient.Nutrient
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.IngredientNutrient
-import com.ChickenKitchen.app.model.entity.cooking.CookingMethod
-import com.ChickenKitchen.app.model.entity.cooking.CookingEffect
 import com.ChickenKitchen.app.model.entity.recipe.Recipe
 import com.ChickenKitchen.app.model.entity.recipe.RecipeIngredient
+import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.user.UserAddressRepository
 import com.ChickenKitchen.app.repository.user.WalletRepository
 import com.ChickenKitchen.app.repository.ingredient.NutrientRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientNutrientRepository
-import com.ChickenKitchen.app.repository.cooking.CookingMethodRepository
-import com.ChickenKitchen.app.repository.cooking.CookingEffectRepository
 import com.ChickenKitchen.app.repository.recipe.RecipeRepository
+import com.ChickenKitchen.app.repository.recipe.RecipeIngredientRepository
+import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.enum.Role
 import com.ChickenKitchen.app.enum.UnitEnum
-import com.ChickenKitchen.app.enum.IngredientCategory
-import com.ChickenKitchen.app.enum.EffectType
 import com.ChickenKitchen.app.enum.RecipeCategory
 import java.time.LocalDate
 import java.math.BigDecimal
+import java.math.RoundingMode
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 
 @Configuration
 class DataInitializer {
@@ -41,11 +41,12 @@ class DataInitializer {
         userAddressRepository: UserAddressRepository,
         walletRepository: WalletRepository,
         nutrientRepository: NutrientRepository,
+        categoryRepository: CategoryRepository,
         ingredientRepository: IngredientRepository,
+        recipeRepository: RecipeRepository,
+        recipeIngredientRepository: RecipeIngredientRepository,
         ingredientNutrientRepository: IngredientNutrientRepository,
-        cookingMethodRepository: CookingMethodRepository,
-        cookingEffectRepository: CookingEffectRepository,
-        // recipeRepository: RecipeRepository,
+        transactionManager: PlatformTransactionManager,
         passwordEncoder: PasswordEncoder
     ) = CommandLineRunner {
 
@@ -169,612 +170,417 @@ class DataInitializer {
             val savedNutrients = nutrientRepository.saveAll(nutrients)
             val nutMap = savedNutrients.associateBy { it.name }
             println("✅ Inserted ${savedNutrients.size} nutrients")
-
-
-            // ===== INGREDIENTS =====
-
-            if (ingredientRepository.count() < 1L) {
-                val ingredients = listOf(
-                    // === VEGETABLE ===
-                    Ingredient(name = "Cà chua",  category = IngredientCategory.VEGETABLE, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("5000"), baseCal = 18),
-                    Ingredient(name = "Dưa leo",  category = IngredientCategory.VEGETABLE, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("4000"), baseCal = 15),
-                    Ingredient(name = "Rau muống",category = IngredientCategory.VEGETABLE, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("3000"), baseCal = 19),
-                    Ingredient(name = "Khoai tây",category = IngredientCategory.VEGETABLE, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("6000"), baseCal = 77),
-                    Ingredient(name = "Cà rốt",   category = IngredientCategory.VEGETABLE, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("7000"), baseCal = 41),
-        
-                    // === MEAT ===
-                    Ingredient(name = "Thịt gà",  category = IngredientCategory.MEAT, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("25000"), baseCal = 239),
-                    Ingredient(name = "Thịt bò",  category = IngredientCategory.MEAT, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("40000"), baseCal = 250),
-                    Ingredient(name = "Thịt heo", category = IngredientCategory.MEAT, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("20000"), baseCal = 242),
-                    Ingredient(name = "Thịt vịt", category = IngredientCategory.MEAT, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("22000"), baseCal = 337),
-                    Ingredient(name = "Thịt dê",  category = IngredientCategory.MEAT, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("35000"), baseCal = 143),
-        
-                    // === SEAFOOD ===
-                    Ingredient(name = "Cá hồi",   category = IngredientCategory.SEAFOOD, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("60000"), baseCal = 208),
-                    Ingredient(name = "Cá thu",   category = IngredientCategory.SEAFOOD, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("30000"), baseCal = 205),
-                    Ingredient(name = "Tôm sú",   category = IngredientCategory.SEAFOOD, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("45000"), baseCal = 99),
-                    Ingredient(name = "Mực ống",  category = IngredientCategory.SEAFOOD, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("38000"), baseCal = 92),
-                    Ingredient(name = "Ghẹ biển", category = IngredientCategory.SEAFOOD, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("50000"), baseCal = 97),
-        
-                    // === GRAIN ===
-                    Ingredient(name = "Cơm trắng", category = IngredientCategory.GRAIN, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("12000"), baseCal = 130),
-                    Ingredient(name = "Cơm gạo lứt",   category = IngredientCategory.GRAIN, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("18000"), baseCal = 111),
-                    Ingredient(name = "Bún tươi",  category = IngredientCategory.GRAIN, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("15000"), baseCal = 109),
-                    Ingredient(name = "Mì trứng",  category = IngredientCategory.GRAIN, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("20000"), baseCal = 138),
-                    Ingredient(name = "Bánh mì",   category = IngredientCategory.GRAIN, baseUnit = UnitEnum.G, baseQuantity = 100, basePrice = BigDecimal("10000"), baseCal = 265)
-                )
-                val savedIngredients = ingredientRepository.saveAll(ingredients)
-                val ingMap = savedIngredients.associateBy { it.name }
-                println("✅ Inserted ${savedIngredients.size} ingredients")
-
-                    // ===== INGREDIENT_NUTRIENTS =====
-
-                if (ingredientNutrientRepository.count() < 1L) {
-                    val ingredientNutrients = listOf(
-                        // Cà chua
-                        IngredientNutrient(ingredient = ingMap["Cà chua"]!!, nutrient = nutMap["Vitamin C"]!!, amount = BigDecimal("14.0")),
-                        IngredientNutrient(ingredient = ingMap["Cà chua"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("3.9")),
-                        IngredientNutrient(ingredient = ingMap["Cà chua"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("1.2")),
-                        IngredientNutrient(ingredient = ingMap["Cà chua"]!!, nutrient = nutMap["Sugar"]!!, amount = BigDecimal("2.6")),
-                        IngredientNutrient(ingredient = ingMap["Cà chua"]!!, nutrient = nutMap["Potassium"]!!, amount = BigDecimal("237.0")),
-    
-                        // Dưa leo
-                        IngredientNutrient(ingredient = ingMap["Dưa leo"]!!, nutrient = nutMap["Vitamin K"]!!, amount = BigDecimal("16.4")),
-                        IngredientNutrient(ingredient = ingMap["Dưa leo"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("0.5")),
-                        IngredientNutrient(ingredient = ingMap["Dưa leo"]!!, nutrient = nutMap["Potassium"]!!, amount = BigDecimal("147.0")),
-                        IngredientNutrient(ingredient = ingMap["Dưa leo"]!!, nutrient = nutMap["Vitamin C"]!!, amount = BigDecimal("3.0")),
-    
-                        // Rau muống
-                        IngredientNutrient(ingredient = ingMap["Rau muống"]!!, nutrient = nutMap["Iron"]!!, amount = BigDecimal("1.6")),
-                        IngredientNutrient(ingredient = ingMap["Rau muống"]!!, nutrient = nutMap["Vitamin A"]!!, amount = BigDecimal("315.0")),
-                        IngredientNutrient(ingredient = ingMap["Rau muống"]!!, nutrient = nutMap["Calcium"]!!, amount = BigDecimal("77.0")),
-                        IngredientNutrient(ingredient = ingMap["Rau muống"]!!, nutrient = nutMap["Magnesium"]!!, amount = BigDecimal("71.0")),
-                        IngredientNutrient(ingredient = ingMap["Rau muống"]!!, nutrient = nutMap["Vitamin C"]!!, amount = BigDecimal("55.0")),
-    
-                        // Khoai tây
-                        IngredientNutrient(ingredient = ingMap["Khoai tây"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("17.0")),
-                        IngredientNutrient(ingredient = ingMap["Khoai tây"]!!, nutrient = nutMap["Potassium"]!!, amount = BigDecimal("429.0")),
-                        IngredientNutrient(ingredient = ingMap["Khoai tây"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("2.2")),
-                        IngredientNutrient(ingredient = ingMap["Khoai tây"]!!, nutrient = nutMap["Vitamin C"]!!, amount = BigDecimal("19.7")),
-                        IngredientNutrient(ingredient = ingMap["Khoai tây"]!!, nutrient = nutMap["Magnesium"]!!, amount = BigDecimal("23.0")),
-    
-                        // Cà rốt
-                        IngredientNutrient(ingredient = ingMap["Cà rốt"]!!, nutrient = nutMap["Vitamin A"]!!, amount = BigDecimal("835.0")),
-                        IngredientNutrient(ingredient = ingMap["Cà rốt"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("2.8")),
-                        IngredientNutrient(ingredient = ingMap["Cà rốt"]!!, nutrient = nutMap["Sugar"]!!, amount = BigDecimal("4.7")),
-                        IngredientNutrient(ingredient = ingMap["Cà rốt"]!!, nutrient = nutMap["Potassium"]!!, amount = BigDecimal("320.0")),
-                        IngredientNutrient(ingredient = ingMap["Cà rốt"]!!, nutrient = nutMap["Vitamin K"]!!, amount = BigDecimal("13.0")),
-    
-                        // Thịt gà
-                        IngredientNutrient(ingredient = ingMap["Thịt gà"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("27.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt gà"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("14.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt gà"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("70.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt gà"]!!, nutrient = nutMap["Cholesterol"]!!, amount = BigDecimal("85.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt gà"]!!, nutrient = nutMap["Vitamin B6"]!!, amount = BigDecimal("0.5")),
-    
-                        // Thịt bò
-                        IngredientNutrient(ingredient = ingMap["Thịt bò"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("26.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt bò"]!!, nutrient = nutMap["Iron"]!!, amount = BigDecimal("2.6")),
-                        IngredientNutrient(ingredient = ingMap["Thịt bò"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("72.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt bò"]!!, nutrient = nutMap["Zinc"]!!, amount = BigDecimal("4.8")),
-                        IngredientNutrient(ingredient = ingMap["Thịt bò"]!!, nutrient = nutMap["Vitamin B12"]!!, amount = BigDecimal("2.6")),
-    
-                        // Thịt heo
-                        IngredientNutrient(ingredient = ingMap["Thịt heo"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("27.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt heo"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("14.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt heo"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("62.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt heo"]!!, nutrient = nutMap["Magnesium"]!!, amount = BigDecimal("20.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt heo"]!!, nutrient = nutMap["Vitamin B1"]!!, amount = BigDecimal("0.7")),
-    
-                        // Thịt vịt
-                        IngredientNutrient(ingredient = ingMap["Thịt vịt"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("19.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt vịt"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("28.0")),
-    
-                        // === Thịt dê ===
-                        IngredientNutrient(ingredient = ingMap["Thịt dê"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("27.0")),
-                        IngredientNutrient(ingredient = ingMap["Thịt dê"]!!, nutrient = nutMap["Iron"]!!, amount = BigDecimal("3.7")),
-                        
-                        // Cá hồi
-                        IngredientNutrient(ingredient = ingMap["Cá hồi"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("20.0")),
-                        IngredientNutrient(ingredient = ingMap["Cá hồi"]!!, nutrient = nutMap["Cholesterol"]!!, amount = BigDecimal("55.0")),
-                        IngredientNutrient(ingredient = ingMap["Cá hồi"]!!, nutrient = nutMap["Vitamin D"]!!, amount = BigDecimal("10.9")),
-                        IngredientNutrient(ingredient = ingMap["Cá hồi"]!!, nutrient = nutMap["Vitamin B12"]!!, amount = BigDecimal("3.2")),
-                        IngredientNutrient(ingredient = ingMap["Cá hồi"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("59.0")),
-    
-                        // Cá thu
-                        IngredientNutrient(ingredient = ingMap["Cá thu"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("19.0")),
-                        IngredientNutrient(ingredient = ingMap["Cá thu"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("13.0")),
-                        IngredientNutrient(ingredient = ingMap["Cá thu"]!!, nutrient = nutMap["Vitamin D"]!!, amount = BigDecimal("16.1")),
-                        IngredientNutrient(ingredient = ingMap["Cá thu"]!!, nutrient = nutMap["Vitamin B6"]!!, amount = BigDecimal("0.7")),
-                        IngredientNutrient(ingredient = ingMap["Cá thu"]!!, nutrient = nutMap["Cholesterol"]!!, amount = BigDecimal("70.0")),
-    
-                        // Tôm sú
-                        IngredientNutrient(ingredient = ingMap["Tôm sú"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("24.0")),
-                        IngredientNutrient(ingredient = ingMap["Tôm sú"]!!, nutrient = nutMap["Cholesterol"]!!, amount = BigDecimal("189.0")),
-                        IngredientNutrient(ingredient = ingMap["Tôm sú"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("111.0")),
-                        IngredientNutrient(ingredient = ingMap["Tôm sú"]!!, nutrient = nutMap["Vitamin B12"]!!, amount = BigDecimal("1.1")),
-                        IngredientNutrient(ingredient = ingMap["Tôm sú"]!!, nutrient = nutMap["Zinc"]!!, amount = BigDecimal("1.3")),
-    
-                        // Mực ống
-                        IngredientNutrient(ingredient = ingMap["Mực ống"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("15.0")),
-                        IngredientNutrient(ingredient = ingMap["Mực ống"]!!, nutrient = nutMap["Cholesterol"]!!, amount = BigDecimal("233.0")),
-                        IngredientNutrient(ingredient = ingMap["Mực ống"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("44.0")),
-                        IngredientNutrient(ingredient = ingMap["Mực ống"]!!, nutrient = nutMap["Vitamin B2"]!!, amount = BigDecimal("0.5")),
-                        IngredientNutrient(ingredient = ingMap["Mực ống"]!!, nutrient = nutMap["Zinc"]!!, amount = BigDecimal("1.5")),
-    
-                        // Ghẹ biển
-                        IngredientNutrient(ingredient = ingMap["Ghẹ biển"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("21.0")),
-                        IngredientNutrient(ingredient = ingMap["Ghẹ biển"]!!, nutrient = nutMap["Zinc"]!!, amount = BigDecimal("7.6")),
-    
-                        // Cơm trắng
-                        IngredientNutrient(ingredient = ingMap["Cơm trắng"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("28.0")),
-                        IngredientNutrient(ingredient = ingMap["Cơm trắng"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("2.7")),
-                        IngredientNutrient(ingredient = ingMap["Cơm trắng"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("0.3")),
-                        IngredientNutrient(ingredient = ingMap["Cơm trắng"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("0.4")),
-    
-                        // Cơm gạo lứt
-                        IngredientNutrient(ingredient = ingMap["Cơm gạo lứt"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("23.0")),
-                        IngredientNutrient(ingredient = ingMap["Cơm gạo lứt"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("2.6")),
-                        IngredientNutrient(ingredient = ingMap["Cơm gạo lứt"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("0.9")),
-                        IngredientNutrient(ingredient = ingMap["Cơm gạo lứt"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("1.8")),
-    
-                        // === Bún tươi ===
-                        IngredientNutrient(ingredient = ingMap["Bún tươi"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("25.0")),
-                        IngredientNutrient(ingredient = ingMap["Bún tươi"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("2.0")),
-    
-                        // Mì trứng
-                        IngredientNutrient(ingredient = ingMap["Mì trứng"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("25.0")),
-                        IngredientNutrient(ingredient = ingMap["Mì trứng"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("4.5")),
-                        IngredientNutrient(ingredient = ingMap["Mì trứng"]!!, nutrient = nutMap["Fat"]!!, amount = BigDecimal("4.0")),
-                        IngredientNutrient(ingredient = ingMap["Mì trứng"]!!, nutrient = nutMap["Sodium"]!!, amount = BigDecimal("140.0")),
-                        IngredientNutrient(ingredient = ingMap["Mì trứng"]!!, nutrient = nutMap["Vitamin B2"]!!, amount = BigDecimal("0.3")),
-    
-                        // === Bánh mì ===
-                        IngredientNutrient(ingredient = ingMap["Bánh mì"]!!, nutrient = nutMap["Carbohydrate"]!!, amount = BigDecimal("49.0")),
-                        IngredientNutrient(ingredient = ingMap["Bánh mì"]!!, nutrient = nutMap["Protein"]!!, amount = BigDecimal("9.0")),
-                        IngredientNutrient(ingredient = ingMap["Bánh mì"]!!, nutrient = nutMap["Fiber"]!!, amount = BigDecimal("2.7"))
-                    )
-    
-                    ingredientNutrientRepository.saveAll(ingredientNutrients)
-                    println("✅ Inserted ${ingredientNutrients.size} ingredient_nutrients")
-                }
-
-            }
-
-            if (cookingMethodRepository.count() < 1L) {
-                // ===== COOKING METHODS ======
-                val cookingMethods = listOf(
-                    CookingMethod(
-                        name = "Luộc",
-                        note = "Giữ lại nhiều vitamin nhưng có thể làm mất khoáng chất tan trong nước.",
-                        basePrice = BigDecimal("1000.00")
-                    ),
-                    CookingMethod(
-                        name = "Chiên",
-                        note = "Tăng hương vị, nhưng thường làm tăng chất béo và calo.",
-                        basePrice = BigDecimal("3000.00")
-                    ),
-                    CookingMethod(
-                        name = "Nướng",
-                        note = "Giảm chất béo do mỡ chảy ra ngoài, giữ được hương vị đặc trưng.",
-                        basePrice = BigDecimal("4000.00")
-                    ),
-                    CookingMethod(
-                        name = "Hấp",
-                        note = "Giữ được nhiều vitamin, không cần thêm dầu mỡ.",
-                        basePrice = BigDecimal("2000.00")
-                    ),
-                    CookingMethod(
-                        name = "Xào",
-                        note = "Nấu nhanh với ít dầu, giữ màu sắc và độ giòn của rau củ.",
-                        basePrice = BigDecimal("2500.00")
-                    ),
-                    CookingMethod(
-                        name = "Kho",
-                        note = "Thường dùng nước mắm, đường và gia vị để tạo vị đậm đà.",
-                        basePrice = BigDecimal("2200.00")
-                    ),
-                    CookingMethod(
-                        name = "Hầm",
-                        note = "Nấu lâu ở lửa nhỏ, làm mềm thịt và giải phóng chất dinh dưỡng trong xương.",
-                        basePrice = BigDecimal("5000.00")
-                    ),
-                    CookingMethod(
-                        name = "Ninh",
-                        note = "Tương tự hầm nhưng chủ yếu để lấy nước dùng trong, ngọt từ xương/rau.",
-                        basePrice = BigDecimal("4800.00")
-                    ),
-                    CookingMethod(
-                        name = "Rang",
-                        note = "Dùng ít dầu hoặc muối để tạo hương vị thơm đặc trưng.",
-                        basePrice = BigDecimal("2000.00")
-                    ),
-                    CookingMethod(
-                        name = "Muối chua/Ngâm",
-                        note = "Dùng lên men tự nhiên hoặc ngâm gia vị để bảo quản thực phẩm.",
-                        basePrice = BigDecimal("1500.00")
-                    ),
-                    CookingMethod(
-                        name = "Không",
-                        note = "Giữ nguyên trạng thái tươi sống của thực phẩm.",
-                        basePrice = BigDecimal("0.00")
-                    )
-                )
-                
-                val savedMethods = cookingMethodRepository.saveAll(cookingMethods)
-                println("✅ Inserted ${savedMethods.size} cooking methods")
-    
-                if (cookingEffectRepository.count() < 1L) {
-                    // ===== COOKING EFFECTS ======
-                    
-                    val effects = listOf(
-                        // Luộc (id = 1)
-                        CookingEffect(method = savedMethods[0], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("20"), description = "Luộc làm giảm ~20% Vitamin C tan trong nước"),
-                        CookingEffect(method = savedMethods[0], nutrient = nutMap["Potassium"]!!, effectType = EffectType.DECREASE, value = BigDecimal("15"), description = "Khoáng chất Kali tan trong nước giảm"),
-                        CookingEffect(method = savedMethods[0], nutrient = nutMap["Fiber"]!!, effectType = EffectType.DECREASE, value = BigDecimal("10"), description = "Luộc làm rau mềm, hao hụt chất xơ nhẹ"),
-    
-                        // Chiên (id = 2)
-                        CookingEffect(method = savedMethods[1], nutrient = nutMap["Fat"]!!, effectType = EffectType.INCREASE, value = BigDecimal("30"), description = "Chiên tăng hàm lượng chất béo ~30%"),
-                        // Removed Calories effect; calories now tracked via Ingredient.baseCal
-                        CookingEffect(method = savedMethods[1], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("15"), description = "Vitamin C dễ phân hủy ở nhiệt độ cao khi chiên"),
-    
-                        // Nướng (id = 3)
-                        CookingEffect(method = savedMethods[2], nutrient = nutMap["Fat"]!!, effectType = EffectType.DECREASE, value = BigDecimal("10"), description = "Nướng giúp giảm một phần chất béo chảy ra ngoài"),
-                        // Removed Calories effect; calories now tracked via Ingredient.baseCal
-                        CookingEffect(method = savedMethods[2], nutrient = nutMap["Vitamin A"]!!, effectType = EffectType.DECREASE, value = BigDecimal("20"), description = "Vitamin A giảm do nhiệt độ cao"),
-    
-                        // Hấp (id = 4)
-                        CookingEffect(method = savedMethods[3], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("5"), description = "Hấp làm hao hụt rất ít vitamin C"),
-                        CookingEffect(method = savedMethods[3], nutrient = nutMap["Potassium"]!!, effectType = EffectType.DECREASE, value = BigDecimal("5"), description = "Khoáng chất Kali giảm nhẹ do hơi nước"),
-    
-                        // Xào (id = 5)
-                        CookingEffect(method = savedMethods[4], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("10"), description = "Xào làm mất một phần vitamin C"),
-                        CookingEffect(method = savedMethods[4], nutrient = nutMap["Fat"]!!, effectType = EffectType.INCREASE, value = BigDecimal("15"), description = "Dầu ăn bổ sung thêm chất béo"),
-                        // Removed Calories effect; calories now tracked via Ingredient.baseCal
-    
-                        // Kho (id = 6)
-                        CookingEffect(method = savedMethods[5], nutrient = nutMap["Sodium"]!!, effectType = EffectType.INCREASE, value = BigDecimal("20"), description = "Kho với nước mắm làm tăng lượng Natri"),
-                        CookingEffect(method = savedMethods[5], nutrient = nutMap["Sugar"]!!, effectType = EffectType.INCREASE, value = BigDecimal("15"), description = "Đường và gia vị làm tăng đường tổng thể"),
-                        CookingEffect(method = savedMethods[5], nutrient = nutMap["Protein"]!!, effectType = EffectType.DECREASE, value = BigDecimal("5"), description = "Protein hao hụt nhẹ do nấu lâu"),
-    
-                        // Hầm (id = 7)
-                        CookingEffect(method = savedMethods[6], nutrient = nutMap["Calcium"]!!, effectType = EffectType.INCREASE, value = BigDecimal("30"), description = "Hầm giúp canxi và khoáng chất tan vào nước"),
-                        CookingEffect(method = savedMethods[6], nutrient = nutMap["Magnesium"]!!, effectType = EffectType.INCREASE, value = BigDecimal("25"), description = "Magie và vi chất trong xương tan ra"),
-                        CookingEffect(method = savedMethods[6], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("10"), description = "Vitamin C giảm khi nấu lâu"),
-    
-                        // Ninh (id = 8)
-                        CookingEffect(method = savedMethods[7], nutrient = nutMap["Calcium"]!!, effectType = EffectType.INCREASE, value = BigDecimal("35"), description = "Ninh lấy nước dùng giàu canxi"),
-                        CookingEffect(method = savedMethods[7], nutrient = nutMap["Iron"]!!, effectType = EffectType.INCREASE, value = BigDecimal("10"), description = "Sắt từ xương/rau củ tan ra nước"),
-                        CookingEffect(method = savedMethods[7], nutrient = nutMap["Protein"]!!, effectType = EffectType.DECREASE, value = BigDecimal("8"), description = "Protein bị phân hủy nhẹ khi ninh lâu"),
-    
-                        // Rang (id = 9)
-                        CookingEffect(method = savedMethods[8], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("12"), description = "Rang làm mất một ít vitamin C"),
-                        CookingEffect(method = savedMethods[8], nutrient = nutMap["Vitamin A"]!!, effectType = EffectType.DECREASE, value = BigDecimal("15"), description = "Vitamin A hao hụt do nhiệt khô"),
-                        // Removed Calories effect; calories now tracked via Ingredient.baseCal
-    
-                        // Muối chua/Ngâm (id = 10)
-                        CookingEffect(method = savedMethods[9], nutrient = nutMap["Vitamin C"]!!, effectType = EffectType.DECREASE, value = BigDecimal("25"), description = "Muối chua làm hao hụt vitamin C"),
-                        CookingEffect(method = savedMethods[9], nutrient = nutMap["Sodium"]!!, effectType = EffectType.INCREASE, value = BigDecimal("40"), description = "Tăng natri do muối"),
-                        CookingEffect(method = savedMethods[9], nutrient = nutMap["Fiber"]!!, effectType = EffectType.INCREASE, value = BigDecimal("10"), description = "Quá trình lên men tạo thêm chất xơ hòa tan"),
-                    )
-    
-                    cookingEffectRepository.saveAll(effects)
-                    println("✅ Inserted ${effects.size} cooking effects")
-                }
-            
-            }
-
         }
-        
+    
+        // ===== CATEGORIES =====
+        if (categoryRepository.count() == 0L) {
+            val categoryNames = listOf(
+                "Grains", "Vegetables", "Fruits", "Meats", "Seafood",
+                "Sauces", "Spices", "Dairy", "Baked", "Other"
+            )
+            val categories = categoryNames.map { name -> Category(name = name, description = "$name category") }
+            categoryRepository.saveAll(categories)
+            println("✅ Inserted ${categories.size} categories")
+        }
 
-        
+        // Helper maps
+        val categoryByName = categoryRepository.findAll().associateBy { it.name }
 
-        
+        // ===== INGREDIENTS (> 50) =====
+        if (ingredientRepository.count() < 50L) {
+            data class IngredientDef(
+                val name: String,
+                val unit: UnitEnum,
+                val baseQty: Int,
+                val price: BigDecimal,
+                val cal: Int,
+                val category: String,
+                val image: String? = null
+            )
 
-        
+            val ingredientDefs = listOf(
+                // Grains
+                IngredientDef("Rice", UnitEnum.G, 100, BigDecimal("0.50"), 130, "Grains"),
+                IngredientDef("Brown Rice", UnitEnum.G, 100, BigDecimal("0.60"), 111, "Grains"),
+                IngredientDef("Quinoa", UnitEnum.G, 100, BigDecimal("1.20"), 120, "Grains"),
+                IngredientDef("Pasta", UnitEnum.G, 100, BigDecimal("0.70"), 131, "Grains"),
+                IngredientDef("Bread", UnitEnum.PIECE, 1, BigDecimal("0.30"), 79, "Grains"),
+                IngredientDef("Noodles", UnitEnum.G, 100, BigDecimal("0.65"), 138, "Grains"),
+                IngredientDef("Oats", UnitEnum.G, 100, BigDecimal("0.80"), 389, "Grains"),
+                IngredientDef("Couscous", UnitEnum.G, 100, BigDecimal("0.90"), 112, "Grains"),
 
-        // // ===== RECIPES =====
-        // val recipes = listOf(
-        //     Recipe(
-        //         name = "Cơm gà luộc",
-        //         description = "Cơm trắng ăn kèm thịt gà luộc và rau muống.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("35000"),
-        //         baseCal = 500,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm bò xào",
-        //         description = "Cơm gạo lứt với thịt bò xào cà rốt và dưa leo.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("45000"),
-        //         baseCal = 600,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Mì trứng hải sản",
-        //         description = "Mì trứng ăn kèm tôm sú, mực ống và cà chua.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("50000"),
-        //         baseCal = 650,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Bánh mì thịt bò nướng",
-        //         description = "Ổ bánh mì kẹp thịt bò nướng, dưa leo và cà chua.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("40000"),
-        //         baseCal = 550,
-        //         category = RecipeCategory.SNACK,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Salad rau củ trộn",
-        //         description = "Rau muống, cà rốt, cà chua, dưa leo trộn dầu giấm.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("30000"),
-        //         baseCal = 200,
-        //         category = RecipeCategory.SNACK,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm cá hồi hấp",
-        //         description = "Cơm trắng ăn kèm cá hồi hấp và cà rốt.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("60000"),
-        //         baseCal = 550,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm sườn heo kho",
-        //         description = "Cơm gạo lứt với thịt heo kho, kèm rau muống.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("50000"),
-        //         baseCal = 650,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Bún bò xào",
-        //         description = "Bún tươi với thịt bò xào khoai tây và cà rốt.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("45000"),
-        //         baseCal = 580,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Mực nướng cơm trắng",
-        //         description = "Mực ống nướng ăn kèm cơm trắng và rau muống.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("55000"),
-        //         baseCal = 500,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Ghẹ rang me",
-        //         description = "Ghẹ biển rang me ăn kèm cơm trắng.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("65000"),
-        //         baseCal = 700,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm gà chiên mắm",
-        //         description = "Cơm gạo lứt với gà chiên mắm, kèm dưa leo.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("52000"),
-        //         baseCal = 680,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Mì trứng thịt heo xào",
-        //         description = "Mì trứng xào thịt heo và cà chua.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("40000"),
-        //         baseCal = 520,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm bò nướng rau củ",
-        //         description = "Cơm trắng ăn kèm thịt bò nướng, cà rốt, khoai tây.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("60000"),
-        //         baseCal = 700,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Salad hải sản",
-        //         description = "Rau củ trộn cùng tôm sú, mực và cà chua.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("55000"),
-        //         baseCal = 400,
-        //         category = RecipeCategory.SNACK,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm dê hấp",
-        //         description = "Cơm gạo lứt ăn kèm thịt dê hấp.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("58000"),
-        //         baseCal = 620,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Bánh mì ốp la bò",
-        //         description = "Bánh mì kẹp thịt bò và trứng ốp la.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("45000"),
-        //         baseCal = 500,
-        //         category = RecipeCategory.SNACK,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm vịt kho gừng",
-        //         description = "Cơm trắng ăn với thịt vịt kho gừng.",
-        //         isCustomizable = false,
-        //         basePrice = BigDecimal("55000"),
-        //         baseCal = 650,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Bún thịt gà xào",
-        //         description = "Bún tươi xào thịt gà và rau muống.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("45000"),
-        //         baseCal = 520,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Mì trứng cá thu chiên",
-        //         description = "Mì trứng ăn kèm cá thu chiên và cà chua.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("50000"),
-        //         baseCal = 600,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true
-        //     ),
-        //     Recipe(
-        //         name = "Cơm gà xào rau củ",
-        //         description = "Cơm trắng xào gà với cà rốt và khoai tây.",
-        //         isCustomizable = true,
-        //         basePrice = BigDecimal("48000"),
-        //         baseCal = 550,
-        //         category = RecipeCategory.MAIN,
-        //         isActive = true 
-        //     )
-        // )
+                // Vegetables
+                IngredientDef("Lettuce", UnitEnum.G, 100, BigDecimal("0.40"), 15, "Vegetables"),
+                IngredientDef("Tomato", UnitEnum.G, 100, BigDecimal("0.50"), 18, "Vegetables"),
+                IngredientDef("Cucumber", UnitEnum.G, 100, BigDecimal("0.45"), 16, "Vegetables"),
+                IngredientDef("Bell Pepper", UnitEnum.G, 100, BigDecimal("0.70"), 26, "Vegetables"),
+                IngredientDef("Onion", UnitEnum.G, 100, BigDecimal("0.30"), 40, "Vegetables"),
+                IngredientDef("Garlic", UnitEnum.G, 100, BigDecimal("1.50"), 149, "Vegetables"),
+                IngredientDef("Carrot", UnitEnum.G, 100, BigDecimal("0.35"), 41, "Vegetables"),
+                IngredientDef("Broccoli", UnitEnum.G, 100, BigDecimal("0.90"), 34, "Vegetables"),
+                IngredientDef("Spinach", UnitEnum.G, 100, BigDecimal("0.85"), 23, "Vegetables"),
+                IngredientDef("Kale", UnitEnum.G, 100, BigDecimal("1.10"), 49, "Vegetables"),
+                IngredientDef("Corn", UnitEnum.G, 100, BigDecimal("0.50"), 96, "Vegetables"),
+                IngredientDef("Peas", UnitEnum.G, 100, BigDecimal("0.75"), 81, "Vegetables"),
+                IngredientDef("Mushrooms", UnitEnum.G, 100, BigDecimal("1.20"), 22, "Vegetables"),
+                IngredientDef("Zucchini", UnitEnum.G, 100, BigDecimal("0.60"), 17, "Vegetables"),
+                IngredientDef("Eggplant", UnitEnum.G, 100, BigDecimal("0.65"), 25, "Vegetables"),
+                IngredientDef("Parsley", UnitEnum.G, 100, BigDecimal("1.20"), 36, "Spices"),
 
-        // val savedRecipes = recipeRepository.saveAll(recipes)
-        // println("✅ Inserted ${savedRecipes.size} recipes")
+                // Fruits
+                IngredientDef("Apple", UnitEnum.G, 100, BigDecimal("0.60"), 52, "Fruits"),
+                IngredientDef("Banana", UnitEnum.G, 100, BigDecimal("0.55"), 96, "Fruits"),
+                IngredientDef("Orange", UnitEnum.G, 100, BigDecimal("0.65"), 47, "Fruits"),
+                IngredientDef("Pineapple", UnitEnum.G, 100, BigDecimal("0.70"), 50, "Fruits"),
+                IngredientDef("Mango", UnitEnum.G, 100, BigDecimal("0.90"), 60, "Fruits"),
+                IngredientDef("Lemon", UnitEnum.G, 100, BigDecimal("0.50"), 29, "Fruits"),
+                IngredientDef("Lime", UnitEnum.G, 100, BigDecimal("0.50"), 30, "Fruits"),
+                IngredientDef("Strawberry", UnitEnum.G, 100, BigDecimal("1.50"), 33, "Fruits"),
+                IngredientDef("Blueberry", UnitEnum.G, 100, BigDecimal("2.00"), 57, "Fruits"),
+                IngredientDef("Avocado", UnitEnum.G, 100, BigDecimal("1.80"), 160, "Fruits"),
 
-        // // ===== RECIPE INGREDIENTS =====
-        // val recipeIngredients = listOf(
-        //     // 1. Cơm gà luộc
-        //     RecipeIngredient(recipe = savedRecipes[0], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]), // cơm luộc
-        //     RecipeIngredient(recipe = savedRecipes[0], ingredient = ingMap["Thịt gà"]!!, quantity = 120, cookingMethod = savedMethods[0]),   // gà luộc
-        //     RecipeIngredient(recipe = savedRecipes[0], ingredient = ingMap["Rau muống"]!!, quantity = 80, cookingMethod = savedMethods[0]),
+                // Meats
+                IngredientDef("Chicken Breast", UnitEnum.G, 100, BigDecimal("1.50"), 165, "Meats"),
+                IngredientDef("Chicken Thigh", UnitEnum.G, 100, BigDecimal("1.30"), 209, "Meats"),
+                IngredientDef("Beef", UnitEnum.G, 100, BigDecimal("2.50"), 250, "Meats"),
+                IngredientDef("Pork", UnitEnum.G, 100, BigDecimal("2.00"), 242, "Meats"),
+                IngredientDef("Bacon", UnitEnum.G, 100, BigDecimal("3.00"), 541, "Meats"),
+                IngredientDef("Ham", UnitEnum.G, 100, BigDecimal("1.80"), 145, "Meats"),
+                IngredientDef("Sausage", UnitEnum.G, 100, BigDecimal("1.60"), 301, "Meats"),
 
-        //     // 2. Cơm bò xào
-        //     RecipeIngredient(recipe = savedRecipes[1], ingredient = ingMap["Cơm gạo lứt"]!!, quantity = 150, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[1], ingredient = ingMap["Thịt bò"]!!, quantity = 100, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[1], ingredient = ingMap["Cà rốt"]!!, quantity = 50, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[1], ingredient = ingMap["Dưa leo"]!!, quantity = 40, cookingMethod = savedMethods[4]),
+                // Seafood
+                IngredientDef("Shrimp", UnitEnum.G, 100, BigDecimal("2.80"), 99, "Seafood"),
+                IngredientDef("Salmon", UnitEnum.G, 100, BigDecimal("3.50"), 208, "Seafood"),
+                IngredientDef("Tuna", UnitEnum.G, 100, BigDecimal("2.90"), 132, "Seafood"),
+                IngredientDef("Squid", UnitEnum.G, 100, BigDecimal("2.40"), 92, "Seafood"),
 
-        //     // 3. Mì trứng hải sản
-        //     RecipeIngredient(recipe = savedRecipes[2], ingredient = ingMap["Mì trứng"]!!, quantity = 120, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[2], ingredient = ingMap["Tôm sú"]!!, quantity = 80, cookingMethod = savedMethods[1]),
-        //     RecipeIngredient(recipe = savedRecipes[2], ingredient = ingMap["Mực ống"]!!, quantity = 80, cookingMethod = savedMethods[2]),
-        //     RecipeIngredient(recipe = savedRecipes[2], ingredient = ingMap["Cà chua"]!!, quantity = 40, cookingMethod = savedMethods[0]),
+                // Sauces
+                IngredientDef("Ketchup", UnitEnum.ML, 100, BigDecimal("0.80"), 112, "Sauces"),
+                IngredientDef("Mayonnaise", UnitEnum.ML, 100, BigDecimal("1.20"), 680, "Sauces"),
+                IngredientDef("Mustard", UnitEnum.ML, 100, BigDecimal("0.90"), 66, "Sauces"),
+                IngredientDef("BBQ Sauce", UnitEnum.ML, 100, BigDecimal("1.10"), 220, "Sauces"),
+                IngredientDef("Soy Sauce", UnitEnum.ML, 100, BigDecimal("0.70"), 53, "Sauces"),
+                IngredientDef("Hot Sauce", UnitEnum.ML, 100, BigDecimal("1.00"), 45, "Sauces"),
+                IngredientDef("Fish Sauce", UnitEnum.ML, 100, BigDecimal("0.85"), 60, "Sauces"),
+                IngredientDef("Teriyaki Sauce", UnitEnum.ML, 100, BigDecimal("1.30"), 89, "Sauces"),
+                IngredientDef("Olive Oil", UnitEnum.ML, 100, BigDecimal("1.50"), 884, "Sauces"),
+                IngredientDef("Honey", UnitEnum.ML, 100, BigDecimal("1.80"), 304, "Sauces"),
 
-        //     // 4. Bánh mì thịt bò nướng
-        //     RecipeIngredient(recipe = savedRecipes[3], ingredient = ingMap["Bánh mì"]!!, quantity = 100, cookingMethod = savedMethods[10]), // không nấu
-        //     RecipeIngredient(recipe = savedRecipes[3], ingredient = ingMap["Thịt bò"]!!, quantity = 120, cookingMethod = savedMethods[2]),
-        //     RecipeIngredient(recipe = savedRecipes[3], ingredient = ingMap["Dưa leo"]!!, quantity = 30, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[3], ingredient = ingMap["Cà chua"]!!, quantity = 30, cookingMethod = savedMethods[10]),
+                // Spices
+                IngredientDef("Salt", UnitEnum.G, 100, BigDecimal("0.20"), 0, "Spices"),
+                IngredientDef("Pepper", UnitEnum.G, 100, BigDecimal("1.50"), 251, "Spices"),
+                IngredientDef("Chili Powder", UnitEnum.G, 100, BigDecimal("1.40"), 282, "Spices"),
+                IngredientDef("Paprika", UnitEnum.G, 100, BigDecimal("1.40"), 282, "Spices"),
+                IngredientDef("Oregano", UnitEnum.G, 100, BigDecimal("1.60"), 265, "Spices"),
+                IngredientDef("Basil", UnitEnum.G, 100, BigDecimal("1.60"), 251, "Spices"),
+                IngredientDef("Cumin", UnitEnum.G, 100, BigDecimal("1.50"), 375, "Spices"),
+                IngredientDef("Turmeric", UnitEnum.G, 100, BigDecimal("1.70"), 354, "Spices"),
+                IngredientDef("Curry Powder", UnitEnum.G, 100, BigDecimal("1.80"), 325, "Spices"),
+                IngredientDef("Cinnamon", UnitEnum.G, 100, BigDecimal("1.90"), 247, "Spices"),
+                IngredientDef("Sugar", UnitEnum.G, 100, BigDecimal("0.50"), 387, "Spices"),
 
-        //     // 5. Salad rau củ trộn
-        //     RecipeIngredient(recipe = savedRecipes[4], ingredient = ingMap["Rau muống"]!!, quantity = 60, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[4], ingredient = ingMap["Cà rốt"]!!, quantity = 40, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[4], ingredient = ingMap["Cà chua"]!!, quantity = 40, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[4], ingredient = ingMap["Dưa leo"]!!, quantity = 40, cookingMethod = savedMethods[10]),
+                // Dairy
+                IngredientDef("Milk", UnitEnum.ML, 100, BigDecimal("0.50"), 42, "Dairy"),
+                IngredientDef("Cheese", UnitEnum.G, 100, BigDecimal("2.20"), 402, "Dairy"),
+                IngredientDef("Butter", UnitEnum.G, 100, BigDecimal("2.00"), 717, "Dairy"),
+                IngredientDef("Yogurt", UnitEnum.ML, 100, BigDecimal("0.80"), 59, "Dairy"),
+                IngredientDef("Cream", UnitEnum.ML, 100, BigDecimal("1.50"), 340, "Dairy")
+            )
 
-        //     // 6. Cơm cá hồi hấp
-        //     RecipeIngredient(recipe = savedRecipes[5], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[5], ingredient = ingMap["Cá hồi"]!!, quantity = 120, cookingMethod = savedMethods[3]),
-        //     RecipeIngredient(recipe = savedRecipes[5], ingredient = ingMap["Cà rốt"]!!, quantity = 60, cookingMethod = savedMethods[3]),
+            var inserted = 0
+            ingredientDefs.forEach { d ->
+                if (!ingredientRepository.existsByName(d.name)) {
+                    val cat = categoryByName[d.category]
+                        ?: categoryRepository.save(Category(name = d.category, description = "${d.category} category"))
+                    val ing = Ingredient(
+                        name = d.name,
+                        baseUnit = d.unit,
+                        baseQuantity = d.baseQty,
+                        price = d.price,
+                        cal = d.cal,
+                        category = cat,
+                        image = d.image,
+                        isActive = true
+                    )
+                    ingredientRepository.save(ing)
+                    inserted++
+                }
+            }
+            println("✅ Inserted $inserted ingredients (total now ${ingredientRepository.count()})")
+        }
 
-        //     // 7. Cơm sườn heo kho
-        //     RecipeIngredient(recipe = savedRecipes[6], ingredient = ingMap["Cơm gạo lứt"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[6], ingredient = ingMap["Thịt heo"]!!, quantity = 120, cookingMethod = savedMethods[5]),
-        //     RecipeIngredient(recipe = savedRecipes[6], ingredient = ingMap["Rau muống"]!!, quantity = 70, cookingMethod = savedMethods[0]),
+        // ===== RECIPES (> 40) =====
+        if (recipeRepository.count() < 40L) {
+            data class ItemDef(val ingredientName: String, val quantity: Int)
+            data class RecipeDef(val name: String, val category: RecipeCategory, val items: List<ItemDef>, val description: String? = null)
 
-        //     // 8. Bún bò xào
-        //     RecipeIngredient(recipe = savedRecipes[7], ingredient = ingMap["Bún tươi"]!!, quantity = 150, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[7], ingredient = ingMap["Thịt bò"]!!, quantity = 100, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[7], ingredient = ingMap["Khoai tây"]!!, quantity = 60, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[7], ingredient = ingMap["Cà rốt"]!!, quantity = 50, cookingMethod = savedMethods[4]),
+            val ingredientMap = ingredientRepository.findAll().associateBy { it.name }
 
-        //     // 9. Mực nướng cơm trắng
-        //     RecipeIngredient(recipe = savedRecipes[8], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[8], ingredient = ingMap["Mực ống"]!!, quantity = 100, cookingMethod = savedMethods[2]),
-        //     RecipeIngredient(recipe = savedRecipes[8], ingredient = ingMap["Rau muống"]!!, quantity = 70, cookingMethod = savedMethods[0]),
+            fun items(vararg pairs: Pair<String, Int>) = pairs.map { ItemDef(it.first, it.second) }
 
-        //     // 10. Ghẹ rang me
-        //     RecipeIngredient(recipe = savedRecipes[9], ingredient = ingMap["Ghẹ biển"]!!, quantity = 150, cookingMethod = savedMethods[8]),
-        //     RecipeIngredient(recipe = savedRecipes[9], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
+            val recipes = listOf(
+                // MAIN (10)
+                RecipeDef("Grilled Chicken Bowl", RecipeCategory.MAIN, items("Rice" to 150, "Chicken Breast" to 150, "Broccoli" to 80, "Carrot" to 50, "Soy Sauce" to 20)),
+                RecipeDef("Beef Stir Fry", RecipeCategory.MAIN, items("Rice" to 150, "Beef" to 120, "Bell Pepper" to 60, "Onion" to 40, "Garlic" to 10, "Soy Sauce" to 20)),
+                RecipeDef("Pork Teriyaki", RecipeCategory.MAIN, items("Rice" to 150, "Pork" to 120, "Teriyaki Sauce" to 30, "Onion" to 40, "Broccoli" to 60)),
+                RecipeDef("Shrimp Pasta", RecipeCategory.MAIN, items("Pasta" to 120, "Shrimp" to 120, "Garlic" to 10, "Butter" to 20, "Pepper" to 2)),
+                RecipeDef("Salmon Quinoa", RecipeCategory.MAIN, items("Quinoa" to 120, "Salmon" to 150, "Spinach" to 60, "Lemon" to 20, "Salt" to 2)),
+                RecipeDef("Chicken Fried Rice", RecipeCategory.MAIN, items("Rice" to 200, "Chicken Thigh" to 120, "Peas" to 50, "Carrot" to 50, "Soy Sauce" to 20)),
+                RecipeDef("Beef Noodles", RecipeCategory.MAIN, items("Noodles" to 150, "Beef" to 120, "Onion" to 40, "Chili Powder" to 5, "Soy Sauce" to 20)),
+                RecipeDef("BBQ Pork Sandwich", RecipeCategory.MAIN, items("Bread" to 2, "Pork" to 100, "BBQ Sauce" to 30, "Onion" to 30)),
+                RecipeDef("Ham Cheese Pasta", RecipeCategory.MAIN, items("Pasta" to 120, "Ham" to 80, "Cheese" to 50, "Cream" to 40, "Pepper" to 2)),
+                RecipeDef("Sausage Rice Bowl", RecipeCategory.MAIN, items("Rice" to 180, "Sausage" to 120, "Bell Pepper" to 60, "Onion" to 40, "Ketchup" to 20)),
 
-        //     // 11. Cơm gà chiên mắm
-        //     RecipeIngredient(recipe = savedRecipes[10], ingredient = ingMap["Cơm gạo lứt"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[10], ingredient = ingMap["Thịt gà"]!!, quantity = 120, cookingMethod = savedMethods[1]),
-        //     RecipeIngredient(recipe = savedRecipes[10], ingredient = ingMap["Dưa leo"]!!, quantity = 40, cookingMethod = savedMethods[10]),
+                // SALAD (8)
+                RecipeDef("Garden Salad", RecipeCategory.SALAD, items("Lettuce" to 80, "Tomato" to 60, "Cucumber" to 60, "Carrot" to 40, "Olive Oil" to 0)),
+                RecipeDef("Spinach Avocado Salad", RecipeCategory.SALAD, items("Spinach" to 80, "Avocado" to 80, "Tomato" to 50, "Lemon" to 20, "Salt" to 2)),
+                RecipeDef("Kale Quinoa Salad", RecipeCategory.SALAD, items("Kale" to 80, "Quinoa" to 100, "Cucumber" to 60, "Lemon" to 20, "Pepper" to 2)),
+                RecipeDef("Chicken Salad", RecipeCategory.SALAD, items("Lettuce" to 80, "Chicken Breast" to 120, "Tomato" to 50, "Cucumber" to 50, "Mayonnaise" to 20)),
+                RecipeDef("Shrimp Avocado Salad", RecipeCategory.SALAD, items("Lettuce" to 80, "Shrimp" to 100, "Avocado" to 80, "Lemon" to 20, "Pepper" to 2)),
+                RecipeDef("Broccoli Apple Salad", RecipeCategory.SALAD, items("Broccoli" to 80, "Apple" to 80, "Carrot" to 40, "Yogurt" to 40, "Pepper" to 2)),
+                RecipeDef("Corn Pea Salad", RecipeCategory.SALAD, items("Corn" to 80, "Peas" to 80, "Tomato" to 60, "Onion" to 40, "Mayonnaise" to 20)),
+                RecipeDef("Mediterranean Salad", RecipeCategory.SALAD, items("Lettuce" to 80, "Tomato" to 60, "Cucumber" to 60, "Onion" to 40, "Oregano" to 3, "Basil" to 3)),
 
-        //     // 12. Mì trứng thịt heo xào
-        //     RecipeIngredient(recipe = savedRecipes[11], ingredient = ingMap["Mì trứng"]!!, quantity = 150, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[11], ingredient = ingMap["Thịt heo"]!!, quantity = 100, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[11], ingredient = ingMap["Cà chua"]!!, quantity = 40, cookingMethod = savedMethods[0]),
+                // SOUP (6)
+                RecipeDef("Tomato Soup", RecipeCategory.SOUP, items("Tomato" to 200, "Onion" to 50, "Garlic" to 10, "Salt" to 2, "Pepper" to 2)),
+                RecipeDef("Chicken Soup", RecipeCategory.SOUP, items("Chicken Thigh" to 150, "Carrot" to 60, "Onion" to 40, "Salt" to 2, "Pepper" to 2)),
+                RecipeDef("Mushroom Soup", RecipeCategory.SOUP, items("Mushrooms" to 180, "Onion" to 40, "Garlic" to 10, "Cream" to 50, "Pepper" to 2)),
+                RecipeDef("Corn Soup", RecipeCategory.SOUP, items("Corn" to 200, "Onion" to 40, "Butter" to 20, "Salt" to 2, "Pepper" to 2)),
+                RecipeDef("Vegetable Soup", RecipeCategory.SOUP, items("Carrot" to 80, "Peas" to 80, "Tomato" to 80, "Onion" to 40, "Salt" to 2)),
+                RecipeDef("Seafood Soup", RecipeCategory.SOUP, items("Shrimp" to 120, "Squid" to 100, "Onion" to 40, "Garlic" to 10, "Pepper" to 2)),
 
-        //     // 13. Cơm bò nướng rau củ
-        //     RecipeIngredient(recipe = savedRecipes[12], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[12], ingredient = ingMap["Thịt bò"]!!, quantity = 120, cookingMethod = savedMethods[2]),
-        //     RecipeIngredient(recipe = savedRecipes[12], ingredient = ingMap["Cà rốt"]!!, quantity = 50, cookingMethod = savedMethods[3]),
-        //     RecipeIngredient(recipe = savedRecipes[12], ingredient = ingMap["Khoai tây"]!!, quantity = 60, cookingMethod = savedMethods[3]),
+                // SNACK (5)
+                RecipeDef("Fruit Mix", RecipeCategory.SNACK, items("Apple" to 80, "Banana" to 80, "Orange" to 80, "Strawberry" to 60)),
+                RecipeDef("Yogurt Parfait", RecipeCategory.SNACK, items("Yogurt" to 150, "Oats" to 50, "Blueberry" to 60, "Strawberry" to 60, "Honey" to 0)),
+                RecipeDef("Cheese Sandwich", RecipeCategory.SNACK, items("Bread" to 2, "Cheese" to 50, "Butter" to 10)),
+                RecipeDef("Garlic Bread", RecipeCategory.SNACK, items("Bread" to 2, "Butter" to 15, "Garlic" to 10, "Parsley" to 0)),
+                RecipeDef("Avocado Toast", RecipeCategory.SNACK, items("Bread" to 1, "Avocado" to 80, "Lemon" to 10, "Pepper" to 2, "Salt" to 2)),
 
-        //     // 14. Salad hải sản
-        //     RecipeIngredient(recipe = savedRecipes[13], ingredient = ingMap["Tôm sú"]!!, quantity = 70, cookingMethod = savedMethods[3]),
-        //     RecipeIngredient(recipe = savedRecipes[13], ingredient = ingMap["Mực ống"]!!, quantity = 70, cookingMethod = savedMethods[3]),
-        //     RecipeIngredient(recipe = savedRecipes[13], ingredient = ingMap["Cà chua"]!!, quantity = 40, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[13], ingredient = ingMap["Dưa leo"]!!, quantity = 40, cookingMethod = savedMethods[10]),
+                // APPETIZER (4)
+                RecipeDef("Bruschetta", RecipeCategory.APPETIZER, items("Bread" to 2, "Tomato" to 60, "Garlic" to 10, "Basil" to 3, "Pepper" to 2)),
+                RecipeDef("Stuffed Mushrooms", RecipeCategory.APPETIZER, items("Mushrooms" to 120, "Cheese" to 40, "Garlic" to 10, "Pepper" to 2)),
+                RecipeDef("Shrimp Cocktail", RecipeCategory.APPETIZER, items("Shrimp" to 120, "Lemon" to 20, "Ketchup" to 30, "Pepper" to 2)),
+                RecipeDef("Veggie Sticks Dip", RecipeCategory.APPETIZER, items("Carrot" to 80, "Cucumber" to 80, "Bell Pepper" to 60, "Mayonnaise" to 40, "Mustard" to 20)),
 
-        //     // 15. Cơm dê hấp
-        //     RecipeIngredient(recipe = savedRecipes[14], ingredient = ingMap["Cơm gạo lứt"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[14], ingredient = ingMap["Thịt dê"]!!, quantity = 120, cookingMethod = savedMethods[3]),
+                // DESSERT (6)
+                RecipeDef("Fruit Salad", RecipeCategory.DESSERT, items("Apple" to 60, "Banana" to 60, "Mango" to 60, "Pineapple" to 60, "Yogurt" to 80)),
+                RecipeDef("Cinnamon Oats", RecipeCategory.DESSERT, items("Oats" to 60, "Milk" to 150, "Cinnamon" to 3, "Honey" to 0)),
+                RecipeDef("Mango Yogurt", RecipeCategory.DESSERT, items("Mango" to 120, "Yogurt" to 120, "Milk" to 50)),
+                RecipeDef("Banana Yogurt", RecipeCategory.DESSERT, items("Banana" to 150, "Yogurt" to 120, "Milk" to 50)),
+                RecipeDef("Blueberry Yogurt", RecipeCategory.DESSERT, items("Blueberry" to 120, "Yogurt" to 120, "Milk" to 50)),
+                RecipeDef("Strawberry Yogurt", RecipeCategory.DESSERT, items("Strawberry" to 150, "Yogurt" to 120, "Milk" to 50)),
 
-        //     // 16. Bánh mì ốp la bò
-        //     RecipeIngredient(recipe = savedRecipes[15], ingredient = ingMap["Bánh mì"]!!, quantity = 100, cookingMethod = savedMethods[10]),
-        //     RecipeIngredient(recipe = savedRecipes[15], ingredient = ingMap["Thịt bò"]!!, quantity = 100, cookingMethod = savedMethods[2]),
-        //     RecipeIngredient(recipe = savedRecipes[15], ingredient = ingMap["Mì trứng"]!!, quantity = 50, cookingMethod = savedMethods[6]),
+                // BEVERAGE (2)
+                RecipeDef("Mango Smoothie", RecipeCategory.BEVERAGE, items("Mango" to 150, "Milk" to 120, "Yogurt" to 80)),
+                RecipeDef("Strawberry Smoothie", RecipeCategory.BEVERAGE, items("Strawberry" to 150, "Milk" to 120, "Yogurt" to 80)),
 
-        //     // 17. Cơm vịt kho gừng
-        //     RecipeIngredient(recipe = savedRecipes[16], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[16], ingredient = ingMap["Thịt vịt"]!!, quantity = 120, cookingMethod = savedMethods[5]),
+                // SAUCE (4)
+                RecipeDef("Spicy Mayo", RecipeCategory.SAUCE, items("Mayonnaise" to 80, "Hot Sauce" to 20, "Lemon" to 10)),
+                RecipeDef("Teriyaki Dip", RecipeCategory.SAUCE, items("Teriyaki Sauce" to 80, "Soy Sauce" to 20, "Sugar" to 0)),
+                RecipeDef("BBQ Mix", RecipeCategory.SAUCE, items("BBQ Sauce" to 80, "Ketchup" to 40, "Mustard" to 20)),
+                RecipeDef("Fish Sauce Mix", RecipeCategory.SAUCE, items("Fish Sauce" to 60, "Lemon" to 20, "Sugar" to 0, "Chili Powder" to 3)),
 
-        //     // 18. Bún thịt gà xào
-        //     RecipeIngredient(recipe = savedRecipes[17], ingredient = ingMap["Bún tươi"]!!, quantity = 150, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[17], ingredient = ingMap["Thịt gà"]!!, quantity = 100, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[17], ingredient = ingMap["Rau muống"]!!, quantity = 60, cookingMethod = savedMethods[4]),
+                // OTHER (additional to surpass 40)
+                RecipeDef("Tuna Sandwich", RecipeCategory.OTHER, items("Bread" to 2, "Tuna" to 120, "Mayonnaise" to 20, "Onion" to 20)),
+                RecipeDef("Salmon Rice", RecipeCategory.OTHER, items("Rice" to 200, "Salmon" to 120, "Lemon" to 10, "Pepper" to 2, "Salt" to 2))
+            )
 
-        //     // 19. Mì trứng cá thu chiên
-        //     RecipeIngredient(recipe = savedRecipes[18], ingredient = ingMap["Mì trứng"]!!, quantity = 150, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[18], ingredient = ingMap["Cá thu"]!!, quantity =  100, cookingMethod = savedMethods[1]),
-        //     RecipeIngredient(recipe = savedRecipes[18], ingredient = ingMap["Cà chua"]!!, quantity = 40, cookingMethod = savedMethods[0]),
+            var insertedRecipes = 0
+            recipes.forEach { r ->
+                if (recipeRepository.findByName(r.name).isEmpty) {
+                    // Build components and compute totals
+                    data class Component(val ingredient: Ingredient, val qty: Int, val unit: UnitEnum, val price: BigDecimal, val cal: Int)
+                    val components = r.items.mapNotNull { item ->
+                        val ing = ingredientMap[item.ingredientName]
+                        if (ing == null) {
+                            println("⚠️ Missing ingredient for recipe '${r.name}': ${item.ingredientName}")
+                            null
+                        } else {
+                            val ratio = BigDecimal(item.quantity).divide(BigDecimal(ing.baseQuantity))
+                            val price = ing.price.multiply(ratio)
+                            val cal = (ing.cal * item.quantity) / ing.baseQuantity
+                            Component(ing, item.quantity, ing.baseUnit, price, cal)
+                        }
+                    }
 
-        //     // 20. Cơm gà xào rau củ
-        //     RecipeIngredient(recipe = savedRecipes[19], ingredient = ingMap["Cơm trắng"]!!, quantity = 150, cookingMethod = savedMethods[0]),
-        //     RecipeIngredient(recipe = savedRecipes[19], ingredient = ingMap["Thịt gà"]!!, quantity =  100, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[19], ingredient = ingMap["Cà rốt"]!!, quantity = 50, cookingMethod = savedMethods[4]),
-        //     RecipeIngredient(recipe = savedRecipes[19], ingredient = ingMap["Khoai tây"]!!, quantity = 60, cookingMethod = savedMethods[4])
-        // )
+                    val totalPrice = components.fold(BigDecimal.ZERO) { acc, c -> acc + c.price }
+                    val totalCal = components.sumOf { it.cal }
 
-        // recipeIngredientRepository.saveAll(recipeIngredients)
-        // println("✅ Inserted ${recipeIngredients.size} recipe_ingredients")
+                    val recipe = Recipe(
+                        name = r.name,
+                        description = r.description,
+                        isCustomizable = true,
+                        price = totalPrice,
+                        cal = totalCal,
+                        ingredientSnapshot = null,
+                        isActive = true,
+                        image = null,
+                        category = r.category
+                    )
+
+                    // Attach components
+                    components.forEach { c ->
+                        recipe.recipe_ingredients.add(
+                            RecipeIngredient(
+                                recipe = recipe,
+                                ingredient = c.ingredient,
+                                quantity = c.qty,
+                                baseUnit = c.unit,
+                                price = c.price,
+                                cal = c.cal,
+                                itemSnapshot = null
+                            )
+                        )
+                    }
+
+                    recipeRepository.save(recipe)
+                    insertedRecipes++
+                }
+            }
+
+            println("✅ Inserted $insertedRecipes recipes (total now ${recipeRepository.count()})")
+        }
+
+        // ===== INGREDIENT NUTRIENTS (populate if missing) =====
+        TransactionTemplate(transactionManager).execute {
+            val nutNames = listOf(
+                "Protein", "Carbohydrate", "Fat", "Fiber", "Sugar",
+                "Sodium", "Potassium", "Calcium", "Iron", "Cholesterol"
+            )
+            val nutMap = nutrientRepository.findAll().associateBy { it.name }
+            val requiredNutrients = nutNames.mapNotNull { name ->
+                val n = nutMap[name]
+                if (n == null) {
+                    println("⚠️ Nutrient not found, skipping: $name")
+                }
+                n
+            }
+
+            fun bd(d: Double) = BigDecimal.valueOf(d)
+            fun round2(v: BigDecimal) = v.setScale(2, RoundingMode.HALF_UP)
+            fun clamp(v: BigDecimal, max: Double) = if (v > bd(max)) bd(max) else v
+
+            fun isName(ing: Ingredient, vararg keys: String) =
+                keys.any { k -> ing.name.contains(k, ignoreCase = true) }
+
+            val allIngredients = ingredientRepository.findAll()
+            var updated = 0
+            allIngredients.forEach { ing ->
+                val ingId = ing.id
+                if (ingId != null && ingredientNutrientRepository.findAllByIngredientId(ingId).isEmpty()) {
+                    val cat = ing.category.name.lowercase()
+                    val cal = ing.cal
+
+                    val (pPct, cPct, fPct) = when {
+                        cat.contains("meat") -> Triple(0.55, 0.03, 0.42)
+                        cat.contains("seafood") -> Triple(0.55, 0.02, 0.43)
+                        cat.contains("grain") -> Triple(0.12, 0.75, 0.13)
+                        cat.contains("vegetable") -> Triple(0.20, 0.70, 0.10)
+                        cat.contains("fruit") -> Triple(0.03, 0.95, 0.02)
+                        cat.contains("dairy") -> Triple(0.20, 0.35, 0.45)
+                        cat.contains("sauce") -> Triple(0.05, 0.60, 0.35)
+                        cat.contains("spice") -> Triple(0.10, 0.70, 0.20)
+                        else -> Triple(0.20, 0.60, 0.20)
+                    }
+
+                    val proteinG = round2(bd(cal.toDouble() * pPct / 4.0))
+                    val carbG = round2(bd(cal.toDouble() * cPct / 4.0))
+                    val fatG = round2(bd(cal.toDouble() * fPct / 9.0))
+
+                    val fiberG = when {
+                        cat.contains("vegetable") -> clamp(round2(carbG.multiply(bd(0.30))), 12.0)
+                        cat.contains("fruit") -> clamp(round2(carbG.multiply(bd(0.20))), 10.0)
+                        cat.contains("grain") -> clamp(round2(carbG.multiply(bd(0.12))), 10.0)
+                        cat.contains("spice") -> clamp(round2(carbG.multiply(bd(0.35))), 30.0)
+                        else -> clamp(round2(carbG.multiply(bd(0.05))), 4.0)
+                    }
+
+                    val sugarG = when {
+                        cat.contains("fruit") -> round2(carbG.multiply(bd(0.70)))
+                        isName(ing, "Ketchup", "BBQ", "Teriyaki", "Hot Sauce") -> round2(carbG.multiply(bd(0.65)))
+                        cat.contains("sauce") -> round2(carbG.multiply(bd(0.50)))
+                        cat.contains("dairy") -> round2(carbG.multiply(bd(0.30)))
+                        cat.contains("meat") || cat.contains("seafood") -> bd(0.0)
+                        else -> round2(carbG.multiply(bd(0.15)))
+                    }
+
+                    val sodiumMg = when {
+                        isName(ing, "Soy Sauce") -> 5000
+                        isName(ing, "Fish Sauce") -> 4000
+                        isName(ing, "Ketchup") -> 900
+                        isName(ing, "BBQ Sauce") -> 1200
+                        isName(ing, "Mustard") -> 1100
+                        isName(ing, "Mayonnaise") -> 700
+                        isName(ing, "Cheese") -> 600
+                        cat.contains("sauce") -> 800
+                        cat.contains("meat") -> 70
+                        cat.contains("seafood") -> 150
+                        cat.contains("dairy") -> 60
+                        cat.contains("grain") -> 5
+                        cat.contains("vegetable") || cat.contains("fruit") -> 5
+                        else -> 50
+                    }
+
+                    val potassiumMg = when {
+                        cat.contains("vegetable") || cat.contains("fruit") -> 250
+                        cat.contains("meat") || cat.contains("seafood") -> 300
+                        cat.contains("dairy") -> 150
+                        else -> 120
+                    }
+
+                    val calciumMg = when {
+                        isName(ing, "Cheese") -> 700
+                        cat.contains("dairy") -> 120
+                        cat.contains("vegetable") -> 50
+                        else -> 30
+                    }
+
+                    val ironMg = when {
+                        isName(ing, "Spinach", "Kale") -> 2
+                        cat.contains("meat") || cat.contains("seafood") -> 2
+                        cat.contains("grain") -> 1
+                        else -> 0
+                    }
+
+                    val cholesterolMg = when {
+                        isName(ing, "Butter") -> 215
+                        isName(ing, "Shrimp") -> 150
+                        cat.contains("meat") -> 70
+                        cat.contains("seafood") -> 100
+                        cat.contains("dairy") -> 20
+                        else -> 0
+                    }
+
+                    val valuesByName: Map<String, BigDecimal> = mapOf(
+                        "Protein" to proteinG,
+                        "Carbohydrate" to carbG,
+                        "Fat" to fatG,
+                        "Fiber" to fiberG,
+                        "Sugar" to sugarG,
+                        "Sodium" to bd(sodiumMg.toDouble()),
+                        "Potassium" to bd(potassiumMg.toDouble()),
+                        "Calcium" to bd(calciumMg.toDouble()),
+                        "Iron" to bd(ironMg.toDouble()),
+                        "Cholesterol" to bd(cholesterolMg.toDouble())
+                    )
+
+                    // Create IngredientNutrient for available nutrients only, avoid touching lazy collection
+                    val relations = valuesByName.mapNotNull { (name, amount) ->
+                        val nutrient = nutMap[name]
+                        if (nutrient != null) IngredientNutrient(
+                            ingredient = ing,
+                            nutrient = nutrient,
+                            amount = amount
+                        ) else null
+                    }
+                    if (relations.isNotEmpty()) ingredientNutrientRepository.saveAll(relations)
+                    updated++
+                }
+            }
+            println("✅ Populated nutrients for $updated ingredients")
+        }
 
         println("✅ Sample data initialized!")
-
-
-
 
     }
 }

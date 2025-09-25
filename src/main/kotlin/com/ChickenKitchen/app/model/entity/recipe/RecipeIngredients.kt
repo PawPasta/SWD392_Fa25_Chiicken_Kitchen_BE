@@ -4,7 +4,6 @@ import jakarta.persistence.*
 import java.math.BigDecimal
 import com.ChickenKitchen.app.enum.UnitEnum
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
-import com.ChickenKitchen.app.model.entity.cooking.CookingMethod
 
 @Entity
 @Table(name = "recipe_ingredients")
@@ -19,10 +18,6 @@ class RecipeIngredient(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ingredient_id", nullable = false)
     var ingredient: Ingredient,
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cooking_method_id", nullable = false)
-    var cookingMethod: CookingMethod,
 
     @Column(nullable = false)
     var quantity: Int,

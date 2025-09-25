@@ -20,12 +20,14 @@ import com.ChickenKitchen.app.handler.PriceMustBeNonNegativeException
 import com.ChickenKitchen.app.handler.CategoryMustNotBeNullException
 import com.ChickenKitchen.app.handler.NutrientNotFoundException
 import com.ChickenKitchen.app.handler.DuplicateNutrientInIngredientException
+import com.ChickenKitchen.app.repository.category.CategoryRepository
 import org.springframework.stereotype.Service
 
 @Service
 class IngredientServiceImpl(
     private val ingredientRepository: IngredientRepository,
-    private val nutrientRepository: NutrientRepository
+    private val nutrientRepository: NutrientRepository,
+    private val categoryRepository: CategoryRepository
 ) : IngredientService {
 
     override fun getAll(): List<IngredientResponse>? {
@@ -58,15 +60,18 @@ class IngredientServiceImpl(
             checkForDuplicateNutrients(req.nutrients)
         }
 
+        val category = categoryRepository.findByName(req.category).orElse(null)
+            ?: throw CategoryMustNotBeNullException("Category with name ${req.category} not found")
+
         val newIngredient = ingredientRepository.save(
             Ingredient(
                 name = req.name,
                 baseUnit = req.baseUnit,
                 baseQuantity = req.baseQuantity,
-                basePrice = req.basePrice,
-                baseCal = req.baseCal,
+                price = req.basePrice,
+                cal = req.baseCal,
                 image = req.image,
-                category = req.category,
+                category = category,
                 isActive = req.isActive
             )
         )
@@ -85,10 +90,13 @@ class IngredientServiceImpl(
         req.name?.let { ingredient.name = it }
         req.baseUnit?.let { ingredient.baseUnit = it }
         req.baseQuantity?.let { ingredient.baseQuantity = it }
-        req.basePrice?.let { ingredient.basePrice = it }
-        req.baseCal?.let { ingredient.baseCal = it }
+        req.basePrice?.let { ingredient.price = it }
+        req.baseCal?.let { ingredient.cal = it }
         req.image?.let { ingredient.image = it }
-        req.category?.let { ingredient.category = it }
+        req.category?.let { ingredient.category = 
+            categoryRepository.findByName(it).orElse(null)
+                ?: throw CategoryMustNotBeNullException("Category with name $it not found")
+        }
         req.isActive?.let { ingredient.isActive = it }
 
         req.nutrients?.let { nutrientRequests ->

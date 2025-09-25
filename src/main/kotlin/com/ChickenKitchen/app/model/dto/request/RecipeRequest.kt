@@ -8,9 +8,9 @@ data class CreateRecipeRequest(
     val name: String,
     val description: String? = null,
     val isCustomizable: Boolean = false, // Admin tạo mặc định là món có sẵn
-    val basePrice: BigDecimal,
-    val baseCal: Int,
-    val ingredientSnapshot: String? = null,
+    val basePrice: BigDecimal = BigDecimal.ZERO,
+    val baseCal: Int = 0,
+    val ingredientSnapshot: String? = "{}",
     val image: String? = null,
     val category: RecipeCategory? = null,
     val isActive: Boolean = true,

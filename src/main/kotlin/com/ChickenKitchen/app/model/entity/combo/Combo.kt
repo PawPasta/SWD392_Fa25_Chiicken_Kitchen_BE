@@ -2,7 +2,6 @@ package com.ChickenKitchen.app.model.entity.combo
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import com.ChickenKitchen.app.model.entity.order.OrderCombo
 
 @Entity
 @Table(name = "combos")
@@ -23,9 +22,5 @@ class Combo(
     var isActive: Boolean = true,
 
     @OneToMany(mappedBy = "combo", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
-    var order_combos: MutableList<OrderCombo> = mutableListOf(),
-
-    @OneToMany(mappedBy = "combo", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var combo_items: MutableList<ComboItem> = mutableListOf(),
-
 )

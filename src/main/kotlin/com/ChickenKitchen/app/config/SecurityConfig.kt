@@ -49,13 +49,6 @@ class SecurityConfig(
                     "/api/ingredient",
                     "/api/ingredient/*",
                 ).permitAll() 
-                it.requestMatchers( // Endpoint Cooking 
-                    HttpMethod.GET,
-                    "/api/cooking-method",
-                    "/api/cooking-method/*",
-                    "/api/cooking-effect",
-                    "/api/cooking-effect/*",
-                ).permitAll()
                 it.requestMatchers( // Endpoint Recipe 
                     HttpMethod.GET,
                     "/api/recipe",

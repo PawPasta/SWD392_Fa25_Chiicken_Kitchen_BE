@@ -2,7 +2,6 @@ package com.ChickenKitchen.app.model.entity.ingredient
 
 import jakarta.persistence.*
 import com.ChickenKitchen.app.enum.UnitEnum
-import com.ChickenKitchen.app.model.entity.cooking.CookingEffect
 
 @Entity
 @Table(name = "nutrients")
@@ -18,7 +17,4 @@ class Nutrient(
 
     @OneToMany(mappedBy = "nutrient", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var ingredient_nutrients: MutableList<IngredientNutrient> = mutableListOf(),
-
-    @OneToMany(mappedBy = "nutrient", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
-    var cooking_effects: MutableList<CookingEffect> = mutableListOf(),
 )

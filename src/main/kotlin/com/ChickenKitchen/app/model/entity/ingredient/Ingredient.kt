@@ -2,9 +2,9 @@ package com.ChickenKitchen.app.model.entity.ingredient
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import com.ChickenKitchen.app.enum.IngredientCategory
 import com.ChickenKitchen.app.enum.UnitEnum
 import com.ChickenKitchen.app.model.entity.recipe.RecipeIngredient
+import com.ChickenKitchen.app.model.entity.category.Category
 
 @Entity
 @Table(name = "ingredients")
@@ -22,15 +22,16 @@ class Ingredient(
     var baseQuantity: Int, // ví dụ: 100g
 
     @Column(nullable = false, precision = 15, scale = 2)
-    var basePrice: BigDecimal, // giá theo baseQuantity
+    var price: BigDecimal, // giá theo baseQuantity
 
     @Column(nullable = false)
-    var baseCal: Int, // calories tương ứng với baseQuantity
+    var cal: Int, // calories tương ứng với baseQuantity
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    var category: Category,
 
     var image: String? = null,
-
-    @Enumerated(EnumType.STRING)
-    var category: IngredientCategory, // Enum: vegetable, meat, grain...
 
     @Column(nullable = false)
     var isActive: Boolean = true,
@@ -40,4 +41,5 @@ class Ingredient(
 
     @OneToMany(mappedBy = "ingredient", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var recipe_ingredients: MutableList<RecipeIngredient> = mutableListOf(),
+
 )

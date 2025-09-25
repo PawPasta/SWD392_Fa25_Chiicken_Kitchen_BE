@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository
 interface RecipeIngredientRepository : JpaRepository<RecipeIngredient, Long> {
     fun findAllByRecipeId(recipeId: Long): List<RecipeIngredient>
     fun findAllByIngredientId(ingredientId: Long): List<RecipeIngredient>
-    fun findAllByCookingMethodId(cookingMethodId: Long): List<RecipeIngredient>
 }

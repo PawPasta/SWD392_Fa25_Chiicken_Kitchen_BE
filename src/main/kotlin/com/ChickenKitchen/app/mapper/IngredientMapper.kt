@@ -9,11 +9,11 @@ fun Ingredient.toIngredientResponse() = IngredientResponse(
     id = this.id!!,
     name = this.name,
     baseUnit = this.baseUnit,
-    baseQuantity = this.baseQuantity,
-    basePrice = this.basePrice,
-    baseCal = this.baseCal,
+    baseQuantity = this.baseQuantity, 
+    price = this.price,
+    cal = this.cal,
     image = this.image,
-    category = this.category,
+    category = this.category.name,
     isActive = this.isActive
 )
 
@@ -22,10 +22,10 @@ fun Ingredient.toIngredientDetailResponse() = IngredientDetailResponse(
     name = this.name,
     baseUnit = this.baseUnit,
     baseQuantity = this.baseQuantity,
-    basePrice = this.basePrice,
-    baseCal = this.baseCal,
+    price = this.price,
+    cal = this.cal,
     image = this.image,
-    category = this.category, 
+    category = this.category.name, 
     isActive = this.isActive,
     nutrients = this.ingredient_nutrients.map {
         IngredientNutrientResponse(

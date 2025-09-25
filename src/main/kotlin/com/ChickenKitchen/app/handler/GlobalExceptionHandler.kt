@@ -73,23 +73,6 @@ class GlobalExceptionHandler {
     fun handleNutrientAlreadyExists(e: NutrientAlreadyExistsException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Nutrient already exists")
 
-    // ========== Cooking Method Exceptions ==========
-    @ExceptionHandler(CookingMethodNotFoundException::class)
-    fun handleCookingMethodNotFound(e: CookingMethodNotFoundException) =
-        buildError(HttpStatus.NOT_FOUND, e.message ?: "Cooking method not found")
-    
-    @ExceptionHandler(CookingMethodAlreadyExistsException::class)
-    fun handleCookingMethodAlreadyExists(e: CookingMethodAlreadyExistsException) =
-        buildError(HttpStatus.CONFLICT, e.message ?: "Cooking method already exists")
-
-    // ========== Cooking Effect Exceptions ==========
-    @ExceptionHandler(CookingEffectNotFoundException::class)
-    fun handleCookingEffectNotFound(e: CookingEffectNotFoundException) =
-        buildError(HttpStatus.NOT_FOUND, e.message ?: "Cooking effect not found")
-
-    @ExceptionHandler(CookingEffectAlreadyExistsException::class)
-    fun handleCookingEffectAlreadyExists(e: CookingEffectAlreadyExistsException) =
-        buildError(HttpStatus.CONFLICT, e.message ?: "Cooking effect already exists")
 
     // ========== Common Exceptions ==========
     @ExceptionHandler(QuantityMustBeNonNegativeException::class)

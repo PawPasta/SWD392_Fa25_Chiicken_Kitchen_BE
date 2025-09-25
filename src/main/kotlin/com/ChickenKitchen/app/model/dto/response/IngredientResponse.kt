@@ -2,6 +2,7 @@ package com.ChickenKitchen.app.model.dto.response
 
 import com.ChickenKitchen.app.enum.IngredientCategory
 import com.ChickenKitchen.app.enum.UnitEnum
+import com.ChickenKitchen.app.model.entity.category.Category
 import java.math.BigDecimal
 
 data class IngredientResponse(
@@ -9,10 +10,10 @@ data class IngredientResponse(
     val name: String,
     val baseUnit: UnitEnum,
     val baseQuantity: Int,
-    val basePrice: BigDecimal,
-    val baseCal: Int,
+    val price: BigDecimal,
+    val cal: Int,
     val image: String?,
-    val category: IngredientCategory?,
+    val category: String,
     val isActive: Boolean
 )
 
@@ -21,10 +22,10 @@ data class IngredientDetailResponse(
     val name: String,
     val baseUnit: UnitEnum,
     val baseQuantity: Int,
-    val basePrice: BigDecimal,
-    val baseCal: Int,
+    val price: BigDecimal,
+    val cal: Int,
     val image: String?,
-    val category: IngredientCategory?,
+    val category: String,
     val isActive: Boolean,
     val nutrients: List<IngredientNutrientResponse>?
 )

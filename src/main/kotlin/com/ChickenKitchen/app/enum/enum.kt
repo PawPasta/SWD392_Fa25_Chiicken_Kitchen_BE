@@ -10,6 +10,8 @@ enum class TransactionType { CAPTURE, REFUND }
 
 enum class TransactionStatus { PENDING, AUTHORIZED, CAPTURED, FAILED, REFUNDED }
 
+enum class MenuType { MEAL, COMBO, EXTRA }
+
 enum class ItemType { RECIPE, CUSTOM }
 
 enum class IngredientCategory { GRAIN, VEGETABLE, FRUIT, MEAT, SEAFOOD, SAUCE, SPICE, OTHER }
