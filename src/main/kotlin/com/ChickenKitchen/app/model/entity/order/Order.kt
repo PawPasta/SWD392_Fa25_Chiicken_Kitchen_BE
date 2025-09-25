@@ -36,7 +36,7 @@ class Order(
     var order_items: MutableList<OrderItem> = mutableListOf(),
 
     @OneToOne(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
-    var feedbacks: Feedback,
+    var feedbacks: Feedback? = null,
 
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var promotion_orders: MutableList<PromotionOrder> = mutableListOf(),
