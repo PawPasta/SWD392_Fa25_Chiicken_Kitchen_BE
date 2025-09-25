@@ -56,6 +56,11 @@ class SecurityConfig(
                     "/api/recipe",
                     "/api/recipe/*",
                 ).permitAll()
+                it.requestMatchers( // Endpoint Promotion
+                    HttpMethod.GET,
+                    "/api/promotion",
+                    "/api/promotion/*",
+                ).permitAll()
                 .anyRequest().authenticated()
             }
             .sessionManagement {

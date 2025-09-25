@@ -37,6 +37,8 @@ class FilterConfig(
         "/api/category/",
         "/api/recipe",
         "/api/recipe/",
+        "/api/promotion",
+        "/api/promotion/",
     )
 
     override fun doFilterInternal(
