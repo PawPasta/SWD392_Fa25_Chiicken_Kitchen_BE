@@ -1,8 +1,11 @@
 package com.ChickenKitchen.app.serviceImpl.order
 
 import com.ChickenKitchen.app.enum.OrderStatus
+import com.ChickenKitchen.app.enum.MenuType
 import com.ChickenKitchen.app.handler.IngredientNotFoundException
 import com.ChickenKitchen.app.handler.QuantityMustBeNonNegativeException
+import com.ChickenKitchen.app.handler.UserNotFoundException
+import com.ChickenKitchen.app.handler.AccessDeniedException
 import com.ChickenKitchen.app.mapper.toOrderDetailResponse
 import com.ChickenKitchen.app.mapper.toOrderResponse
 import com.ChickenKitchen.app.mapper.toOrderResponseList
@@ -19,11 +22,19 @@ import com.ChickenKitchen.app.repository.order.OrderItemRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStatusHistoryRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
+import com.ChickenKitchen.app.repository.recipe.RecipeRepository
+import com.ChickenKitchen.app.repository.combo.ComboRepository
 import com.ChickenKitchen.app.service.order.OrderService
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
+import org.springframework.security.core.context.SecurityContextHolder
+
+import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
+import com.ChickenKitchen.app.model.dto.response.UserOrderDetailResponse
+import com.ChickenKitchen.app.model.dto.response.UserOrderResponse
+import com.ChickenKitchen.app.model.dto.response.UserOrderItemDetailResponse
 
 @Service
 class OrderServiceImpl(
@@ -31,8 +42,105 @@ class OrderServiceImpl(
     private val orderItemRepository: OrderItemRepository,
     private val statusHistoryRepository: OrderStatusHistoryRepository,
     private val userRepository: UserRepository,
-    private val dailyMenuItemRepository: DailyMenuItemRepository
+    private val dailyMenuItemRepository: DailyMenuItemRepository,
+    private val recipeRepository: RecipeRepository,
+    private val comboRepository: ComboRepository
 ) : OrderService {
+
+    override fun getUserOrders(): List<UserOrderResponse> {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        val orders = orderRepository.findAllByUserId(user.id!!)
+        if (orders.isEmpty()) return emptyList()
+
+        return orders.map { order ->
+            val items = orderItemRepository.findAllByOrderId(order.id!!)
+            UserOrderResponse(
+                id = order.id!!,
+                totalPrice = order.totalPrice,
+                status = order.status,
+                createdAt = order.createdAt,
+                items = items.map { oi -> toUserOrderItemDetail(oi) }
+            )
+        }
+    }
+
+    override fun getUserOrderById(id: Long): UserOrderDetailResponse {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        val order = orderRepository.findById(id).orElse(null)
+            ?: throw IngredientNotFoundException("Order with id $id not found")
+
+        if (order.user.id != user.id) {
+            throw AccessDeniedException("You do not have access to this order")
+        }
+
+        val items = orderItemRepository.findAllByOrderId(order.id!!)
+        return UserOrderDetailResponse(
+            id = order.id!!,
+            totalPrice = order.totalPrice,
+            status = order.status,
+            createdAt = order.createdAt,
+            items = items.map { oi -> toUserOrderItemDetail(oi) }
+        )
+    }
+
+    override fun addOrderItem(req: AddOrderItemRequest): UserOrderDetailResponse {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        if (req.quantity < 0) throw QuantityMustBeNonNegativeException("Quantity must be non-negative")
+
+        // Try to find an existing NEW order for the user; if none, create one
+        val existingNew = orderRepository.findAllByUserUsernameAndStatus(username, OrderStatus.NEW)
+        val order = if (existingNew.isNotEmpty()) existingNew.first() else {
+            val newOrder = Order(
+                user = user,
+                totalPrice = BigDecimal.ZERO,
+                status = OrderStatus.NEW,
+                createdAt = Timestamp(System.currentTimeMillis())
+            )
+            orderRepository.save(newOrder)
+        }
+
+        val dmi = dailyMenuItemRepository.findById(req.dailyMenuItemId).orElse(null)
+            ?: throw IngredientNotFoundException("DailyMenuItem with id ${req.dailyMenuItemId} not found")
+
+        val linePrice = dmi.price.multiply(BigDecimal(req.quantity))
+        val lineCal = dmi.cal * req.quantity
+
+        // Append new order item
+        val newItem = OrderItem(
+            order = order,
+            dailyMenuItem = dmi,
+            quantity = req.quantity,
+            price = linePrice,
+            cal = lineCal,
+            note = req.note
+        )
+        order.order_items.add(newItem)
+
+        // Recalculate total
+        val total = order.order_items.fold(BigDecimal.ZERO) { acc, it -> acc + it.price }
+        order.totalPrice = total
+
+        val saved = orderRepository.save(order)
+        val items = orderItemRepository.findAllByOrderId(saved.id!!)
+        return UserOrderDetailResponse(
+            id = saved.id!!,
+            totalPrice = saved.totalPrice,
+            status = saved.status,
+            createdAt = saved.createdAt,
+            items = items.map { oi -> toUserOrderItemDetail(oi) }
+        )
+    }
+
+    
 
     override fun getAll(): List<OrderResponse>? {
         val list = orderRepository.findAll()
@@ -132,6 +240,7 @@ class OrderServiceImpl(
     }
 
     private fun nextStatus(current: OrderStatus): OrderStatus = when (current) {
+        OrderStatus.NEW -> OrderStatus.PENDING
         OrderStatus.PENDING -> OrderStatus.CONFIRMED
         OrderStatus.CONFIRMED -> OrderStatus.PREPARING
         OrderStatus.PREPARING -> OrderStatus.READY
@@ -140,5 +249,42 @@ class OrderServiceImpl(
         OrderStatus.COMPLETED -> OrderStatus.COMPLETED
         OrderStatus.CANCELED -> OrderStatus.CANCELED
     }
-}
 
+    private fun toUserOrderItemDetail(oi: OrderItem): UserOrderItemDetailResponse {
+        val dmi = oi.dailyMenuItem
+
+        var name = ""
+        var imageUrl = ""
+
+        when (dmi.menuType) {
+            MenuType.MEAL -> {
+                val recipe = recipeRepository.findById(dmi.refId).orElse(null)
+                if (recipe != null) {
+                    name = recipe.name
+                    imageUrl = recipe.image ?: ""
+                } else {
+                    name = "Meal"
+                }
+            }
+            MenuType.COMBO -> {
+                val combo = comboRepository.findById(dmi.refId).orElse(null)
+                name = combo?.name ?: "Combo"
+                imageUrl = ""
+            }
+            MenuType.EXTRA -> {
+                name = "Extra"
+                imageUrl = ""
+            }
+        }
+
+        return UserOrderItemDetailResponse(
+            dailyMenuItemId = dmi.id!!,
+            name = name,
+            imageUrl = imageUrl,
+            quantity = oi.quantity,
+            price = oi.price,
+            cal = oi.cal,
+            note = oi.note
+        )
+    }
+}

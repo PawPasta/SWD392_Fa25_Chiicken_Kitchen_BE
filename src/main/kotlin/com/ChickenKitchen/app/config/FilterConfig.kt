@@ -41,6 +41,8 @@ class FilterConfig(
         "/api/promotion/",
         "/api/combo",
         "/api/combo/",
+        "/api/daily-menu",
+        "/api/daily-menu/",
         "/api/payment-method",
         "/api/payment-method/",
     )

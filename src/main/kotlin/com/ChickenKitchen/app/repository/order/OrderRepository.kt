@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository
 interface OrderRepository : JpaRepository<Order, Long> {
     fun findAllByUserId(userId: Long): List<Order>
     fun findAllByStatus(status: OrderStatus): List<Order>
+    fun findAllByUserUsernameAndStatus(username: String, status: OrderStatus): List<Order>
 }

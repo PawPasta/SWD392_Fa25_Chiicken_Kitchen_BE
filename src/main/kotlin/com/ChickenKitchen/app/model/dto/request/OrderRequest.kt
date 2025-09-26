@@ -19,3 +19,11 @@ data class OrderItemRequest(
     val note: String? = null
 )
 
+// User
+
+data class AddOrderItemRequest(
+    val dailyMenuItemId: Long,
+    val quantity: Int,
+    val note: String? = null
+) 
+

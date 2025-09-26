@@ -15,11 +15,15 @@ import com.ChickenKitchen.app.model.dto.response.RecipeResponse
 import com.ChickenKitchen.app.model.entity.recipe.Recipe
 import com.ChickenKitchen.app.model.entity.recipe.RecipeIngredient
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
+import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.recipe.RecipeRepository
 import com.ChickenKitchen.app.service.recipe.RecipeService
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
+import org.springframework.security.core.context.SecurityContextHolder
+import com.ChickenKitchen.app.enum.OrderStatus
+import com.ChickenKitchen.app.model.entity.order.Order
 
 @Service
 class RecipeServiceImpl(

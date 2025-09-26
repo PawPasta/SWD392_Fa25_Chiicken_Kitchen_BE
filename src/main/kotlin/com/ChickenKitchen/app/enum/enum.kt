@@ -4,7 +4,16 @@ enum class Role { USER, EMPLOYEE, ADMIN }
 
 enum class DiscountType { PERCENT, AMOUNT }
 
-enum class OrderStatus { PENDING, CONFIRMED, PREPARING, READY, DELIVERING, COMPLETED, CANCELED }
+enum class OrderStatus { NEW, PENDING, CONFIRMED, PREPARING, READY, DELIVERING, COMPLETED, CANCELED }
+
+// NEW - just created, not confirmed
+// PENDING - waiting for confirmation
+// CONFIRMED - confirmed by admin
+// PREPARING - being prepared
+// READY - ready for pickup/delivery
+// DELIVERING - out for delivery
+// COMPLETED - delivered and completed
+// CANCELED - canceled order
 
 enum class TransactionType { CAPTURE, REFUND }
 

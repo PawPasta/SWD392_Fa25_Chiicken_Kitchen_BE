@@ -27,6 +27,8 @@ import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.combo.ComboRepository
 import com.ChickenKitchen.app.repository.combo.ComboItemRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
+import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
+import com.ChickenKitchen.app.repository.menu.DailyMenuItemRepository
 import com.ChickenKitchen.app.enum.Role
 import com.ChickenKitchen.app.enum.UnitEnum
 import com.ChickenKitchen.app.enum.RecipeCategory
@@ -42,7 +44,11 @@ import com.ChickenKitchen.app.model.entity.combo.Combo
 import com.ChickenKitchen.app.model.entity.combo.ComboItem
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
+import com.ChickenKitchen.app.model.entity.menu.DailyMenu
+import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
+import com.ChickenKitchen.app.enum.MenuType
 import java.sql.Timestamp
+import java.sql.Date
 
 @Configuration
 class DataInitializer {
@@ -56,13 +62,12 @@ class DataInitializer {
         categoryRepository: CategoryRepository,
         ingredientRepository: IngredientRepository,
         recipeRepository: RecipeRepository,
-        recipeIngredientRepository: RecipeIngredientRepository,
         ingredientNutrientRepository: IngredientNutrientRepository,
         transactionManager: PlatformTransactionManager,
         paymentMethodRepository: PaymentMethodRepository,
         comboRepository: ComboRepository,
-        comboItemRepository: ComboItemRepository,
         promotionRepository: PromotionRepository,
+        dailyMenuRepository: DailyMenuRepository,
         passwordEncoder: PasswordEncoder
     ) = CommandLineRunner {
 
@@ -561,6 +566,90 @@ class DataInitializer {
                 }
             }
             println("✅ Inserted $insertedCombos combos (total now ${comboRepository.count()})")
+        }
+
+        // ===== DAILY MENUS =====
+        if (dailyMenuRepository.count() == 0L) {
+            val rmap = recipeRepository.findAll().associateBy { it.name }
+            val cmap = comboRepository.findAll().associateBy { it.name }
+
+            fun r(name: String) = rmap[name]
+            fun c(name: String) = cmap[name]
+
+            data class DM(
+                val date: LocalDate,
+                val name: String,
+                val meals: List<String>,
+                val combos: List<String>
+            )
+
+            val dms = listOf(
+                DM(
+                    LocalDate.now(),
+                    "Menu Today",
+                    meals = listOf("Grilled Chicken Bowl", "Garden Salad", "Tomato Soup", "Shrimp Pasta"),
+                    combos = listOf("Classic Chicken Combo", "Light & Fresh Combo")
+                ),
+                DM(
+                    LocalDate.now().plusDays(1),
+                    "Menu Tomorrow",
+                    meals = listOf("Beef Stir Fry", "Vegetable Soup", "Ham Cheese Pasta", "Kale Quinoa Salad"),
+                    combos = listOf("Beef Lover Combo", "Salmon Healthy Set")
+                ),
+                DM(
+                    LocalDate.now().plusDays(2),
+                    "Menu Next Day",
+                    meals = listOf("Chicken Fried Rice", "Mediterranean Salad", "Seafood Soup", "Bruschetta"),
+                    combos = listOf("Seafood Delight Combo", "Pasta Feast Combo")
+                )
+            )
+
+            var insertedDM = 0
+            dms.forEach { def ->
+                val dm = DailyMenu(
+                    date = Date.valueOf(def.date),
+                    name = def.name
+                )
+
+                def.meals.forEach { name ->
+                    val rec = r(name)
+                    if (rec == null) {
+                        println("⚠️ Missing recipe for daily menu '${def.name}': $name")
+                    } else {
+                        dm.dailyMenuItems.add(
+                            DailyMenuItem(
+                                dailyMenu = dm,
+                                name = rec.name,
+                                menuType = MenuType.MEAL,
+                                refId = rec.id!!,
+                                cal = rec.cal,
+                                price = rec.price
+                            )
+                        )
+                    }
+                }
+                def.combos.forEach { name ->
+                    val combo = c(name)
+                    if (combo == null) {
+                        println("⚠️ Missing combo for daily menu '${def.name}': $name")
+                    } else {
+                        dm.dailyMenuItems.add(
+                            DailyMenuItem(
+                                dailyMenu = dm,
+                                name = combo.name,
+                                menuType = MenuType.COMBO,
+                                refId = combo.id!!,
+                                cal = combo.cal,
+                                price = combo.price
+                            )
+                        )
+                    }
+                }
+
+                dailyMenuRepository.save(dm)
+                insertedDM++
+            }
+            println("✅ Inserted $insertedDM daily menus (total now ${dailyMenuRepository.count()})")
         }
 
         // ===== INGREDIENT NUTRIENTS (populate if missing) =====

@@ -71,6 +71,11 @@ class SecurityConfig(
                     "/api/combo",
                     "/api/combo/*",
                 ).permitAll()
+                it.requestMatchers( // Endpoint Daily Menu
+                    HttpMethod.GET,
+                    "/api/daily-menu",
+                    "/api/daily-menu/*",
+                ).permitAll()
                 .anyRequest().authenticated()
             }
             .sessionManagement {

@@ -2,6 +2,7 @@ package com.ChickenKitchen.app.controller
 
 import com.ChickenKitchen.app.model.dto.request.CreateOrderRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateOrderRequest
+import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.order.OrderService
 import io.swagger.v3.oas.annotations.Operation
@@ -14,6 +15,31 @@ import org.springframework.web.bind.annotation.*
 class OrderController(
     private val orderService: OrderService
 ) {
+
+    // User endpoints
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Get orders of the authenticated user")
+    @GetMapping("/user")
+    fun getUserOrders(): ResponseEntity<ResponseModel> {
+        val orders = orderService.getUserOrders()
+        return ResponseEntity.ok(ResponseModel.success(orders, "Get user orders successfully!"))
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Get order by ID for the authenticated user")
+    @GetMapping("/user/{id}")
+    fun getUserOrderById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+        val order = orderService.getUserOrderById(id)
+        return ResponseEntity.ok(ResponseModel.success(order, "Get user order successfully!"))
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Add item to order for the authenticated user")
+    @PostMapping("/user")
+    fun createUserOrder(@RequestBody req: AddOrderItemRequest): ResponseEntity<ResponseModel> {
+        val created = orderService.addOrderItem(req)
+        return ResponseEntity.ok(ResponseModel.success(created, "Create user order successfully!"))
+    }
 
     // Admin-only endpoints
     @PreAuthorize("hasRole('ADMIN')")

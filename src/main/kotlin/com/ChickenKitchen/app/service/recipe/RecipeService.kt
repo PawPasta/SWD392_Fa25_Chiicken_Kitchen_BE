@@ -9,4 +9,5 @@ import com.ChickenKitchen.app.service.BaseService
 interface RecipeService : BaseService<RecipeResponse, RecipeDetailResponse,
         CreateRecipeRequest, UpdateRecipeRequest, Long> {
     fun changeStatus(id: Long): RecipeResponse
+    // fun addToCart(id: Long): RecipeResponse
 }

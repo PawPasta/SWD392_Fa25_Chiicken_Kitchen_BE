@@ -29,3 +29,39 @@ data class OrderItemDetailResponse(
     val note: String?
 )
 
+// Response model for user's own orders with item details
+
+data class UserOrderResponse(
+    val id: Long,
+    val totalPrice: BigDecimal,
+    val status: OrderStatus,
+    val createdAt: Timestamp,
+    val items: List<UserOrderItemDetailResponse>
+)
+
+data class UserOrderDetailResponse(
+    val id: Long,
+    val totalPrice: BigDecimal,
+    val status: OrderStatus,
+    val createdAt: Timestamp,
+    val items: List<UserOrderItemDetailResponse>
+)
+
+data class UserOrderItemResponse(
+    val dailyMenuItemId: Long,
+    val name: String,
+    val imageUrl: String,
+    val quantity: Int,
+    val price: BigDecimal,
+)
+
+data class UserOrderItemDetailResponse(
+    val dailyMenuItemId: Long,
+    val name: String,
+    val imageUrl: String,
+    val quantity: Int,
+    val price: BigDecimal,
+    val cal: Int,
+    val note: String?
+)
+

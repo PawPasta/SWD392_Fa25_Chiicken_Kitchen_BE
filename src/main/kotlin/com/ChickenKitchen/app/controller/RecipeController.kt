@@ -30,6 +30,15 @@ class RecipeController(
         return ResponseEntity.ok(ResponseModel.success(recipe, "Get recipe successfully!"))
     }
 
+    // // User-only endpoints
+    // @PreAuthorize("hasRole('USER')")
+    // @Operation(summary = "Add recipe to cart (User only)")
+    // @PostMapping("/{id}/add-to-cart")
+    // fun addToCart(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+    //     val cartItem = recipeService.addToCart(id)
+    //     return ResponseEntity.ok(ResponseModel.success(cartItem, "Add recipe to cart successfully!"))
+    // }
+
     // Admin-only endpoints
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create new recipe (Admin only)")
