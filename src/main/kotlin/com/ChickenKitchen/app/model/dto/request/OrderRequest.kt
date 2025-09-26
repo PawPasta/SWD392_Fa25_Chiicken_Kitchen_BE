@@ -27,3 +27,7 @@ data class AddOrderItemRequest(
     val note: String? = null
 ) 
 
+data class UpdateUserOrderItemRequest(
+    val quantity: Int,
+    val note: String? = null
+)

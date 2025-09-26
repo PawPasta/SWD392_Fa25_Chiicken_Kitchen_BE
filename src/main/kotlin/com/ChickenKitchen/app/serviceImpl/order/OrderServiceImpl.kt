@@ -35,6 +35,7 @@ import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
 import com.ChickenKitchen.app.model.dto.response.UserOrderDetailResponse
 import com.ChickenKitchen.app.model.dto.response.UserOrderResponse
 import com.ChickenKitchen.app.model.dto.response.UserOrderItemDetailResponse
+import com.ChickenKitchen.app.model.dto.request.UpdateUserOrderItemRequest
 
 @Service
 class OrderServiceImpl(
@@ -190,6 +191,88 @@ class OrderServiceImpl(
         val order = orderRepository.findById(id).orElse(null)
             ?: throw IngredientNotFoundException("Order with id $id not found")
         orderRepository.delete(order)
+    }
+
+    override fun updateUserOrderItem(orderId: Long, dailyMenuItemId: Long, req: UpdateUserOrderItemRequest): UserOrderDetailResponse? {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        val order = orderRepository.findById(orderId).orElse(null)
+            ?: throw IngredientNotFoundException("Order with id $orderId not found")
+
+        if (order.user.id != user.id) {
+            throw AccessDeniedException("You do not have access to this order")
+        }
+        if (order.status != OrderStatus.NEW) {
+            throw AccessDeniedException("Only NEW orders can be modified")
+        }
+
+        if (req.quantity < 0) throw QuantityMustBeNonNegativeException("Quantity must be non-negative")
+
+        val items = orderItemRepository.findAllByOrderId(order.id!!).toMutableList()
+        val target = items.find { it.dailyMenuItem.id == dailyMenuItemId }
+            ?: throw IngredientNotFoundException("Order item with DailyMenuItem id $dailyMenuItemId not found in this order")
+
+        if (req.quantity == 0) {
+            orderItemRepository.delete(target)
+            items.removeIf { it.id == target.id }
+        } else {
+            val dmi = target.dailyMenuItem
+            target.quantity = req.quantity
+            target.price = dmi.price.multiply(BigDecimal(req.quantity))
+            target.cal = dmi.cal * req.quantity
+            target.note = req.note
+            orderItemRepository.save(target)
+        }
+
+        if (items.isEmpty()) {
+            orderRepository.delete(order)
+            return null
+        }
+
+        val total = items.fold(BigDecimal.ZERO) { acc, it -> acc + it.price }
+        order.totalPrice = total
+        val saved = orderRepository.save(order)
+        val refreshed = orderItemRepository.findAllByOrderId(saved.id!!)
+        return UserOrderDetailResponse(
+            id = saved.id!!,
+            totalPrice = saved.totalPrice,
+            status = saved.status,
+            createdAt = saved.createdAt,
+            items = refreshed.map { oi -> toUserOrderItemDetail(oi) }
+        )
+    }
+
+    override fun deleteUserOrderItem(orderId: Long, dailyMenuItemId: Long) {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        val order = orderRepository.findById(orderId).orElse(null)
+            ?: throw IngredientNotFoundException("Order with id $orderId not found")
+
+        if (order.user.id != user.id) {
+            throw AccessDeniedException("You do not have access to this order")
+        }
+        if (order.status != OrderStatus.NEW) {
+            throw AccessDeniedException("Only NEW orders can be modified")
+        }
+
+        val items = orderItemRepository.findAllByOrderId(order.id!!).toMutableList()
+        val target = items.find { it.dailyMenuItem.id == dailyMenuItemId }
+            ?: throw IngredientNotFoundException("Order item with DailyMenuItem id $dailyMenuItemId not found in this order")
+        orderItemRepository.delete(target)
+        items.removeIf { it.id == target.id }
+
+        if (items.isEmpty()) {
+            orderRepository.delete(order)
+            return
+        }
+
+        val total = items.fold(BigDecimal.ZERO) { acc, it -> acc + it.price }
+        order.totalPrice = total
+        orderRepository.save(order)
     }
 
     override fun changeStatus(id: Long): OrderResponse {

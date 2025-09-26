@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.controller
 import com.ChickenKitchen.app.model.dto.request.CreateOrderRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateOrderRequest
 import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
+import com.ChickenKitchen.app.model.dto.request.UpdateUserOrderItemRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.order.OrderService
 import io.swagger.v3.oas.annotations.Operation
@@ -39,6 +40,33 @@ class OrderController(
     fun createUserOrder(@RequestBody req: AddOrderItemRequest): ResponseEntity<ResponseModel> {
         val created = orderService.addOrderItem(req)
         return ResponseEntity.ok(ResponseModel.success(created, "Create user order successfully!"))
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Update quantity of an item in user's order; deletes order if empty")
+    @PutMapping("/user/{orderId}/item/{dailyMenuItemId}")
+    fun updateUserOrderItem(
+        @PathVariable orderId: Long,
+        @PathVariable dailyMenuItemId: Long,
+        @RequestBody req: UpdateUserOrderItemRequest
+    ): ResponseEntity<ResponseModel> {
+        val updated = orderService.updateUserOrderItem(orderId, dailyMenuItemId, req)
+        return if (updated == null) {
+            ResponseEntity.ok(ResponseModel.success(null, "Order deleted because it has no items"))
+        } else {
+            ResponseEntity.ok(ResponseModel.success(updated, "Update user order item successfully!"))
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Delete an item from user's order; deletes order if empty")
+    @DeleteMapping("/user/{orderId}/item/{dailyMenuItemId}")
+    fun deleteUserOrderItem(
+        @PathVariable orderId: Long,
+        @PathVariable dailyMenuItemId: Long
+    ): ResponseEntity<ResponseModel> {
+        orderService.deleteUserOrderItem(orderId, dailyMenuItemId)
+        return ResponseEntity.ok(ResponseModel.success(null, "Delete user order item successfully!"))
     }
 
     // Admin-only endpoints
@@ -90,4 +118,3 @@ class OrderController(
         return ResponseEntity.ok(ResponseModel.success(order, "Change order status successfully!"))
     }
 }
-
