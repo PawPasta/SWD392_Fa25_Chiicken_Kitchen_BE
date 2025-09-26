@@ -38,4 +38,7 @@ class UserAddress(
     @Column(nullable = false)
     var updatedAt: Timestamp? = null,
 
+    @OneToMany(mappedBy = "userAddress", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
+    var orders: MutableList<com.ChickenKitchen.app.model.entity.order.Order> = mutableListOf(),
+
 )

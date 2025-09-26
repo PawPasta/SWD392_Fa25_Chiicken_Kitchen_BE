@@ -35,7 +35,18 @@ import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
 import com.ChickenKitchen.app.model.dto.response.UserOrderDetailResponse
 import com.ChickenKitchen.app.model.dto.response.UserOrderResponse
 import com.ChickenKitchen.app.model.dto.response.UserOrderItemDetailResponse
+import com.ChickenKitchen.app.model.dto.response.UserAddressResponse
 import com.ChickenKitchen.app.model.dto.request.UpdateUserOrderItemRequest
+import com.ChickenKitchen.app.model.dto.request.ConfirmOrderRequest
+import com.ChickenKitchen.app.repository.user.UserAddressRepository
+import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
+import com.ChickenKitchen.app.repository.promotion.PromotionRepository
+import com.ChickenKitchen.app.repository.promotion.PromotionOrderRepository
+import com.ChickenKitchen.app.repository.payment.TransactionRepository
+import com.ChickenKitchen.app.enum.PaymentMethodType
+import com.ChickenKitchen.app.enum.DiscountType
+import com.ChickenKitchen.app.model.entity.promotion.PromotionOrder
+import com.ChickenKitchen.app.model.entity.transaction.Transaction
 
 @Service
 class OrderServiceImpl(
@@ -45,7 +56,12 @@ class OrderServiceImpl(
     private val userRepository: UserRepository,
     private val dailyMenuItemRepository: DailyMenuItemRepository,
     private val recipeRepository: RecipeRepository,
-    private val comboRepository: ComboRepository
+    private val comboRepository: ComboRepository,
+    private val userAddressRepository: UserAddressRepository,
+    private val paymentMethodRepository: PaymentMethodRepository,
+    private val promotionRepository: PromotionRepository,
+    private val promotionOrderRepository: PromotionOrderRepository,
+    private val transactionRepository: TransactionRepository
 ) : OrderService {
 
     override fun getUserOrders(): List<UserOrderResponse> {
@@ -63,7 +79,16 @@ class OrderServiceImpl(
                 totalPrice = order.totalPrice,
                 status = order.status,
                 createdAt = order.createdAt,
-                items = items.map { oi -> toUserOrderItemDetail(oi) }
+                items = items.map { oi -> toUserOrderItemDetail(oi) },
+                address = if (order.status != OrderStatus.NEW && order.userAddress != null)
+                    UserAddressResponse(
+                        id = order.userAddress!!.id!!,
+                        recipientName = order.userAddress!!.recipientName,
+                        phone = order.userAddress!!.phone,
+                        addressLine = order.userAddress!!.addressLine,
+                        city = order.userAddress!!.city,
+                        isDefault = order.userAddress!!.isDefault
+                    ) else null
             )
         }
     }
@@ -86,7 +111,16 @@ class OrderServiceImpl(
             totalPrice = order.totalPrice,
             status = order.status,
             createdAt = order.createdAt,
-            items = items.map { oi -> toUserOrderItemDetail(oi) }
+            items = items.map { oi -> toUserOrderItemDetail(oi) },
+            address = if (order.status != OrderStatus.NEW && order.userAddress != null)
+                UserAddressResponse(
+                    id = order.userAddress!!.id!!,
+                    recipientName = order.userAddress!!.recipientName,
+                    phone = order.userAddress!!.phone,
+                    addressLine = order.userAddress!!.addressLine,
+                    city = order.userAddress!!.city,
+                    isDefault = order.userAddress!!.isDefault
+                ) else null
         )
     }
 
@@ -137,7 +171,8 @@ class OrderServiceImpl(
             totalPrice = saved.totalPrice,
             status = saved.status,
             createdAt = saved.createdAt,
-            items = items.map { oi -> toUserOrderItemDetail(oi) }
+            items = items.map { oi -> toUserOrderItemDetail(oi) },
+            address = null
         )
     }
 
@@ -240,7 +275,16 @@ class OrderServiceImpl(
             totalPrice = saved.totalPrice,
             status = saved.status,
             createdAt = saved.createdAt,
-            items = refreshed.map { oi -> toUserOrderItemDetail(oi) }
+            items = refreshed.map { oi -> toUserOrderItemDetail(oi) },
+            address = if (saved.status != OrderStatus.NEW && saved.userAddress != null)
+                UserAddressResponse(
+                    id = saved.userAddress!!.id!!,
+                    recipientName = saved.userAddress!!.recipientName,
+                    phone = saved.userAddress!!.phone,
+                    addressLine = saved.userAddress!!.addressLine,
+                    city = saved.userAddress!!.city,
+                    isDefault = saved.userAddress!!.isDefault
+                ) else null
         )
     }
 
@@ -273,6 +317,105 @@ class OrderServiceImpl(
         val total = items.fold(BigDecimal.ZERO) { acc, it -> acc + it.price }
         order.totalPrice = total
         orderRepository.save(order)
+    }
+
+    override fun confirmUserOrder(orderId: Long, req: ConfirmOrderRequest): UserOrderDetailResponse {
+        val username = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByUsername(username)
+            ?: throw UserNotFoundException("User not found")
+
+        val order = orderRepository.findById(orderId).orElse(null)
+            ?: throw IngredientNotFoundException("Order with id $orderId not found")
+
+        if (order.user.id != user.id) {
+            throw AccessDeniedException("You do not have access to this order")
+        }
+        if (order.order_items.isEmpty()) {
+            throw QuantityMustBeNonNegativeException("Order has no items to confirm")
+        }
+        if (order.status != OrderStatus.NEW) {
+            throw AccessDeniedException("Only NEW orders can be confirmed by user")
+        }
+
+        // Validate and set user address
+        val address = userAddressRepository.findById(req.userAddressId).orElse(null)
+            ?: throw IngredientNotFoundException("UserAddress with id ${req.userAddressId} not found")
+        if (address.user.id != user.id) {
+            throw AccessDeniedException("Address does not belong to current user")
+        }
+        order.userAddress = address
+
+        // Resolve payment method (default COD)
+        val pmType = req.paymentMethod
+        val paymentMethod = paymentMethodRepository.findByName(pmType).orElse(null)
+            ?: throw IngredientNotFoundException("Payment method ${pmType.name} not found")
+
+        // Apply promotion if provided
+        req.promotionId?.let { pid ->
+            val promo = promotionRepository.findById(pid).orElse(null)
+                ?: throw IngredientNotFoundException("Promotion with id $pid not found")
+            if (!promo.isActive) throw AccessDeniedException("Promotion is not active")
+
+            val now = Timestamp(System.currentTimeMillis())
+            if (now.before(promo.startDate) || now.after(promo.endDate)) {
+                throw AccessDeniedException("Promotion is not valid at this time")
+            }
+            if (promo.quantity <= 0) throw AccessDeniedException("Promotion is out of quantity")
+
+            val original = order.totalPrice
+            val discounted = when (promo.discountType) {
+                DiscountType.PERCENT -> {
+                    val percent = promo.discountValue
+                    original.subtract(original.multiply(percent).divide(BigDecimal(100)))
+                }
+                DiscountType.AMOUNT -> {
+                    val amt = promo.discountValue
+                    if (original <= amt) BigDecimal.ZERO else original.subtract(amt)
+                }
+            }
+            order.totalPrice = discounted
+
+            // Create PromotionOrder linkage and reduce promo quantity
+            val po = PromotionOrder(order = order, promotion = promo, user = user, usedDate = now)
+            promotionOrderRepository.save(po)
+            promo.quantity = promo.quantity - 1
+            promotionRepository.save(promo)
+        }
+
+        // Create a transaction record for the order
+        val tx = Transaction(
+            order = order,
+            user = user,
+            paymentMethod = paymentMethod,
+            transactionType = com.ChickenKitchen.app.enum.TransactionType.CAPTURE,
+            amount = order.totalPrice,
+            createdAt = Timestamp(System.currentTimeMillis()),
+            note = "COD"
+        )
+        transactionRepository.save(tx)
+
+        // Update order status to CONFIRMED and add status history
+        order.status = OrderStatus.CONFIRMED
+        addStatusHistory(order, OrderStatus.CONFIRMED, note = "Order confirmed by user")
+
+        val saved = orderRepository.save(order)
+        val items = orderItemRepository.findAllByOrderId(saved.id!!)
+        return UserOrderDetailResponse(
+            id = saved.id!!,
+            totalPrice = saved.totalPrice,
+            status = saved.status,
+            createdAt = saved.createdAt,
+            items = items.map { oi -> toUserOrderItemDetail(oi) },
+            address = if (saved.status != OrderStatus.NEW && saved.userAddress != null)
+                UserAddressResponse(
+                    id = saved.userAddress!!.id!!,
+                    recipientName = saved.userAddress!!.recipientName,
+                    phone = saved.userAddress!!.phone,
+                    addressLine = saved.userAddress!!.addressLine,
+                    city = saved.userAddress!!.city,
+                    isDefault = saved.userAddress!!.isDefault
+                ) else null
+        )
     }
 
     override fun changeStatus(id: Long): OrderResponse {
@@ -323,8 +466,7 @@ class OrderServiceImpl(
     }
 
     private fun nextStatus(current: OrderStatus): OrderStatus = when (current) {
-        OrderStatus.NEW -> OrderStatus.PENDING
-        OrderStatus.PENDING -> OrderStatus.CONFIRMED
+        OrderStatus.NEW -> OrderStatus.CONFIRMED
         OrderStatus.CONFIRMED -> OrderStatus.PREPARING
         OrderStatus.PREPARING -> OrderStatus.READY
         OrderStatus.READY -> OrderStatus.DELIVERING

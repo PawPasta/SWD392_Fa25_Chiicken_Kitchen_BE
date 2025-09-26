@@ -36,7 +36,8 @@ data class UserOrderResponse(
     val totalPrice: BigDecimal,
     val status: OrderStatus,
     val createdAt: Timestamp,
-    val items: List<UserOrderItemDetailResponse>
+    val items: List<UserOrderItemDetailResponse>,
+    val address: UserAddressResponse? = null
 )
 
 data class UserOrderDetailResponse(
@@ -44,7 +45,8 @@ data class UserOrderDetailResponse(
     val totalPrice: BigDecimal,
     val status: OrderStatus,
     val createdAt: Timestamp,
-    val items: List<UserOrderItemDetailResponse>
+    val items: List<UserOrderItemDetailResponse>,
+    val address: UserAddressResponse? = null
 )
 
 data class UserOrderItemResponse(
@@ -65,3 +67,4 @@ data class UserOrderItemDetailResponse(
     val note: String?
 )
 
+// Use existing UserAddressResponse in this package (see UserAddressResponse.kt)

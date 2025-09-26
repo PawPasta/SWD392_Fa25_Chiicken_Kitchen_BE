@@ -1,10 +1,11 @@
 package com.ChickenKitchen.app.model.dto.request
 
 import com.ChickenKitchen.app.enum.OrderStatus
+import com.ChickenKitchen.app.enum.PaymentMethodType
 
 data class CreateOrderRequest(
     val userId: Long,
-    val status: OrderStatus = OrderStatus.PENDING,
+    val status: OrderStatus = OrderStatus.NEW,
     val items: List<OrderItemRequest>
 )
 
@@ -30,4 +31,10 @@ data class AddOrderItemRequest(
 data class UpdateUserOrderItemRequest(
     val quantity: Int,
     val note: String? = null
+)
+
+data class ConfirmOrderRequest(
+    val userAddressId: Long,
+    val paymentMethod: PaymentMethodType = PaymentMethodType.CASH_ON_DELIVERY,
+    val promotionId: Long? = null
 )

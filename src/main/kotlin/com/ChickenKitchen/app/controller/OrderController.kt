@@ -4,6 +4,7 @@ import com.ChickenKitchen.app.model.dto.request.CreateOrderRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateOrderRequest
 import com.ChickenKitchen.app.model.dto.request.AddOrderItemRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserOrderItemRequest
+import com.ChickenKitchen.app.model.dto.request.ConfirmOrderRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.order.OrderService
 import io.swagger.v3.oas.annotations.Operation
@@ -69,6 +70,17 @@ class OrderController(
         return ResponseEntity.ok(ResponseModel.success(null, "Delete user order item successfully!"))
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Confirm user's order with address, payment method (COD), and optional promotion")
+    @PostMapping("/user/{orderId}/confirm")
+    fun confirmUserOrder(
+        @PathVariable orderId: Long,
+        @RequestBody req: ConfirmOrderRequest
+    ): ResponseEntity<ResponseModel> {
+        val confirmed = orderService.confirmUserOrder(orderId, req)
+        return ResponseEntity.ok(ResponseModel.success(confirmed, "Confirm order successfully!"))
+    }
+ 
     // Admin-only endpoints
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all orders (Admin only)")
