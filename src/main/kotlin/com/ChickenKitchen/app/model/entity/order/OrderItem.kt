@@ -18,8 +18,8 @@ class OrderItem(
     @JoinColumn(name = "order_id", nullable = false)
     var order: Order,
 
-    @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "deily_menu_item_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "daily_menu_item_id", nullable = false)
     var dailyMenuItem: DailyMenuItem,
 
     @Column(nullable = false)
