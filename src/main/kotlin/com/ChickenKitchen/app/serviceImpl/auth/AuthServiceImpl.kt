@@ -29,9 +29,9 @@ import com.ChickenKitchen.app.handler.TokenException
 import com.ChickenKitchen.app.handler.EmailSendException
 import com.ChickenKitchen.app.handler.AccessDeniedException
 import com.ChickenKitchen.app.enum.MailType
-
+import com.ChickenKitchen.app.handler.PasswordNotCorrectException
+import com.ChickenKitchen.app.handler.UsernameNotCorrectException
 import java.util.UUID
-import java.util.Date
 import java.sql.Timestamp
 import java.math.BigDecimal
 
@@ -44,15 +44,30 @@ class AuthServiceImpl (
     private val passwordEncoder: PasswordEncoder,
     private val emailUtil: EmailUtil,
     private val jwtService: JwtServiceImpl,
-    @Value("\${mail.token.expiration}") private val expiration: Long,
+
+    @param:Value("\${mail.token.expiration}") private val expiration: Long,
+    @param:Value("\${app.frontend.url}") private val frontendUrl: String
+
 ): AuthService {
 
+    private val passwordRegex = """^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$""".toRegex()
+
     override fun register(req: RegisterRequest) {
+
+
         if (userRepository.existsByUsername(req.username)) {
             throw UserAlreadyExistsException("Username already exists")
         }
         if (userRepository.existsByEmail(req.email)) {
             throw UserAlreadyExistsException("Email already exists")
+        }
+
+        if (req.username.length < 5) {
+            throw UsernameNotCorrectException("Username must be at least 5 characters long")
+        }
+
+        if (!req.password.matches(passwordRegex)) {
+            throw PasswordNotCorrectException("Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character")
         }
 
         val user = userRepository.save(
@@ -67,6 +82,8 @@ class AuthServiceImpl (
 
         mailTokenRepository.save(MailToken(user = user, token = token, type = MailType.VERIFY_EMAIL, expiredAt = expiredAt))
 
+        val verifyLink = "$frontendUrl/api/verify?token=$token"
+
         try {
             emailUtil.
             send(
@@ -76,7 +93,7 @@ class AuthServiceImpl (
                 Hi,
                 
                 Please verify your email by clicking the link below:
-                http://localhost:8080/api/verify?token=$token
+                $verifyLink
                 
                 This link will expire in 24 hours.
                 """.trimIndent()
@@ -123,6 +140,8 @@ class AuthServiceImpl (
         if (req.oldPassword == req.newPassword) throw AuthenticationException("New password must be different from old password")
         if (!passwordEncoder.matches(req.oldPassword, user.password)) throw AuthenticationException("Old password is incorrect")
 
+        if(!req.newPassword.matches(passwordRegex)) throw PasswordNotCorrectException("Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character")
+
         user.password = passwordEncoder.encode(req.newPassword)
         userRepository.save(user)
     }
@@ -141,6 +160,8 @@ class AuthServiceImpl (
 
         mailTokenRepository.save(MailToken(user = user, token = token, type = MailType.RESET_PASSWORD, expiredAt = expiredAt))
 
+        val resetLink = "$frontendUrl/api/reset-password?token=$token"
+
         try {
             emailUtil.
             send(
@@ -151,7 +172,7 @@ class AuthServiceImpl (
                 
                 You requested to reset your password.
                 Please click the link below to reset it:
-                http://localhost:8080/api/reset-password?token=$token
+                $resetLink
                 
                 This link will expire in 24 hours.
                 """.trimIndent()

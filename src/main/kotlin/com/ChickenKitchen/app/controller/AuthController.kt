@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.http.ResponseEntity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -19,7 +18,6 @@ import com.ChickenKitchen.app.model.dto.request.ForgotPasswordRequest
 import com.ChickenKitchen.app.model.dto.request.ResetPasswordRequest
 import com.ChickenKitchen.app.model.dto.request.TokenRefreshRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
-import com.ChickenKitchen.app.model.dto.response.TokenResponse
 
 @RestController
 @RequestMapping("/api/auth")
@@ -76,5 +74,12 @@ class AuthController(
     fun refreshToken(@RequestBody req: TokenRefreshRequest): ResponseEntity<ResponseModel> {
         val newToken = authService.refreshToken(req)
         return ResponseEntity.ok(ResponseModel.success(newToken, "Token refreshed successfully"))
+    }
+
+    @Operation(summary = "Logout user")
+    @PostMapping("/logout")
+    fun logout(): ResponseEntity<ResponseModel> {
+        authService.logout()
+        return ResponseEntity.ok(ResponseModel.success(null, "Logout successfully"))
     }
 }
