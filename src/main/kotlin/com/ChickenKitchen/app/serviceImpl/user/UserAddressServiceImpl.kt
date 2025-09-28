@@ -1,5 +1,6 @@
 package com.ChickenKitchen.app.serviceImpl.user
 
+import com.ChickenKitchen.app.handler.PhoneNumberInvalidException
 import org.springframework.stereotype.Service
 import com.ChickenKitchen.app.model.entity.user.UserAddress
 import com.ChickenKitchen.app.model.dto.response.UserAddressResponse
@@ -17,6 +18,8 @@ class UserAddressServiceImpl (
     private val userRepository: UserRepository,
     private val userAddressRepository: UserAddressRepository
 ) : UserAddressService {
+
+    private val  phoneRegex = """^0\d{9,10}$""".toRegex()
 
     override fun getAll(): List<UserAddressResponse> {
         val username = SecurityContextHolder.getContext().authentication.name
@@ -42,6 +45,10 @@ class UserAddressServiceImpl (
         val username = SecurityContextHolder.getContext().authentication.name
         val user = userRepository.findByUsername(username)
             ?: throw IllegalArgumentException("User not found")
+
+        if (!req.phone.matches(phoneRegex)) {
+            throw PhoneNumberInvalidException("Phone number is invalid")
+        }
 
         val userAddress = UserAddress(
             user = user,
@@ -70,6 +77,12 @@ class UserAddressServiceImpl (
 
         val address = userAddressRepository.findAllByUserUsernameAndId(userUsername = username, id = id).firstOrNull()
             ?: throw IllegalArgumentException("Address not found")
+
+        req.phone?.let {
+            if (!it.matches(phoneRegex)) {
+                throw PhoneNumberInvalidException("Phone number is invalid")
+            }
+        }
 
         address.recipientName = req.recipientName ?: address.recipientName
         address.phone = req.phone ?: address.phone

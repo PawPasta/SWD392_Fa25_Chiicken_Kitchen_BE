@@ -3,9 +3,7 @@ package com.ChickenKitchen.app.controller
 import com.ChickenKitchen.app.service.user.UserAddressService
 import com.ChickenKitchen.app.model.dto.request.CreateUserAddressRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserAddressRequest
-import com.ChickenKitchen.app.model.dto.response.UserAddressResponse
 import io.swagger.v3.oas.annotations.Operation
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping
@@ -13,10 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.DeleteMapping
-
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
-import org.eclipse.angus.mail.iap.Response
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 
 @RestController
@@ -63,5 +59,12 @@ class UserAddressController(
     fun deleteUserAddress(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         userAddressService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "Delete address successfully!"))
+    }
+
+    @Operation(summary = "Set a user address as default")
+    @PutMapping("/{id}/default")
+    fun setDefaultAddress(@PathVariable id: Long): ResponseEntity<ResponseModel> {
+        userAddressService.setDefault(id)
+        return ResponseEntity.ok(ResponseModel.success(null, "Set default address successfully!"))
     }
 }

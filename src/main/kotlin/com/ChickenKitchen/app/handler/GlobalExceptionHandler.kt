@@ -1,23 +1,11 @@
 package com.ChickenKitchen.app.handler
 
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
-import com.ChickenKitchen.app.handler.UserAlreadyExistsException
-import com.ChickenKitchen.app.handler.UserNotFoundException
-import com.ChickenKitchen.app.handler.AuthenticationException
-import com.ChickenKitchen.app.handler.TokenException
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
-import org.springframework.web.HttpRequestMethodNotSupportedException
-import org.springframework.web.bind.MethodArgumentNotValidException
-import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import org.springframework.web.servlet.NoHandlerFoundException
-import jakarta.persistence.EntityNotFoundException
-import java.sql.SQLIntegrityConstraintViolationException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -27,6 +15,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException::class)
     fun handleUserAlreadyExists(e: UserAlreadyExistsException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "User already exists")
+
+    @ExceptionHandler(UsernameNotCorrectException ::class)
+    fun handleUsernameNotCorrect(e: UsernameNotCorrectException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Username required more than 5 characters")
+
+    @ExceptionHandler(PasswordNotCorrectException ::class)
+    fun handlePasswordNotCorrect(e: PasswordNotCorrectException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Password must have at least 8 characters, 1 uppercase letter, 1 number, and 1 special character")
 
     @ExceptionHandler(AuthenticationException::class)
     fun handleAuth(e: AuthenticationException) =
@@ -90,6 +86,12 @@ class GlobalExceptionHandler {
     @ExceptionHandler(UnitMustNotBeNullException::class)
     fun handleUnitNotNull(e: UnitMustNotBeNullException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Unit must not be null")
+
+    // ========== Address Exception ==========
+    @ExceptionHandler(PhoneNumberInvalidException::class)
+    fun handlePhoneNumberInvalid(e: PhoneNumberInvalidException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Phone number is invalid")
+
 
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {

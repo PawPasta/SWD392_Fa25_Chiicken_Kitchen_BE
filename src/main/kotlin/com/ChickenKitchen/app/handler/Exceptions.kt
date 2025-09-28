@@ -5,6 +5,10 @@ class UserAlreadyExistsException(message: String) : RuntimeException(message)
 
 class UserNotFoundException(message: String) : RuntimeException(message)
 
+class UsernameNotCorrectException(message: String) : RuntimeException(message)
+
+class PasswordNotCorrectException(message: String) : RuntimeException(message)
+
 class AuthenticationException(message: String) : RuntimeException(message)
 
 class TokenException(message: String) : RuntimeException(message)
@@ -48,3 +52,8 @@ class PriceMustBeNonNegativeException(message: String) : RuntimeException(messag
 class CategoryMustNotBeNullException(message: String) : RuntimeException(message)
 
 class UnitMustNotBeNullException(message: String) : RuntimeException(message)
+
+// =================== Address Exceptions ====================
+class PhoneNumberInvalidException(message: String) : RuntimeException(message)
+
+
