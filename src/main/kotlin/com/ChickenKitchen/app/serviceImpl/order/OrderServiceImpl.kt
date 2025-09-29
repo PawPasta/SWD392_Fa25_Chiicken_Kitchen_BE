@@ -45,6 +45,7 @@ import com.ChickenKitchen.app.repository.promotion.PromotionOrderRepository
 import com.ChickenKitchen.app.repository.payment.TransactionRepository
 import com.ChickenKitchen.app.enum.PaymentMethodType
 import com.ChickenKitchen.app.enum.DiscountType
+import com.ChickenKitchen.app.enum.TransactionType
 import com.ChickenKitchen.app.model.entity.promotion.PromotionOrder
 import com.ChickenKitchen.app.model.entity.transaction.Transaction
 
@@ -129,7 +130,7 @@ class OrderServiceImpl(
         val user = userRepository.findByUsername(username)
             ?: throw UserNotFoundException("User not found")
 
-        if (req.quantity < 0) throw QuantityMustBeNonNegativeException("Quantity must be non-negative")
+        if (req.quantity < 0) throw QuantityMustBeNonNegativeException("Quantity must be more than 0")
 
         // Try to find an existing NEW order for the user; if none, create one
         val existingNew = orderRepository.findAllByUserUsernameAndStatus(username, OrderStatus.NEW)
@@ -163,6 +164,9 @@ class OrderServiceImpl(
         // Recalculate total
         val total = order.order_items.fold(BigDecimal.ZERO) { acc, it -> acc + it.price }
         order.totalPrice = total
+
+        //Update Order status
+        order.status = OrderStatus.NEW
 
         val saved = orderRepository.save(order)
         val items = orderItemRepository.findAllByOrderId(saved.id!!)
@@ -327,29 +331,22 @@ class OrderServiceImpl(
         val order = orderRepository.findById(orderId).orElse(null)
             ?: throw IngredientNotFoundException("Order with id $orderId not found")
 
-        if (order.user.id != user.id) {
-            throw AccessDeniedException("You do not have access to this order")
-        }
-        if (order.order_items.isEmpty()) {
-            throw QuantityMustBeNonNegativeException("Order has no items to confirm")
-        }
-        if (order.status != OrderStatus.NEW) {
-            throw AccessDeniedException("Only NEW orders can be confirmed by user")
-        }
+        if (order.user.id != user.id) throw AccessDeniedException("You do not have access to this order")
+        if (order.order_items.isEmpty()) throw QuantityMustBeNonNegativeException("Order has no items to confirm")
+        if (order.status != OrderStatus.NEW) throw AccessDeniedException("Only NEW orders can be confirmed by user")
 
-        // Validate and set user address
+        // Validate and set address
         val address = userAddressRepository.findById(req.userAddressId).orElse(null)
             ?: throw IngredientNotFoundException("UserAddress with id ${req.userAddressId} not found")
-        if (address.user.id != user.id) {
-            throw AccessDeniedException("Address does not belong to current user")
-        }
+        if (address.user.id != user.id) throw AccessDeniedException("Address does not belong to current user")
         order.userAddress = address
 
-        // Resolve payment method (default COD)
-        val pmType = req.paymentMethod
-        val paymentMethod = paymentMethodRepository.findByName(pmType).orElse(null)
-            ?: throw IngredientNotFoundException("Payment method ${pmType.name} not found")
+        // Payment method
+        val paymentMethod = paymentMethodRepository.findByName(req.paymentMethod).orElse(null)
+            ?: throw IngredientNotFoundException("Payment method ${req.paymentMethod.name} not found")
+        if (!paymentMethod.isActive) throw AccessDeniedException("Payment method is under maintenance")
 
+        // Promotion
         // Apply promotion if provided
         req.promotionId?.let { pid ->
             val promo = promotionRepository.findById(pid).orElse(null)
@@ -378,45 +375,55 @@ class OrderServiceImpl(
             // Create PromotionOrder linkage and reduce promo quantity
             val po = PromotionOrder(order = order, promotion = promo, user = user, usedDate = now)
             promotionOrderRepository.save(po)
-            promo.quantity = promo.quantity - 1
+            promo.quantity -= 1
             promotionRepository.save(promo)
         }
 
-        // Create a transaction record for the order
-        val tx = Transaction(
-            order = order,
-            user = user,
-            paymentMethod = paymentMethod,
-            transactionType = com.ChickenKitchen.app.enum.TransactionType.CAPTURE,
-            amount = order.totalPrice,
-            createdAt = Timestamp(System.currentTimeMillis()),
-            note = "COD"
+        val note = if (req.paymentMethod == PaymentMethodType.CASH_ON_DELIVERY) {
+            "COD"
+        } else {
+            "Online Banking"
+        }
+
+        transactionRepository.save(
+            Transaction(
+                order = order,
+                user = user,
+                paymentMethod = paymentMethod,
+                transactionType = TransactionType.PENDING,
+                amount = order.totalPrice,
+                createdAt = Timestamp(System.currentTimeMillis()),
+                note = note
+            )
         )
-        transactionRepository.save(tx)
 
-        // Update order status to CONFIRMED and add status history
+        // Cập nhật status
         order.status = OrderStatus.CONFIRMED
-        addStatusHistory(order, OrderStatus.CONFIRMED, note = "Order confirmed by user")
 
+        addStatusHistory(order, order.status, note ="Order confirmed by user - Cash")
         val saved = orderRepository.save(order)
+
         val items = orderItemRepository.findAllByOrderId(saved.id!!)
+
         return UserOrderDetailResponse(
             id = saved.id!!,
             totalPrice = saved.totalPrice,
             status = saved.status,
             createdAt = saved.createdAt,
-            items = items.map { oi -> toUserOrderItemDetail(oi) },
-            address = if (saved.status != OrderStatus.NEW && saved.userAddress != null)
+            items = items.map { toUserOrderItemDetail(it) },
+            address = saved.userAddress?.let { addr ->
                 UserAddressResponse(
-                    id = saved.userAddress!!.id!!,
-                    recipientName = saved.userAddress!!.recipientName,
-                    phone = saved.userAddress!!.phone,
-                    addressLine = saved.userAddress!!.addressLine,
-                    city = saved.userAddress!!.city,
-                    isDefault = saved.userAddress!!.isDefault
-                ) else null
+                    id = addr.id!!,
+                    recipientName = addr.recipientName,
+                    phone = addr.phone,
+                    addressLine = addr.addressLine,
+                    city = addr.city,
+                    isDefault = addr.isDefault
+                )
+            },
         )
     }
+
 
     override fun changeStatus(id: Long): OrderResponse {
         val order = orderRepository.findById(id).orElse(null)

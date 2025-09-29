@@ -93,6 +93,37 @@ class GlobalExceptionHandler {
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Phone number is invalid")
 
 
+    // ========== Order Exception ==========
+    @ExceptionHandler(OrderNotFoundException::class)
+    fun handleOrderNotFound(e: OrderNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Order not found")
+    @ExceptionHandler(OrderNotInStatusException::class)
+    fun handleOrderNotInStatus(e: OrderNotInStatusException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Order not in the required status")
+
+
+    //===========Transactions Exception ==========
+    @ExceptionHandler(TransactionNotFoundException::class)
+    fun handleTransactionNotFound(e: TransactionNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Transaction not found")
+
+
+    //=========== Payment Method Exception ==========
+    @ExceptionHandler(PaymentMethodNotActiveException::class)
+    fun handlePaymentMethodNotActive(e: PaymentMethodNotActiveException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Payment method is under maintenance")
+    @ExceptionHandler(PaymentMethodNotFoundException :: class)
+    fun handlePaymentMethodNotFound(e: PaymentMethodNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Payment method not found")
+
+    //=========== Payment Exception ==========
+    @ExceptionHandler(VNPayPaymentNotVerify :: class)
+    fun handlePaymentMethodNotFoundInPayment(e: VNPayPaymentNotVerify) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Payment method not found")
+    @ExceptionHandler(PaymentException ::class)
+    fun handlePaymentException(e: PaymentException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Payment processing error")
+
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {
         return ResponseEntity(

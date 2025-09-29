@@ -8,6 +8,7 @@ import java.util.*
 
 @Repository
 interface TransactionRepository : JpaRepository<Transaction, Long> {
+    fun findByOrderIdAndTransactionType(orderId: Long, transactionType: TransactionType): Transaction?
     fun findAllByUserId(userId: Long): List<Transaction>
     fun findAllByOrderId(orderId: Long): List<Transaction>
     fun findAllByTransactionType(transactionType: TransactionType): List<Transaction>

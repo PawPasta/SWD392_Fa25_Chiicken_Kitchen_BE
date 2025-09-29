@@ -35,6 +35,6 @@ data class UpdateUserOrderItemRequest(
 
 data class ConfirmOrderRequest(
     val userAddressId: Long,
-    val paymentMethod: PaymentMethodType = PaymentMethodType.CASH_ON_DELIVERY,
+    val paymentMethod: PaymentMethodType,
     val promotionId: Long? = null
 )
