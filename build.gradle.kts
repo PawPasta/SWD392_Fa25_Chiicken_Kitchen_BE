@@ -4,10 +4,10 @@ plugins {
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
-    kotlin("kapt") version "2.2.20"
-}
+    kotlin("kapt") version "2.2.20" 
+} 
 
-group = "com.ChickenKitchen"
+group = "com.ChickenKitchen" 
 version = "0.0.1-SNAPSHOT"
 description = "Step-by-step ordering suggestion system integrated with Chicken Kitchen"
 
