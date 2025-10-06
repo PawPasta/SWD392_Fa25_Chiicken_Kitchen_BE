@@ -57,3 +57,19 @@ class UnitMustNotBeNullException(message: String) : RuntimeException(message)
 class PhoneNumberInvalidException(message: String) : RuntimeException(message)
 
 
+// =================== Order Exceptions ====================
+class OrderNotFoundException(message: String) : RuntimeException(message)
+class OrderNotInStatusException(message: String) : RuntimeException(message)
+
+// =================== Transaction Exceptions ====================
+class TransactionNotFoundException(message: String) : RuntimeException(message)
+
+
+// =================== Payment Method Exceptions ====================
+class PaymentMethodNotActiveException(message: String) : RuntimeException(message)
+class PaymentMethodNotFoundException(message: String) : RuntimeException(message)
+
+
+//=================== Payment Exceptions ====================
+class VNPayPaymentNotVerify(message: String) : RuntimeException(message)
+class PaymentException(message: String) : RuntimeException(message)
