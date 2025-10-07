@@ -37,20 +37,13 @@ class UserServiceImpl (
     }
 
     override fun create(req: CreateUserRequest) : UserDetailResponse {
-        if (req.username.isNullOrEmpty()) {
-            throw IllegalArgumentException("Username is required")
-        }
         if (req.email.isNullOrEmpty()) {
             throw IllegalArgumentException("Email is required")
         }
-        if (req.password.isNullOrEmpty()) {
-            throw IllegalArgumentException("Password is required")
-        }
         val newUser = userRepository.save(
             User(
-                username = req.username,
+                fullname = req.fullname,
                 email = req.email,
-                password = req.password,
                 firstName = req.firstName,
                 lastName = req.lastName,
                 birthday = req.birthday,
@@ -63,8 +56,8 @@ class UserServiceImpl (
 
     override fun update(id: Long, req: UpdateUserRequest) : UserDetailResponse {
         val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
-        if (!req.username.isNullOrEmpty()) {
-            user.username = req.username
+        if (!req.fullname.isNullOrEmpty()) {
+            user.fullname = req.fullname
         }
         if (!req.email.isNullOrEmpty()) {
             user.email = req.email
@@ -101,14 +94,14 @@ class UserServiceImpl (
     }
 
     override fun getProfile() : UserProfileResponse {
-        val username = SecurityContextHolder.getContext().authentication.name
-        val user = userRepository.findByUsername(username) ?: throw UserNotFoundException("User not found")
+        val email = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User not found")
         return user.toUserProfileResponse()
     }
 
     override fun updateProfile(req: UpdateUserProfileRequest) : UserProfileResponse {
-        val username = SecurityContextHolder.getContext().authentication.name
-        val user = userRepository.findByUsername(username) ?: throw UserNotFoundException("User not found")
+        val email = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User not found")
     
         if (!req.firstName.isNullOrEmpty()) {
             user.firstName = req.firstName
@@ -121,7 +114,7 @@ class UserServiceImpl (
         }
 
         val updatedUser = userRepository.save(user)
-        val userSessions = userSessionRepository.findAllByUserUsernameAndIsCanceledFalse(username)
+        val userSessions = userSessionRepository.findAllByUserEmailAndIsCanceledFalse(email)
         userSessions[0].lastActivity = Timestamp(System.currentTimeMillis())
         userSessionRepository.saveAll(userSessions)
 

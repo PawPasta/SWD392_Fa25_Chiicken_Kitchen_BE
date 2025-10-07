@@ -7,7 +7,7 @@ import com.ChickenKitchen.app.model.dto.response.UserProfileResponse
 fun User.toUserResponse(): UserResponse =
     UserResponse(
         id = this.id!!,
-        username = this.username,
+        fullname = this.fullname,
         email = this.email,
         roles = this.role,
         isActive = this.isActive
@@ -19,7 +19,7 @@ fun List<User>.toUserResponseList(): List<UserResponse> =
 fun User.toUserDetailResponse(): UserDetailResponse =
     UserDetailResponse(
         id = this.id!!,
-        username = this.username,
+        fullname = this.fullname,
         email = this.email,
         roles = this.role,
         isActive = this.isActive,
@@ -33,7 +33,7 @@ fun User.toUserDetailResponse(): UserDetailResponse =
 
 fun User.toUserProfileResponse(): UserProfileResponse =
     UserProfileResponse(
-        username = this.username,
+        fullname = this.fullname,
         email = this.email,
         firstName = this.firstName,
         lastName = this.lastName,

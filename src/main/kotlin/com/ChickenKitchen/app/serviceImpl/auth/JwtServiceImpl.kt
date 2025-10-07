@@ -9,7 +9,7 @@ import java.util.Date
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.auth.JwtService
 import com.ChickenKitchen.app.handler.TokenException
-import io.jsonwebtoken.security.SignatureException
+import io.jsonwebtoken.security.SignatureException 
 
 @Component
 class JwtServiceImpl(
@@ -19,18 +19,18 @@ class JwtServiceImpl(
 ): JwtService {
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())
 
-    override fun generateUserToken(username: String, role: String): String =
+    override fun generateUserToken(email: String, role: String): String =
         Jwts.builder()
-            .setSubject(username)
+            .setSubject(email)
             .claim("role", role)
             .setIssuedAt(Date())
             .setExpiration(getExpiryDate(true))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact()
 
-    override fun generateRefreshToken(username: String): String =
+    override fun generateRefreshToken(email: String): String =
         Jwts.builder()
-            .setSubject(username)
+            .setSubject(email)
             .claim("role", "REFRESH")
             .setIssuedAt(Date())
             .setExpiration(getExpiryDate(false))
@@ -46,7 +46,7 @@ class JwtServiceImpl(
         return try {
             val claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body
             val expiration = claims.expiration
-            userRepository.existsByUsername(userDetails.username) && expiration.after(Date())
+            userRepository.existsByEmail(userDetails.username) && expiration.after(Date())
         } catch (e: ExpiredJwtException) {
             throw TokenException("Token has expired")
         } catch (e: MalformedJwtException) {
@@ -58,11 +58,11 @@ class JwtServiceImpl(
         }
     }
 
-    override fun getUsername(token: String): String? =
+    override fun getEmail(token: String): String? =
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body.subject
         } catch (e: Exception) {
-            throw TokenException("Failed to extract username from token: ${e.message}")
+            throw TokenException("Failed to extract email from token: ${e.message}")
         }
 
     override fun getRole(token: String): String =

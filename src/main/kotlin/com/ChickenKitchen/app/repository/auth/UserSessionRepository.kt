@@ -10,7 +10,7 @@ interface UserSessionRepository : JpaRepository<UserSession, Long> {
     fun findBySessionToken(sessionToken: String): UserSession?
     fun findByRefreshToken(refreshToken: String): UserSession?
     fun findByRefreshTokenAndIsCanceledFalse(refreshToken: String): UserSession?
-    fun findAllByUserUsernameAndIsCanceledFalse(username: String): List<UserSession>
+    fun findAllByUserEmailAndIsCanceledFalse(email: String): List<UserSession>
     fun findAllByUserId(userId: Long): List<UserSession>
     fun deleteBySessionToken(sessionToken: String)
 }

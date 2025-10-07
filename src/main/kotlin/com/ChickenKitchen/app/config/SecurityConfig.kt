@@ -36,45 +36,8 @@ class SecurityConfig(
                     "/swagger-ui.html",
                 ).permitAll()
                 it.requestMatchers( // Endpoint Auth
-                    "/api/auth/register",
                     "/api/auth/login",
-                    "/api/auth/verify",
-                    "/api/auth/forgot-password",
-                    "/api/auth/reset-password",
-                ).permitAll()
-                it.requestMatchers( // Endpoint Ingredient
-                    HttpMethod.GET, 
-                    "/api/nutrient", 
-                    "/api/nutrient/*",
-                    "/api/ingredient",
-                    "/api/ingredient/*",
-                    "/api/category",
-                    "/api/category/*",
-                ).permitAll() 
-                it.requestMatchers( // Endpoint Recipe 
-                    HttpMethod.GET,
-                    "/api/recipe",
-                    "/api/recipe/*",
-                ).permitAll()
-                it.requestMatchers( // Endpoint Promotion
-                    HttpMethod.GET,
-                    "/api/promotion",
-                    "/api/promotion/*",
-                ).permitAll()
-                it.requestMatchers( // Endpoint Payment Method
-                    HttpMethod.GET,
-                    "/api/payment-method",
-                    "/api/payment-method/*",
-                ).permitAll()
-                it.requestMatchers( // Endpoint Combo
-                    HttpMethod.GET,
-                    "/api/combo",
-                    "/api/combo/*",
-                ).permitAll()
-                it.requestMatchers( // Endpoint Daily Menu
-                    HttpMethod.GET,
-                    "/api/daily-menu",
-                    "/api/daily-menu/*",
+                    "/api/auth/refresh-token",
                 ).permitAll()
                 .anyRequest().authenticated()
             }

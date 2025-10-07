@@ -6,9 +6,8 @@ import java.time.LocalDate
 // Những response này chỉ dùng cho admin
 
 data class CreateUserRequest(
-    val username: String,
+    val fullname: String,
     val email: String,
-    val password: String,
     val role: Role = Role.USER,
     val isActive: Boolean = true,
     val firstName: String? = null,
@@ -17,7 +16,7 @@ data class CreateUserRequest(
 )
 
 data class UpdateUserRequest(
-    val username: String? = null,
+    val fullname: String? = null,
     val email: String? = null,
     val role: Role? = null,
     val isActive: Boolean? = null,

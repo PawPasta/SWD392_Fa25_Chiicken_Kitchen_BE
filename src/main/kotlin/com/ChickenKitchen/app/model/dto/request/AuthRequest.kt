@@ -1,30 +1,14 @@
 package com.ChickenKitchen.app.model.dto.request
 
-data class RegisterRequest (
-    val username: String,
+// Firebase-supported login: backend receives user info payload (e.g., from test.json)
+data class FirebaseLoginRequest(
+    val uid: String,
     val email: String,
-    val password: String,
+    val name: String? = null,
+    val emailVerified: Boolean = false,
+    val picture: String? = null,
 )
 
-data class LoginRequest (
-    val username: String,
-    val password: String,
-)
-
-data class ForgotPasswordRequest (
-    val email: String
-)
-
-data class ChangePasswordRequest (
-    val oldPassword: String,
-    val newPassword: String
-)
-
-data class ResetPasswordRequest (
-    val token: String,
-    val newPassword: String
-)
-
-data class TokenRefreshRequest (
+data class TokenRefreshRequest(
     val refreshToken: String
 )

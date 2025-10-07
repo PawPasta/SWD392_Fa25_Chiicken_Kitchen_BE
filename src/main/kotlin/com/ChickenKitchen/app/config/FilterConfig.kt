@@ -24,27 +24,8 @@ class FilterConfig(
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-ui.html",
-        "/api/auth/register",
         "/api/auth/login",
-        "/api/auth/verify",
-        "/api/auth/forgot-password",
-        "/api/auth/reset-password",
-        "/api/nutrient",
-        "/api/nutrient/",
-        "/api/ingredient",
-        "/api/ingredient/",
-        "/api/category",
-        "/api/category/",
-        "/api/recipe",
-        "/api/recipe/",
-        "/api/promotion",
-        "/api/promotion/",
-        "/api/combo",
-        "/api/combo/",
-        "/api/daily-menu",
-        "/api/daily-menu/",
-        "/api/payment-method",
-        "/api/payment-method/",
+        "/api/auth/refresh-token",
     )
 
     override fun doFilterInternal(
@@ -65,10 +46,10 @@ class FilterConfig(
             // Nếu có token thì parse
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 val token = authHeader.substring(7)
-                val username = jwtService.getUsername(token)
+                val email = jwtService.getEmail(token)
 
-                if (username != null && SecurityContextHolder.getContext().authentication == null) {
-                    val userDetails = userDetailsService.loadUserByUsername(username)
+                if (email != null && SecurityContextHolder.getContext().authentication == null) {
+                    val userDetails = userDetailsService.loadUserByUsername(email)
 
                     if (jwtService.isTokenValid(token, userDetails)) {
                         val authToken = UsernamePasswordAuthenticationToken(
