@@ -1,3 +1,25 @@
 package com.ChickenKitchen.app.enum
 
-enum class Role { USER, EMPLOYEE, MANAGER, ADMIN }
+enum class Role {
+    USER, EMPLOYEE, MANAGER, ADMIN
+}
+
+enum class DiscountType {
+    PERCENT, AMOUNT
+}
+
+enum class OrderStatus {
+    NEW, CONFIRMED, PROCESSING, COMPLETED, CANCELLED
+}
+
+enum class TransactionStatus {
+    PENDING, SUCCESS, REFUND, FAILED
+}
+
+enum class MenuCategory {
+    CARB, PROTEIN, VEGETABLE, SAUCE, DAIRY, FRUIT
+}
+
+enum class UnitType {
+    G, ML
+}

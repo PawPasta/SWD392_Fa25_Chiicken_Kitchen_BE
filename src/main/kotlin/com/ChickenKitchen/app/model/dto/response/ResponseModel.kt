@@ -4,13 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "Standard API response model")
 data class ResponseModel(
-    @Schema(description = "HTTP status code", example = "200")
+    @param:Schema(description = "HTTP status code", example = "200")
     val statusCode: Int,
 
-    @Schema(description = "Response message", example = "Success")
+    @param:Schema(description = "Response message", example = "Success")
     val message: String,
 
-    @Schema(description = "Response data, can be object or null")
+    @param:Schema(description = "Response data, can be object or null")
     val data: Any? = null
 ) {
     companion object {
