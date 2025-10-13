@@ -1,6 +1,5 @@
 package com.ChickenKitchen.app.model.entity.user
 
-import User
 import jakarta.persistence.*
 import java.sql.Timestamp
 

@@ -1,8 +1,9 @@
+package com.ChickenKitchen.app.model.entity.user
+
 import com.ChickenKitchen.app.enum.Role
 import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.entity.order.Order
-import com.ChickenKitchen.app.model.entity.user.Wallet
 import jakarta.persistence.*
 import java.sql.Timestamp
 
@@ -23,6 +24,9 @@ class User(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val role: Role,
+
+    @Column(name = "uid", unique = true, length = 128)
+    val uid: String? = null,
 
     @Column(nullable = false, length = 100)
     val username: String,
@@ -50,6 +54,12 @@ class User(
 
     @Column(name = "full_name", nullable = false, length = 100)
     val fullName: String,
+
+//    @Column(columnDefinition = "json")
+//    val providers: List<String> = listOf(),
+
+//    @Column(columnDefinition = "TEXT")
+//    val providers: String? = null,
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     val sessions: MutableList<UserSession> = mutableListOf(),

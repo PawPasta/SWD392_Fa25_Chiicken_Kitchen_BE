@@ -1,7 +1,7 @@
 package com.ChickenKitchen.app.model.entity.promotion
 
-import User
 import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
 import java.sql.Timestamp
 

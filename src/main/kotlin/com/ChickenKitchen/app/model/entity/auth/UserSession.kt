@@ -1,5 +1,6 @@
 package com.ChickenKitchen.app.model.entity.auth
-import User
+
+import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
