@@ -26,7 +26,7 @@ class AuthServiceImpl(
 
 
     override fun loginWithFirebase(req: FirebaseLoginRequest): TokenResponse {
-        val payload = jwtService.decodeUnverifiedJwtPayload(req.accessToken)
+        val payload = jwtService.decodeUnverifiedJwtPayload(req.idToken)
 
         val email = payload.path("email").asText(null)
             ?: throw AuthenticationException("Invalid Firebase token: email is missing")
@@ -59,21 +59,21 @@ class AuthServiceImpl(
             }
         }
 
-        val accessToken = jwtService.generateUserToken(user.email, user.role.name)
+        val idToken = jwtService.generateUserToken(user.email, user.role.name)
         val refreshToken = jwtService.generateRefreshToken(user.email)
         val expiryAt = jwtService.getExpiryDate(false)
 
         userSessionRepository.save(
             UserSession(
                 user = user,
-                sessionToken = accessToken,
+                sessionToken = idToken,
                 refreshToken = refreshToken,
                 expiresAt = Timestamp(expiryAt.time),
                 lastActivity = Timestamp(System.currentTimeMillis())
             )
         )
 
-        return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
+        return TokenResponse(idToken = idToken, refreshToken = refreshToken)
     }
 
     // Decode helpers moved to JwtServiceImpl
@@ -89,21 +89,21 @@ class AuthServiceImpl(
         }
 
         val user = userSession.user
-        val newAccessToken = jwtService.generateUserToken(user.email, user.role.name)
+        val newidToken = jwtService.generateUserToken(user.email, user.role.name)
         val newRefreshToken = jwtService.generateRefreshToken(user.email)
         val newExpiryAt = jwtService.getExpiryDate(false)
 
         userSessionRepository.save(
             UserSession(
                 user = user,
-                sessionToken = newAccessToken,
+                sessionToken = newidToken,
                 refreshToken = newRefreshToken,
                 expiresAt = Timestamp(newExpiryAt.time),
                 lastActivity = Timestamp(System.currentTimeMillis()),
             )
         )
 
-        return TokenResponse(accessToken = newAccessToken, refreshToken = newRefreshToken)
+        return TokenResponse(idToken = newidToken, refreshToken = newRefreshToken)
     }
 
     override fun logout() {

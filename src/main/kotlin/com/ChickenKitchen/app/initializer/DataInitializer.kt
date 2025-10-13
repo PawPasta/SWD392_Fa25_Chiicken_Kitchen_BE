@@ -79,7 +79,7 @@ class DataInitializer {
                 User(
                     role = Role.MANAGER,
                     uid = "manager-uid-001",
-                    email = "manager@chickenkitchen.com",
+                    email = "khiem1371@gmail.com",
                     isVerified = true,
                     phone = "0901234568",
                     isActive = true,

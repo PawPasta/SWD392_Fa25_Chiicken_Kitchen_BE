@@ -24,7 +24,7 @@ class FilterConfig(
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-ui.html",
-        "/api/auth/provider/login",
+        "/api/auth/login",
         "/api/auth/refresh",
     )
 
@@ -35,33 +35,34 @@ class FilterConfig(
     ) {
         try {
             val requestUri = request.requestURI
-            val isPublic = publicApis.any { requestUri.startsWith(it) }
+
+            // Public thì cho qua luôn
+            if (publicApis.any { requestUri.startsWith(it) }) {
+                filterChain.doFilter(request, response) 
+                return
+            }
             val authHeader = request.getHeader("Authorization")
 
-            // Nếu là private API mà không có token
-            if (!isPublic && (authHeader == null || !authHeader.startsWith("Bearer "))) {
-                throw TokenException("Missing or invalid Authorization header")
-            }
+            // Chặn lại kiểm tra giấy tờ
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) throw TokenException("Missing or invalid Authorization header")
 
-            // Nếu có token thì parse
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                val token = authHeader.substring(7)
-                val email = jwtService.getEmail(token)
+            // Có giấy thì vô
+            val token = authHeader.substring(7)
+            val email = jwtService.getEmail(token)
 
-                if (email != null && SecurityContextHolder.getContext().authentication == null) {
-                    val userDetails = userDetailsService.loadUserByUsername(email)
+            if (email != null && SecurityContextHolder.getContext().authentication == null) {
+                val userDetails = userDetailsService.loadUserByUsername(email)
 
-                    if (jwtService.isTokenValid(token, userDetails)) {
-                        val authToken = UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.authorities
-                        )
-                        authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-                        SecurityContextHolder.getContext().authentication = authToken
-                    } else {
-                        throw TokenException("Invalid or expired token")
-                    }
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    val authToken = UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.authorities
+                    )
+                    authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+                    SecurityContextHolder.getContext().authentication = authToken
+                } else {
+                    throw TokenException("Invalid or expired token")
                 }
             }
 

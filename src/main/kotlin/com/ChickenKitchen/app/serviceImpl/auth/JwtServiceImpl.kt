@@ -18,7 +18,8 @@ import java.util.Base64
 class JwtServiceImpl(
     @param:Value("\${jwt.secret}") private val secret: String,
     @param:Value("\${jwt.expiration}") private val expiration: Long,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val userSessionRepository: com.ChickenKitchen.app.repository.auth.UserSessionRepository
 ): JwtService {
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())
 
@@ -40,16 +41,26 @@ class JwtServiceImpl(
             .signWith(key, SignatureAlgorithm.HS256)
             .compact()
 
-    override fun getExpiryDate(accessToken: Boolean): Date {
+    override fun getExpiryDate(idToken: Boolean): Date {
         val now = Date()
-        return if (accessToken) Date(now.time + expiration) else Date(now.time + 10 * expiration)
+        return if (idToken) Date(now.time + expiration) else Date(now.time + 10 * expiration)
     }
 
     override fun isTokenValid(token: String, userDetails: UserDetails): Boolean {
         return try {
             val claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body
             val expiration = claims.expiration
-            userRepository.existsByEmail(userDetails.username) && expiration.after(Date())
+
+            // Check user exists
+            if (!userRepository.existsByEmail(userDetails.username)) return false
+
+            // Check token not cancelled in DB session table
+            val session = userSessionRepository.findBySessionToken(token)
+                ?: throw TokenException("Session not found for token")
+            if (session.isCancelled) throw TokenException("Session has been cancelled")
+
+            // Check token expiry (JWT claim)
+            expiration.after(Date())
         } catch (e: ExpiredJwtException) {
             throw TokenException("Token has expired")
         } catch (e: MalformedJwtException) {

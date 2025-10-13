@@ -2,7 +2,7 @@ package com.ChickenKitchen.app.model.dto.request
 
 // Firebase login: backend only receives the Firebase ID token
 data class FirebaseLoginRequest(
-    val accessToken: String
+    val idToken: String
 )
 
 // Removed internal email/password login request

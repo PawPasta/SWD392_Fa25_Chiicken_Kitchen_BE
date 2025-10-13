@@ -31,7 +31,7 @@ class SecurityConfig(
                     "/swagger-ui.html",
                 ).permitAll()
                 it.requestMatchers( // Endpoint Auth nè
-                    "/api/auth/provider/login",
+                    "/api/auth/login",
                     "/api/auth/refresh",
                 ).permitAll()
                 .anyRequest().authenticated()
