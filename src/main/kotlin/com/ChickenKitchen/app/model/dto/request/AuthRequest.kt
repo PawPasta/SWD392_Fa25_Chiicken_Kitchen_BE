@@ -5,10 +5,7 @@ data class FirebaseLoginRequest(
     val accessToken: String
 )
 
-data class LoginRequest(
-    val email: String,
-    val password: String
-)
+// Removed internal email/password login request
 
 data class TokenRefreshRequest(
     val refreshToken: String

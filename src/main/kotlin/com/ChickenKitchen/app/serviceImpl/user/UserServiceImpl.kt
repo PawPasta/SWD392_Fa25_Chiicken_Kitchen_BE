@@ -48,7 +48,6 @@ class UserServiceImpl (
                 role = req.role,
                 isActive = req.isActive,
                 imageURL = req.imageURL,
-                password = "123",
                 provider = "local"
             )
         )

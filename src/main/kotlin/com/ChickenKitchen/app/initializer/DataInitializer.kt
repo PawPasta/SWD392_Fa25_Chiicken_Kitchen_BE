@@ -34,7 +34,6 @@ import com.ChickenKitchen.app.repository.user.UserRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.crypto.password.PasswordEncoder
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -58,7 +57,6 @@ class DataInitializer {
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
         dailyMenuRepository: DailyMenuRepository,
-        passwordEncoder: PasswordEncoder
     ) = CommandLineRunner {
 
         // USERS
@@ -69,7 +67,6 @@ class DataInitializer {
                     role = Role.ADMIN,
                     uid = "admin-uid-001",
                     email = "admin@chickenkitchen.com",
-                    password = passwordEncoder.encode("Admin@123"),
                     isVerified = true,
                     phone = "0901234567",
                     isActive = true,
@@ -83,7 +80,6 @@ class DataInitializer {
                     role = Role.MANAGER,
                     uid = "manager-uid-001",
                     email = "manager@chickenkitchen.com",
-                    password = passwordEncoder.encode("Manager@123"),
                     isVerified = true,
                     phone = "0901234568",
                     isActive = true,
@@ -97,7 +93,6 @@ class DataInitializer {
                     role = Role.EMPLOYEE,
                     uid = "employee-uid-001",
                     email = "employee1@chickenkitchen.com",
-                    password = passwordEncoder.encode("Employee@123"),
                     isVerified = true,
                     phone = "0901234569",
                     isActive = true,
@@ -111,7 +106,6 @@ class DataInitializer {
                     role = Role.EMPLOYEE,
                     uid = "employee-uid-002",
                     email = "employee2@chickenkitchen.com",
-                    password = passwordEncoder.encode("Employee@123"),
                     isVerified = true,
                     phone = "0901234570",
                     isActive = true,
@@ -125,7 +119,6 @@ class DataInitializer {
                     role = Role.STORE,
                     uid = "store-uid-002",
                     email = "store@chickenkitchen.com",
-                    password = passwordEncoder.encode("Store@123"),
                     isVerified = true,
                     phone = "0901234570",
                     isActive = true,

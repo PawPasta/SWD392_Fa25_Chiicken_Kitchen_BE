@@ -8,8 +8,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.authentication.AuthenticationManager
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -23,9 +21,6 @@ class SecurityConfig(
 ) {
 
     @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
-    @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
@@ -35,10 +30,9 @@ class SecurityConfig(
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                 ).permitAll()
-                it.requestMatchers( // Endpoint Auth
-                    "/api/auth/internal/login",
+                it.requestMatchers( // Endpoint Auth nè
                     "/api/auth/provider/login",
-                    "/api/auth/refresh-token",
+                    "/api/auth/refresh",
                 ).permitAll()
                 .anyRequest().authenticated()
             }

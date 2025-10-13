@@ -10,12 +10,10 @@ import com.ChickenKitchen.app.repository.auth.UserSessionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.auth.AuthService
 import com.ChickenKitchen.app.handler.TokenException
-import com.ChickenKitchen.app.model.dto.request.LoginRequest
+// Removed internal email/password login
 import com.ChickenKitchen.app.model.entity.user.User
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -24,7 +22,6 @@ class AuthServiceImpl(
     private val userRepository: UserRepository,
     private val userSessionRepository: UserSessionRepository,
     private val jwtService: JwtServiceImpl,
-    private val passwordEncoder: PasswordEncoder
 ) : AuthService {
 
 
@@ -47,7 +44,6 @@ class AuthServiceImpl(
                     isActive = true,
                     isVerified = payload.path("email_verified").asBoolean(true),
                     imageURL = picture,
-                    password = passwordEncoder.encode("oauth_firebase"),
                     provider = provider,
                 ).also { it.uid = uid }
             )
@@ -81,44 +77,6 @@ class AuthServiceImpl(
     }
 
     // Decode helpers moved to JwtServiceImpl
-
-    override fun login(req: LoginRequest): TokenResponse {
-        val user = userRepository.findByEmail(req.email)
-            ?: throw AuthenticationException("Cannot find employee")
-
-        val encoder = BCryptPasswordEncoder()
-
-        if (!encoder.matches(req.password, user.password)) {
-            throw AuthenticationException("Invalid credentials")
-        }
-
-        if (!user.isActive) throw AuthenticationException("Your account is locked!")
-
-        // Cancel all previous sessions (regardless of status) before creating a new session
-        user.id?.let { userId ->
-            val sessions = userSessionRepository.findAllByUserId(userId)
-            if (sessions.isNotEmpty()) {
-                sessions.forEach { it.isCancelled = true }
-                userSessionRepository.saveAll(sessions)
-            }
-        }
-
-        val accessToken = jwtService.generateUserToken(user.email, user.role.name)
-        val refreshToken = jwtService.generateRefreshToken(user.email)
-        val expiryAt = jwtService.getExpiryDate(false)
-
-        userSessionRepository.save(
-            UserSession(
-                user = user,
-                sessionToken = accessToken,
-                refreshToken = refreshToken,
-                expiresAt = Timestamp(expiryAt.time),
-                lastActivity = Timestamp(System.currentTimeMillis())
-            )
-        )
-
-        return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
-    }
 
     override fun refreshToken(req: TokenRefreshRequest): TokenResponse {
         val userSession = userSessionRepository.findByRefreshTokenAndIsCancelledFalse(req.refreshToken)

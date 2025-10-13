@@ -25,8 +25,7 @@ class FilterConfig(
         "/swagger-ui",
         "/swagger-ui.html",
         "/api/auth/provider/login",
-        "/api/auth/internal/login",
-        "/api/auth/refresh-token",
+        "/api/auth/refresh",
     )
 
     override fun doFilterInternal(
