@@ -132,8 +132,23 @@ class DataInitializer {
             )
         )
 
+        val store = userRepository.save(
+            User(
+                role = Role.STORE,
+                uid = "store-uid-002",
+                email = "store@chickenkitchen.com",
+                password = passwordEncoder.encode("Store@123"),
+                isVerified = true,
+                phone = "0901234570",
+                isActive = true,
+                fullName = "Store",
+                provider = "Local",
+                imageURL = null
+            )
+        )
 
-        println("✓ Users created: Admin, Manager, 2 Employees, 1 Customer")
+
+        println("✓ Users created: Admin, Manager, 2 Employees, 1 Customer, 1 Store")
 
         // ============================================================
         // 2. STORES

@@ -1,7 +1,7 @@
 package com.ChickenKitchen.app.enum
 
 enum class Role {
-    USER, EMPLOYEE, MANAGER, ADMIN
+    USER, EMPLOYEE, MANAGER, ADMIN, STORE
 }
 
 enum class DiscountType {
