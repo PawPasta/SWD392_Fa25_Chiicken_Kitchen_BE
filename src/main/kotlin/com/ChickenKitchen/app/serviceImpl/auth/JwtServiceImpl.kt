@@ -68,14 +68,14 @@ class JwtServiceImpl(
             throw TokenException("Failed to extract email from token: ${e.message}")
         }
 
-    override fun getRole(token: String): String =
+    override fun getRole(token: String): String? =
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body["role"] as String
         } catch (e: Exception) {
             throw TokenException("Failed to extract role from token: ${e.message}")
         }
 
-    override fun getAudience(token: String): String =
+    override fun getAudience(token: String): String? =
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body.audience
         } catch (e: Exception) {

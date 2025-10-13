@@ -47,12 +47,21 @@ class AuthServiceImpl(
                     isActive = true,
                     isVerified = payload.path("email_verified").asBoolean(true),
                     imageURL = picture,
-                    // password = "haha",
+                    password = passwordEncoder.encode("oauth_firebase"),
                     provider = provider,
                 ).also { it.uid = uid }
             )
 
         if (!user.isActive) throw AuthenticationException("Your account is locked!")
+
+        // Cancel all previous sessions (regardless of status) before creating a new session
+        user.id?.let { userId ->
+            val sessions = userSessionRepository.findAllByUserId(userId)
+            if (sessions.isNotEmpty()) {
+                sessions.forEach { it.isCancelled = true }
+                userSessionRepository.saveAll(sessions)
+            }
+        }
 
         val accessToken = jwtService.generateUserToken(user.email, user.role.name)
         val refreshToken = jwtService.generateRefreshToken(user.email)
@@ -84,6 +93,15 @@ class AuthServiceImpl(
         }
 
         if (!user.isActive) throw AuthenticationException("Your account is locked!")
+
+        // Cancel all previous sessions (regardless of status) before creating a new session
+        user.id?.let { userId ->
+            val sessions = userSessionRepository.findAllByUserId(userId)
+            if (sessions.isNotEmpty()) {
+                sessions.forEach { it.isCancelled = true }
+                userSessionRepository.saveAll(sessions)
+            }
+        }
 
         val accessToken = jwtService.generateUserToken(user.email, user.role.name)
         val refreshToken = jwtService.generateRefreshToken(user.email)
