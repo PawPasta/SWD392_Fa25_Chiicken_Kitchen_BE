@@ -5,14 +5,16 @@ import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.entity.order.Order
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import java.sql.Timestamp
+import java.time.LocalDate
 
 
 @Entity
 @Table(
     name = "users",
     indexes = [
-        Index(name = "idx_username", columnList = "username"),
         Index(name = "idx_email", columnList = "email")
     ]
 )
@@ -23,53 +25,55 @@ class User(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val role: Role,
+    var role: Role,
 
     @Column(name = "uid", unique = true, length = 128)
-    val uid: String? = null,
-
-    @Column(nullable = false, length = 100)
-    val username: String,
+    var uid: String? = null,
 
     @Column(nullable = false, unique = true, length = 100)
-    val email: String,
+    var email: String,
 
     @Column(nullable = false)
-    val password: String,
+    var password: String,
 
     @Column(name = "is_verified", nullable = false)
-    val isVerified: Boolean = false,
+    var isVerified: Boolean = false,
 
     @Column(length = 100)
-    val phone: String? = null,
+    var phone: String? = null,
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Timestamp? = null,
+    @CreationTimestamp
+    var createdAt: Timestamp? = null,
 
     @Column(name = "updated_at")
+    @UpdateTimestamp
     var updatedAt: Timestamp? = null,
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = false,
 
     @Column(name = "full_name", nullable = false, length = 100)
-    val fullName: String,
+    var fullName: String,
 
-//    @Column(columnDefinition = "json")
-//    val providers: List<String> = listOf(),
+    @Column(name = "image", nullable = true, length = 100)
+    var imageURL: String?,
 
-//    @Column(columnDefinition = "TEXT")
-//    val providers: String? = null,
+    @Column(name = "birthday")
+    var birthday: LocalDate? = null,
+
+    @Column(name = "provider", nullable = true, length = 100)
+    var provider: String?,
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val sessions: MutableList<UserSession> = mutableListOf(),
+    var sessions: MutableList<UserSession> = mutableListOf(),
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val mailTokens: MutableList<MailToken> = mutableListOf(),
+    var mailTokens: MutableList<MailToken> = mutableListOf(),
 
     @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val wallet: Wallet? = null,
+    var wallet: Wallet? = null,
 
     @OneToMany(mappedBy = "user")
-    val orders: MutableList<Order> = mutableListOf(),
+    var orders: MutableList<Order> = mutableListOf(),
 )

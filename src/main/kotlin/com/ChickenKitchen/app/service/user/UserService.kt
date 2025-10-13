@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.service.user
 
-import com.ChickenKitchen.app.model.entity.user.User
+
 import com.ChickenKitchen.app.model.dto.request.CreateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest

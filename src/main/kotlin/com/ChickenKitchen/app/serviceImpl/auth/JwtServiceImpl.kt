@@ -13,8 +13,8 @@ import io.jsonwebtoken.security.SignatureException
 
 @Component
 class JwtServiceImpl(
-    @Value("\${jwt.secret}") private val secret: String,
-    @Value("\${jwt.expiration}") private val expiration: Long,
+    @param:Value("\${jwt.secret}") private val secret: String,
+    @param:Value("\${jwt.expiration}") private val expiration: Long,
     private val userRepository: UserRepository
 ): JwtService {
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())

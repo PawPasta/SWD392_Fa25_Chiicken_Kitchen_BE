@@ -18,20 +18,20 @@ class UserSession(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    val user: User,
+    var user: User,
 
     @Column(name = "session_token")
-    val sessionToken: String? = null,
+    var sessionToken: String? = null,
 
     @Column(name = "refresh_token")
-    val refreshToken: String? = null,
+    var refreshToken: String? = null,
 
     @Column(name = "expires_at")
-    val expiresAt: Timestamp? = null,
+    var expiresAt: Timestamp? = null,
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "device_info", columnDefinition = "json")
-    val deviceInfo: String? = null,
+    var deviceInfo: String? = null,
 
     @Column(name = "last_activity")
     var lastActivity: Timestamp? = null,

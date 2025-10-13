@@ -42,13 +42,14 @@ class UserServiceImpl (
         }
         val newUser = userRepository.save(
             User(
-                fullname = req.fullname,
+                fullName = req.fullName,
                 email = req.email,
-                firstName = req.firstName,
-                lastName = req.lastName,
                 birthday = req.birthday,
                 role = req.role,
                 isActive = req.isActive,
+                imageURL = req.imageURL,
+                password = "123",
+                provider = "local"
             )
         )
         return newUser.toUserDetailResponse()
@@ -56,19 +57,10 @@ class UserServiceImpl (
 
     override fun update(id: Long, req: UpdateUserRequest) : UserDetailResponse {
         val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
-        if (!req.fullname.isNullOrEmpty()) {
-            user.fullname = req.fullname
+        if (!req.fullName.isNullOrEmpty()) {
+            user.fullName = req.fullName
         }
-        if (!req.email.isNullOrEmpty()) {
-            user.email = req.email
-        }
-        if (!req.firstName.isNullOrEmpty()) {
-            user.firstName = req.firstName
-        }
-        if (!req.lastName.isNullOrEmpty()) {
-            user.lastName = req.lastName
-        }
-        if (req.birthday != null) { 
+        if (req.birthday != null) {
             user.birthday = req.birthday
         }
         if (req.role != null) {
@@ -102,19 +94,16 @@ class UserServiceImpl (
     override fun updateProfile(req: UpdateUserProfileRequest) : UserProfileResponse {
         val email = SecurityContextHolder.getContext().authentication.name
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User not found")
-    
-        if (!req.firstName.isNullOrEmpty()) {
-            user.firstName = req.firstName
-        }
-        if (!req.lastName.isNullOrEmpty()) {
-            user.lastName = req.lastName
+
+        if (!req.fullName.isNullOrEmpty()) {
+            user.fullName = req.fullName
         }
         if (req.birthday != null) {
             user.birthday = req.birthday
         }
 
         val updatedUser = userRepository.save(user)
-        val userSessions = userSessionRepository.findAllByUserEmailAndIsCanceledFalse(email)
+        val userSessions = userSessionRepository.findAllByUserEmailAndIsCancelledFalse(email)
         userSessions[0].lastActivity = Timestamp(System.currentTimeMillis())
         userSessionRepository.saveAll(userSessions)
 
