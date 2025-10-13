@@ -10,6 +10,9 @@ import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.auth.JwtService
 import com.ChickenKitchen.app.handler.TokenException
 import io.jsonwebtoken.security.SignatureException 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import java.util.Base64
 
 @Component
 class JwtServiceImpl(
@@ -78,4 +81,23 @@ class JwtServiceImpl(
         } catch (e: Exception) {
             throw TokenException("Failed to extract audience from token: ${e.message}")
         }
+
+    override fun decodeUnverifiedJwtPayload(token: String): JsonNode {
+        try {
+            val parts = token.split(".")
+            if (parts.size < 2) throw TokenException("Invalid token structure")
+            val decoder = Base64.getUrlDecoder()
+            val payloadBytes = decoder.decode(padBase64(parts[1]))
+            val json = String(payloadBytes, Charsets.UTF_8)
+            val mapper = ObjectMapper()
+            return mapper.readTree(json)
+        } catch (e: Exception) {
+            throw TokenException("Failed to decode token payload: ${e.message}")
+        }
+    }
+
+    private fun padBase64(s: String): String {
+        val rem = s.length % 4
+        return if (rem == 0) s else s + "=".repeat(4 - rem)
+    }
 }

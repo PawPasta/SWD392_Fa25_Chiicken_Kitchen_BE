@@ -29,21 +29,27 @@ class AuthServiceImpl(
 
 
     override fun loginWithFirebase(req: FirebaseLoginRequest): TokenResponse {
-        val email = req.email
-        val fullName = req.displayName ?: req.email
+        val payload = jwtService.decodeUnverifiedJwtPayload(req.accessToken)
 
-        val user = userRepository.findByEmail(req.email)
+        val email = payload.path("email").asText(null)
+            ?: throw AuthenticationException("Invalid Firebase token: email is missing")
+        val fullName = payload.path("name").asText(email)
+        val picture = payload.path("picture").asText(null)
+        val provider = payload.path("firebase").path("sign_in_provider").asText("firebase")
+        val uid = payload.path("user_id").asText(payload.path("sub").asText(null))
+
+        val user = userRepository.findByEmail(email)
             ?: userRepository.save(
                 User(
-                    fullName = fullName,
+                    fullName = fullName, 
                     email = email,
                     role = Role.USER,
                     isActive = true,
-                    isVerified = true,
-                    imageURL = req.photoURL,
-                    password = "haha",
-                    provider = req.providerId
-                )
+                    isVerified = payload.path("email_verified").asBoolean(true),
+                    imageURL = picture,
+                    // password = "haha",
+                    provider = provider,
+                ).also { it.uid = uid }
             )
 
         if (!user.isActive) throw AuthenticationException("Your account is locked!")
@@ -64,6 +70,8 @@ class AuthServiceImpl(
 
         return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
     }
+
+    // Decode helpers moved to JwtServiceImpl
 
     override fun login(req: LoginRequest): TokenResponse {
         val user = userRepository.findByEmail(req.email)

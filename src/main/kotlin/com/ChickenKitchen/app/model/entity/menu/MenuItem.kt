@@ -5,6 +5,7 @@ import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.step.StepItem
 import jakarta.persistence.*
 import java.sql.Timestamp
+import org.hibernate.annotations.CreationTimestamp
 
 
 @Entity
@@ -24,6 +25,7 @@ data class MenuItem(
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 

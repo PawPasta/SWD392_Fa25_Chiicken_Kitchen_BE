@@ -10,4 +10,6 @@ interface JwtService {
     fun getEmail(token: String): String?
     fun getRole(token: String): String?
     fun getAudience(token: String): String?
+    // Decode a JWT without signature verification (Base64URL decode payload)
+    fun decodeUnverifiedJwtPayload(token: String): com.fasterxml.jackson.databind.JsonNode
 }

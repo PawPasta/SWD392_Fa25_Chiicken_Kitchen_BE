@@ -1,4 +1,6 @@
 package com.ChickenKitchen.app.model.entity.user
+import org.hibernate.annotations.CreationTimestamp
+
 
 import jakarta.persistence.*
 import java.sql.Timestamp
@@ -17,6 +19,7 @@ class Wallet(
     @Column(nullable = false)
     var balance: Int = 0,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 

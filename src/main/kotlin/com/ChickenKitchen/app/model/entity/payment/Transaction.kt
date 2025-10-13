@@ -5,6 +5,7 @@ import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
 import java.sql.Timestamp
+import org.hibernate.annotations.CreationTimestamp
 
 @Entity
 @Table(
@@ -38,6 +39,7 @@ class Transaction(
     @Column(nullable = false)
     val amount: Int,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 

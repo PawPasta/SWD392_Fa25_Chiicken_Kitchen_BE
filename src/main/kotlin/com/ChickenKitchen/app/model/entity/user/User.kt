@@ -33,8 +33,8 @@ class User(
     @Column(nullable = false, unique = true, length = 100)
     var email: String,
 
-    @Column(nullable = false)
-    var password: String,
+    @Column(nullable = true, name = "password")
+    var password: String? = null,
 
     @Column(name = "is_verified", nullable = false)
     var isVerified: Boolean = false,

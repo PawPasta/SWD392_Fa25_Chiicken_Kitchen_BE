@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.model.entity.ingredient
 import com.ChickenKitchen.app.enum.UnitType
 import jakarta.persistence.*
 import java.sql.Timestamp
+import org.hibernate.annotations.CreationTimestamp
 
 
 @Entity
@@ -19,6 +20,7 @@ class Ingredient(
     @Column(name = "base_unit")
     val baseUnit: UnitType? = null,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 

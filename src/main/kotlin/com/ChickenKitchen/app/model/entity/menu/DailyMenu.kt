@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.model.entity.menu
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import jakarta.persistence.*
 import java.sql.Timestamp
+import org.hibernate.annotations.CreationTimestamp
 
 
 @Entity
@@ -25,6 +26,7 @@ class DailyMenu(
     @Column(name = "menu_date", nullable = false)
     val menuDate: Timestamp? = null,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 )
