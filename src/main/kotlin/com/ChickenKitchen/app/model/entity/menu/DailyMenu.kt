@@ -8,9 +8,6 @@ import java.sql.Timestamp
 @Entity
 @Table(
     name = "daily_menu",
-    uniqueConstraints = [
-        UniqueConstraint(columnNames = ["store_id", "menu_item_id", "menu_date"])
-    ]
 )
 class DailyMenu(
     @Id
