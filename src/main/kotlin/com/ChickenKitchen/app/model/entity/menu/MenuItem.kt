@@ -25,6 +25,9 @@ data class MenuItem(
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,
 
+    @Column(name = "image_url")
+    var imageUrl: String? = null,
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,

@@ -50,14 +50,7 @@ class AuthServiceImpl(
 
         if (!user.isActive) throw AuthenticationException("Your account is locked!")
 
-        // Cancel all previous sessions (regardless of status) before creating a new session
-        user.id?.let { userId ->
-            val sessions = userSessionRepository.findAllByUserId(userId)
-            if (sessions.isNotEmpty()) {
-                sessions.forEach { it.isCancelled = true }
-                userSessionRepository.saveAll(sessions)
-            }
-        }
+        cancelAllPreviousSessions(user)
 
         val idToken = jwtService.generateUserToken(user.email, user.role.name)
         val refreshToken = jwtService.generateRefreshToken(user.email)
@@ -89,6 +82,9 @@ class AuthServiceImpl(
         }
 
         val user = userSession.user
+
+        cancelAllPreviousSessions(user)
+
         val newidToken = jwtService.generateUserToken(user.email, user.role.name)
         val newRefreshToken = jwtService.generateRefreshToken(user.email)
         val newExpiryAt = jwtService.getExpiryDate(false)
@@ -116,5 +112,16 @@ class AuthServiceImpl(
         sessions[0].isCancelled = true
         userSessionRepository.saveAll(sessions)
         SecurityContextHolder.clearContext()
+    }
+
+    private fun cancelAllPreviousSessions(user: User) {
+        // Cancel all previous sessions (regardless of status) before creating a new session
+        user.id?.let { userId ->
+            val sessions = userSessionRepository.findAllByUserId(userId)
+            if (sessions.isNotEmpty()) {
+                sessions.forEach { it.isCancelled = true }
+                userSessionRepository.saveAll(sessions)
+            }
+        }
     }
 }
