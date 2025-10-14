@@ -1,5 +1,7 @@
 package com.ChickenKitchen.app.service
 
+
+
 interface BaseService<R, D, C, U, ID> {
     fun getAll(): List<R>?
     fun getById(id: ID): D
