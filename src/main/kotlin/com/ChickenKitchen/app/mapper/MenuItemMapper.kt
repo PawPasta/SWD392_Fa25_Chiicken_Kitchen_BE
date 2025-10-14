@@ -10,7 +10,8 @@ fun MenuItem.toMenuItemResponse(): MenuItemResponse =
     MenuItemResponse(
         id = this.id!!,
         name = this.name,
-        category = this.category,
+        categoryId = this.category.id!!,
+        categoryName = this.category.name,
         isActive = this.isActive,
         imageUrl = this.imageUrl,
     )
@@ -22,7 +23,8 @@ fun MenuItem.toMenuItemDetailResponse(nutrients: List<MenuItemNutrientBriefRespo
     MenuItemDetailResponse(
         id = this.id!!,
         name = this.name,
-        category = this.category,
+        categoryId = this.category.id!!,
+        categoryName = this.category.name,
         isActive = this.isActive,
         imageUrl = this.imageUrl,
         createdAt = this.createdAt.toString(),

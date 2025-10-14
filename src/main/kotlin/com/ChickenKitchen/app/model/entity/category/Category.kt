@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.category
 
 import com.ChickenKitchen.app.model.entity.step.Step
+import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import jakarta.persistence.*
 
 @Entity
@@ -17,5 +18,9 @@ class Category(
     val description: String? = null,
 
     @OneToMany(mappedBy = "category")
-    val steps: MutableList<Step> = mutableListOf()
+    val steps: MutableList<Step> = mutableListOf(),
+
+    @OneToMany(mappedBy = "category")
+    val menuItems: MutableList<MenuItem> = mutableListOf()
+
 )

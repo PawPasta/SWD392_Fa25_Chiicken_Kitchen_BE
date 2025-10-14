@@ -1,6 +1,4 @@
 package com.ChickenKitchen.app.model.dto.request
-
-import com.ChickenKitchen.app.enum.MenuCategory
 import java.math.BigDecimal
 
 data class MenuItemNutrientInput(
@@ -10,7 +8,7 @@ data class MenuItemNutrientInput(
 
 data class CreateMenuItemRequest(
     val name: String,
-    val category: MenuCategory,
+    val categoryId: Long,
     val isActive: Boolean = true,
     val imageUrl: String? = null,
     val nutrients: List<MenuItemNutrientInput>? = null,
@@ -21,5 +19,6 @@ data class CreateMenuItemRequest(
 data class UpdateMenuItemRequest(
     val isActive: Boolean? = null,
     val imageUrl: String? = null,
+    val categoryId: Long? = null,
     val nutrients: List<MenuItemNutrientInput>? = null,
 )

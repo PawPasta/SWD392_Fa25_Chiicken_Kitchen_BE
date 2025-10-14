@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.menu
 
-import com.ChickenKitchen.app.enum.MenuCategory
+import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.step.StepItem
 import jakarta.persistence.*
@@ -18,9 +18,9 @@ data class MenuItem(
     @Column(nullable = false)
     val name: String,
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    val category: MenuCategory,
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    val category: Category,
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,

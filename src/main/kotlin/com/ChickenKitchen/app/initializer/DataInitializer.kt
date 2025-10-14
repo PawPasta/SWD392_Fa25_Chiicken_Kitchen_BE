@@ -2,10 +2,10 @@ package com.ChickenKitchen.app.initializer
 
 
 import com.ChickenKitchen.app.enum.DiscountType
-import com.ChickenKitchen.app.enum.MenuCategory
 import com.ChickenKitchen.app.enum.Role
 import com.ChickenKitchen.app.enum.UnitType
 import com.ChickenKitchen.app.model.entity.category.Category
+import com.ChickenKitchen.app.enum.MenuCategory
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
@@ -39,11 +39,13 @@ import java.math.RoundingMode
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
+import org.springframework.transaction.annotation.Transactional
 
 @Configuration
 class DataInitializer {
 
     @Bean
+    @Transactional
     fun initData(
         userRepository: UserRepository,
         storeRepository: StoreRepository,
@@ -214,15 +216,24 @@ class DataInitializer {
             println("⏭ Promotions table not empty, skipping")
         }
 
-        // CATEGORIES
-        if (categoryRepository.count() == 0L) {
-            println("Seeding categories...")
-            categoryRepository.save(Category(name = "Carbohydrates", description = "Base carb selection"))
-            categoryRepository.save(Category(name = "Proteins", description = "Protein selection"))
-            categoryRepository.save(Category(name = "Vegetables", description = "Vegetable selection"))
-            println("✓ Categories seeded")
-        } else {
-            println("⏭ Categories table not empty, skipping")
+        // CATEGORIES (ensure all needed categories exist)
+        run {
+            val categories = listOf(
+                "Carbohydrates" to "Base carb selection",
+                "Proteins" to "Protein selection",
+                "Vegetables" to "Vegetable selection",
+                "Sauces" to "Sauce selection",
+                "Dairy" to "Dairy selection",
+                "Fruits" to "Fruit selection",
+            )
+            var created = 0
+            categories.forEach { (name, desc) ->
+                if (!categoryRepository.existsByName(name)) {
+                    categoryRepository.save(Category(name = name, description = desc))
+                    created++
+                }
+            }
+            if (created > 0) println("✓ Categories ensured/seeded: $created new") else println("⏭ Categories already present")
         }
 
         // STEPS
@@ -268,7 +279,7 @@ class DataInitializer {
         // MENU ITEMS
         if (menuItemRepository.count() == 0L) {
             println("Seeding menu items...")
-            val items: List<Triple<String, MenuCategory, String>> = listOf(
+            val items: List<Triple<String, Any, String>> = listOf(
                 // CARB
                 Triple("White Rice", MenuCategory.CARB, "https://example.com/images/white-rice.jpg"),
                 Triple("Brown Rice", MenuCategory.CARB, "https://example.com/images/brown-rice.jpg"),
@@ -294,8 +305,8 @@ class DataInitializer {
                 Triple("Tortilla", MenuCategory.CARB, "https://example.com/images/tortilla.jpg"),
 
                 // PROTEIN
-                Triple("Grilled Chicken", MenuCategory.PROTEIN, "https://example.com/images/grilled-chicken.jpg"),
-                Triple("Fried Chicken", MenuCategory.PROTEIN, "https://example.com/images/fried-chicken.jpg"),
+                Triple("Grilled Chicken", "Proteins", "https://example.com/images/grilled-chicken.jpg"),
+                Triple("Fried Chicken", "Proteins", "https://example.com/images/fried-chicken.jpg"),
                 Triple("Beef Steak", MenuCategory.PROTEIN, "https://example.com/images/beef-steak.jpg"),
                 Triple("Pork Chop", MenuCategory.PROTEIN, "https://example.com/images/pork-chop.jpg"),
                 Triple("Firm Tofu", MenuCategory.PROTEIN, "https://example.com/images/firm-tofu.jpg"),
@@ -409,8 +420,22 @@ class DataInitializer {
                 Triple("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg")
             )
 
-            val entities = items.map { (name, category, img) ->
-                MenuItem(name = name, category = category, isActive = true, imageUrl = img)
+            val entities = items.map { (name, catAny, img) ->
+                val categoryName = when (catAny) {
+                    is String -> catAny
+                    is com.ChickenKitchen.app.enum.MenuCategory -> when (catAny) {
+                        com.ChickenKitchen.app.enum.MenuCategory.CARB -> "Carbohydrates"
+                        com.ChickenKitchen.app.enum.MenuCategory.PROTEIN -> "Proteins"
+                        com.ChickenKitchen.app.enum.MenuCategory.VEGETABLE -> "Vegetables"
+                        com.ChickenKitchen.app.enum.MenuCategory.SAUCE -> "Sauces"
+                        com.ChickenKitchen.app.enum.MenuCategory.DAIRY -> "Dairy"
+                        com.ChickenKitchen.app.enum.MenuCategory.FRUIT -> "Fruits"
+                    }
+                    else -> throw IllegalArgumentException("Unsupported category type: ${'$'}catAny")
+                }
+                val cat = categoryRepository.findByName(categoryName)
+                    ?: throw IllegalStateException("Category not found for seeding: $categoryName")
+                MenuItem(name = name, category = cat, isActive = true, imageUrl = img)
             }
             menuItemRepository.saveAll(entities)
             println("✓ Menu items seeded: ${'$'}{entities.size}")
@@ -519,8 +544,8 @@ class DataInitializer {
                 return base.multiply(factor).setScale(2, RoundingMode.HALF_UP)
             }
 
-            fun nutrientsForCategory(category: MenuCategory): List<Pair<String, BigDecimal>> = when (category) {
-                MenuCategory.CARB -> listOf(
+            fun nutrientsForCategory(categoryName: String): List<Pair<String, BigDecimal>> = when (categoryName) {
+                "Carbohydrates" -> listOf(
                     "Carbohydrates" to BigDecimal("35.0"),
                     "Protein" to BigDecimal("4.0"),
                     "Fat" to BigDecimal("1.5"),
@@ -528,7 +553,7 @@ class DataInitializer {
                     "Sodium" to BigDecimal("0.10"),
                     "Potassium" to BigDecimal("0.15"),
                 )
-                MenuCategory.PROTEIN -> listOf(
+                "Proteins" -> listOf(
                     "Protein" to BigDecimal("28.0"),
                     "Fat" to BigDecimal("6.0"),
                     "Carbohydrates" to BigDecimal("0.5"),
@@ -536,7 +561,7 @@ class DataInitializer {
                     "Sodium" to BigDecimal("0.30"),
                     "Iron" to BigDecimal("0.01"),
                 )
-                MenuCategory.VEGETABLE -> listOf(
+                "Vegetables" -> listOf(
                     "Carbohydrates" to BigDecimal("5.0"),
                     "Fiber" to BigDecimal("3.5"),
                     "Protein" to BigDecimal("2.0"),
@@ -544,7 +569,7 @@ class DataInitializer {
                     "Vitamin A" to BigDecimal("0.03"),
                     "Potassium" to BigDecimal("0.25"),
                 )
-                MenuCategory.SAUCE -> listOf(
+                "Sauces" -> listOf(
                     "Sodium" to BigDecimal("1.20"),
                     "Sugar" to BigDecimal("6.0"),
                     "Fat" to BigDecimal("2.0"),
@@ -552,7 +577,7 @@ class DataInitializer {
                     "Protein" to BigDecimal("0.5"),
                     "Cholesterol" to BigDecimal("0.05"),
                 )
-                MenuCategory.DAIRY -> listOf(
+                "Dairy" -> listOf(
                     "Protein" to BigDecimal("6.0"),
                     "Fat" to BigDecimal("8.0"),
                     "Carbohydrates" to BigDecimal("4.0"),
@@ -560,7 +585,7 @@ class DataInitializer {
                     "Sodium" to BigDecimal("0.20"),
                     "Vitamin D" to BigDecimal("0.01"),
                 )
-                MenuCategory.FRUIT -> listOf(
+                "Fruits" -> listOf(
                     "Carbohydrates" to BigDecimal("12.0"),
                     "Sugar" to BigDecimal("10.0"),
                     "Fiber" to BigDecimal("2.5"),
@@ -568,6 +593,7 @@ class DataInitializer {
                     "Potassium" to BigDecimal("0.20"),
                     "Protein" to BigDecimal("1.0"),
                 )
+                else -> emptyList()
             }
 
             fun specificForItem(name: String): List<Pair<String, BigDecimal>>? {
@@ -778,7 +804,7 @@ class DataInitializer {
 
             val links = items.flatMap { item ->
                 val base = specificForItem(item.name)
-                    ?: nutrientsForCategory(item.category).map { (n, v) ->
+                    ?: nutrientsForCategory(item.category.name).map { (n, v) ->
                         n to jitter(v, item.name, n)
                     }
                 base.mapNotNull { (nName, qty) ->
