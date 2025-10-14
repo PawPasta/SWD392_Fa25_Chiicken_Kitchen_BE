@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.promotion
 
 import com.ChickenKitchen.app.enum.DiscountType
+import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -21,9 +22,11 @@ class Promotion(
     @Column(name = "discount_value", nullable = false)
     val discountValue: Int,
 
+    @field:JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "start_date", nullable = false)
     val startDate: LocalDateTime,
 
+    @field:JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "end_date", nullable = false)
     val endDate: LocalDateTime,
 

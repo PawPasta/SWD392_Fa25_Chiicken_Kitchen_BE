@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PromotionRepository : JpaRepository<Promotion, Long> {
+    fun findAllByIsActive(isActive: Boolean): MutableList<Promotion>
 
 }
