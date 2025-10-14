@@ -52,21 +52,21 @@ class AuthServiceImpl(
 
         cancelAllPreviousSessions(user)
 
-        val idToken = jwtService.generateUserToken(user.email, user.role.name)
+        val accessToken = jwtService.generateUserToken(user.email, user.role.name)
         val refreshToken = jwtService.generateRefreshToken(user.email)
         val expiryAt = jwtService.getExpiryDate(false)
 
         userSessionRepository.save(
             UserSession(
                 user = user,
-                sessionToken = idToken,
+                sessionToken = accessToken,
                 refreshToken = refreshToken,
                 expiresAt = Timestamp(expiryAt.time),
                 lastActivity = Timestamp(System.currentTimeMillis())
             )
         )
 
-        return TokenResponse(idToken = idToken, refreshToken = refreshToken)
+        return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
     }
 
     // Decode helpers moved to JwtServiceImpl
@@ -85,21 +85,21 @@ class AuthServiceImpl(
 
         cancelAllPreviousSessions(user)
 
-        val newidToken = jwtService.generateUserToken(user.email, user.role.name)
+        val newAccessToken = jwtService.generateUserToken(user.email, user.role.name)
         val newRefreshToken = jwtService.generateRefreshToken(user.email)
         val newExpiryAt = jwtService.getExpiryDate(false)
 
         userSessionRepository.save(
             UserSession(
                 user = user,
-                sessionToken = newidToken,
+                sessionToken = newAccessToken,
                 refreshToken = newRefreshToken,
                 expiresAt = Timestamp(newExpiryAt.time),
                 lastActivity = Timestamp(System.currentTimeMillis()),
             )
         )
 
-        return TokenResponse(idToken = newidToken, refreshToken = newRefreshToken)
+        return TokenResponse(accessToken = newAccessToken, refreshToken = newRefreshToken)
     }
 
     override fun logout() {

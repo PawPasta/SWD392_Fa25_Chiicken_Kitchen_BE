@@ -7,7 +7,7 @@ import java.util.Date
 interface JwtService {
     fun generateUserToken(email: String, role: String): String
     fun generateRefreshToken(email: String): String
-    fun getExpiryDate(idToken: Boolean): Date
+    fun getExpiryDate(accessToken: Boolean): Date
     fun isTokenValid(token: String, userDetails: UserDetails): Boolean
     fun getEmail(token: String): String?
     fun getRole(token: String): String?

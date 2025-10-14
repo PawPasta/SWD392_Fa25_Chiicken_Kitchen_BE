@@ -35,6 +35,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -267,14 +268,152 @@ class DataInitializer {
         // MENU ITEMS
         if (menuItemRepository.count() == 0L) {
             println("Seeding menu items...")
-            menuItemRepository.save(MenuItem(name = "White Rice", category = MenuCategory.CARB, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Brown Rice", category = MenuCategory.CARB, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Grilled Chicken", category = MenuCategory.PROTEIN, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Fried Chicken", category = MenuCategory.PROTEIN, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Broccoli", category = MenuCategory.VEGETABLE, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Carrot", category = MenuCategory.VEGETABLE, isActive = true))
-            menuItemRepository.save(MenuItem(name = "Teriyaki Sauce", category = MenuCategory.SAUCE, isActive = true))
-            println("✓ Menu items seeded")
+            val items: List<Triple<String, MenuCategory, String>> = listOf(
+                // CARB
+                Triple("White Rice", MenuCategory.CARB, "https://example.com/images/white-rice.jpg"),
+                Triple("Brown Rice", MenuCategory.CARB, "https://example.com/images/brown-rice.jpg"),
+                Triple("Quinoa", MenuCategory.CARB, "https://example.com/images/quinoa.jpg"),
+                Triple("Whole Wheat Pasta", MenuCategory.CARB, "https://example.com/images/whole-wheat-pasta.jpg"),
+                Triple("Sweet Potato", MenuCategory.CARB, "https://example.com/images/sweet-potato.jpg"),
+                Triple("Mashed Potato", MenuCategory.CARB, "https://example.com/images/mashed-potato.jpg"),
+                Triple("Udon Noodles", MenuCategory.CARB, "https://example.com/images/udon-noodles.jpg"),
+                Triple("Couscous", MenuCategory.CARB, "https://example.com/images/couscous.jpg"),
+                Triple("Oatmeal", MenuCategory.CARB, "https://example.com/images/oatmeal.jpg"),
+                Triple("Garlic Bread", MenuCategory.CARB, "https://example.com/images/garlic-bread.jpg"),
+                Triple("Jasmine Rice", MenuCategory.CARB, "https://example.com/images/jasmine-rice.jpg"),
+                Triple("Basmati Rice", MenuCategory.CARB, "https://example.com/images/basmati-rice.jpg"),
+                Triple("Soba Noodles", MenuCategory.CARB, "https://example.com/images/soba-noodles.jpg"),
+                Triple("Rice Noodles", MenuCategory.CARB, "https://example.com/images/rice-noodles.jpg"),
+                Triple("Buckwheat", MenuCategory.CARB, "https://example.com/images/buckwheat.jpg"),
+                Triple("Barley", MenuCategory.CARB, "https://example.com/images/barley.jpg"),
+                Triple("Bulgur", MenuCategory.CARB, "https://example.com/images/bulgur.jpg"),
+                Triple("Polenta", MenuCategory.CARB, "https://example.com/images/polenta.jpg"),
+                Triple("Farro", MenuCategory.CARB, "https://example.com/images/farro.jpg"),
+                Triple("Sourdough Bread", MenuCategory.CARB, "https://example.com/images/sourdough-bread.jpg"),
+                Triple("Baguette", MenuCategory.CARB, "https://example.com/images/baguette.jpg"),
+                Triple("Tortilla", MenuCategory.CARB, "https://example.com/images/tortilla.jpg"),
+
+                // PROTEIN
+                Triple("Grilled Chicken", MenuCategory.PROTEIN, "https://example.com/images/grilled-chicken.jpg"),
+                Triple("Fried Chicken", MenuCategory.PROTEIN, "https://example.com/images/fried-chicken.jpg"),
+                Triple("Beef Steak", MenuCategory.PROTEIN, "https://example.com/images/beef-steak.jpg"),
+                Triple("Pork Chop", MenuCategory.PROTEIN, "https://example.com/images/pork-chop.jpg"),
+                Triple("Firm Tofu", MenuCategory.PROTEIN, "https://example.com/images/firm-tofu.jpg"),
+                Triple("Salmon Fillet", MenuCategory.PROTEIN, "https://example.com/images/salmon-fillet.jpg"),
+                Triple("Tuna", MenuCategory.PROTEIN, "https://example.com/images/tuna.jpg"),
+                Triple("Shrimp", MenuCategory.PROTEIN, "https://example.com/images/shrimp.jpg"),
+                Triple("Boiled Egg", MenuCategory.PROTEIN, "https://example.com/images/boiled-egg.jpg"),
+                Triple("Turkey Breast", MenuCategory.PROTEIN, "https://example.com/images/turkey-breast.jpg"),
+                Triple("Roast Chicken", MenuCategory.PROTEIN, "https://example.com/images/roast-chicken.jpg"),
+                Triple("Chicken Thigh", MenuCategory.PROTEIN, "https://example.com/images/chicken-thigh.jpg"),
+                Triple("Chicken Wings", MenuCategory.PROTEIN, "https://example.com/images/chicken-wings.jpg"),
+                Triple("Ground Beef", MenuCategory.PROTEIN, "https://example.com/images/ground-beef.jpg"),
+                Triple("Ribeye Steak", MenuCategory.PROTEIN, "https://example.com/images/ribeye-steak.jpg"),
+                Triple("Sirloin", MenuCategory.PROTEIN, "https://example.com/images/sirloin.jpg"),
+                Triple("Pork Belly", MenuCategory.PROTEIN, "https://example.com/images/pork-belly.jpg"),
+                Triple("Ham", MenuCategory.PROTEIN, "https://example.com/images/ham.jpg"),
+                Triple("Bacon", MenuCategory.PROTEIN, "https://example.com/images/bacon.jpg"),
+                Triple("Lamb Chops", MenuCategory.PROTEIN, "https://example.com/images/lamb-chops.jpg"),
+                Triple("Duck Breast", MenuCategory.PROTEIN, "https://example.com/images/duck-breast.jpg"),
+                Triple("Tempeh", MenuCategory.PROTEIN, "https://example.com/images/tempeh.jpg"),
+                Triple("Seitan", MenuCategory.PROTEIN, "https://example.com/images/seitan.jpg"),
+                Triple("Black Beans", MenuCategory.PROTEIN, "https://example.com/images/black-beans.jpg"),
+                Triple("Chickpeas", MenuCategory.PROTEIN, "https://example.com/images/chickpeas.jpg"),
+                Triple("Lentils", MenuCategory.PROTEIN, "https://example.com/images/lentils.jpg"),
+                Triple("Edamame", MenuCategory.PROTEIN, "https://example.com/images/edamame.jpg"),
+                Triple("Smoked Salmon", MenuCategory.PROTEIN, "https://example.com/images/smoked-salmon.jpg"),
+                Triple("Sardines", MenuCategory.PROTEIN, "https://example.com/images/sardines.jpg"),
+
+                // VEGETABLE
+                Triple("Broccoli", MenuCategory.VEGETABLE, "https://example.com/images/broccoli.jpg"),
+                Triple("Carrot", MenuCategory.VEGETABLE, "https://example.com/images/carrot.jpg"),
+                Triple("Spinach", MenuCategory.VEGETABLE, "https://example.com/images/spinach.jpg"),
+                Triple("Kale", MenuCategory.VEGETABLE, "https://example.com/images/kale.jpg"),
+                Triple("Lettuce", MenuCategory.VEGETABLE, "https://example.com/images/lettuce.jpg"),
+                Triple("Tomato", MenuCategory.VEGETABLE, "https://example.com/images/tomato.jpg"),
+                Triple("Cucumber", MenuCategory.VEGETABLE, "https://example.com/images/cucumber.jpg"),
+                Triple("Bell Pepper", MenuCategory.VEGETABLE, "https://example.com/images/bell-pepper.jpg"),
+                Triple("Corn", MenuCategory.VEGETABLE, "https://example.com/images/corn.jpg"),
+                Triple("Green Beans", MenuCategory.VEGETABLE, "https://example.com/images/green-beans.jpg"),
+                Triple("Asparagus", MenuCategory.VEGETABLE, "https://example.com/images/asparagus.jpg"),
+                Triple("Zucchini", MenuCategory.VEGETABLE, "https://example.com/images/zucchini.jpg"),
+                Triple("Eggplant", MenuCategory.VEGETABLE, "https://example.com/images/eggplant.jpg"),
+                Triple("Cauliflower", MenuCategory.VEGETABLE, "https://example.com/images/cauliflower.jpg"),
+                Triple("Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/cabbage.jpg"),
+                Triple("Mushrooms", MenuCategory.VEGETABLE, "https://example.com/images/mushrooms.jpg"),
+                Triple("Peas", MenuCategory.VEGETABLE, "https://example.com/images/peas.jpg"),
+                Triple("Brussels Sprouts", MenuCategory.VEGETABLE, "https://example.com/images/brussels-sprouts.jpg"),
+                Triple("Onion", MenuCategory.VEGETABLE, "https://example.com/images/onion.jpg"),
+                Triple("Garlic", MenuCategory.VEGETABLE, "https://example.com/images/garlic.jpg"),
+                Triple("Red Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/red-cabbage.jpg"),
+                Triple("Arugula", MenuCategory.VEGETABLE, "https://example.com/images/arugula.jpg"),
+                Triple("Beetroot", MenuCategory.VEGETABLE, "https://example.com/images/beetroot.jpg"),
+                Triple("Pumpkin", MenuCategory.VEGETABLE, "https://example.com/images/pumpkin.jpg"),
+
+                // SAUCE
+                Triple("Teriyaki Sauce", MenuCategory.SAUCE, "https://example.com/images/teriyaki-sauce.jpg"),
+                Triple("Soy Sauce", MenuCategory.SAUCE, "https://example.com/images/soy-sauce.jpg"),
+                Triple("Chili Sauce", MenuCategory.SAUCE, "https://example.com/images/chili-sauce.jpg"),
+                Triple("Garlic Sauce", MenuCategory.SAUCE, "https://example.com/images/garlic-sauce.jpg"),
+                Triple("BBQ Sauce", MenuCategory.SAUCE, "https://example.com/images/bbq-sauce.jpg"),
+                Triple("Mayonnaise", MenuCategory.SAUCE, "https://example.com/images/mayonnaise.jpg"),
+                Triple("Ketchup", MenuCategory.SAUCE, "https://example.com/images/ketchup.jpg"),
+                Triple("Mustard", MenuCategory.SAUCE, "https://example.com/images/mustard.jpg"),
+                Triple("Ranch", MenuCategory.SAUCE, "https://example.com/images/ranch.jpg"),
+                Triple("Caesar", MenuCategory.SAUCE, "https://example.com/images/caesar.jpg"),
+                Triple("Pesto", MenuCategory.SAUCE, "https://example.com/images/pesto.jpg"),
+                Triple("Sriracha", MenuCategory.SAUCE, "https://example.com/images/sriracha.jpg"),
+                Triple("Honey Mustard", MenuCategory.SAUCE, "https://example.com/images/honey-mustard.jpg"),
+                Triple("Buffalo Sauce", MenuCategory.SAUCE, "https://example.com/images/buffalo-sauce.jpg"),
+                Triple("Tartar Sauce", MenuCategory.SAUCE, "https://example.com/images/tartar-sauce.jpg"),
+
+                // DAIRY
+                Triple("Cheddar Cheese", MenuCategory.DAIRY, "https://example.com/images/cheddar-cheese.jpg"),
+                Triple("Mozzarella", MenuCategory.DAIRY, "https://example.com/images/mozzarella.jpg"),
+                Triple("Greek Yogurt", MenuCategory.DAIRY, "https://example.com/images/greek-yogurt.jpg"),
+                Triple("Butter", MenuCategory.DAIRY, "https://example.com/images/butter.jpg"),
+                Triple("Milk", MenuCategory.DAIRY, "https://example.com/images/milk.jpg"),
+                Triple("Parmesan", MenuCategory.DAIRY, "https://example.com/images/parmesan.jpg"),
+                Triple("Feta", MenuCategory.DAIRY, "https://example.com/images/feta.jpg"),
+                Triple("Blue Cheese", MenuCategory.DAIRY, "https://example.com/images/blue-cheese.jpg"),
+                Triple("Sour Cream", MenuCategory.DAIRY, "https://example.com/images/sour-cream.jpg"),
+                Triple("Cream Cheese", MenuCategory.DAIRY, "https://example.com/images/cream-cheese.jpg"),
+                Triple("Ricotta", MenuCategory.DAIRY, "https://example.com/images/ricotta.jpg"),
+                Triple("Ice Cream", MenuCategory.DAIRY, "https://example.com/images/ice-cream.jpg"),
+                Triple("Cottage Cheese", MenuCategory.DAIRY, "https://example.com/images/cottage-cheese.jpg"),
+
+                // FRUIT
+                Triple("Apple", MenuCategory.FRUIT, "https://example.com/images/apple.jpg"),
+                Triple("Banana", MenuCategory.FRUIT, "https://example.com/images/banana.jpg"),
+                Triple("Orange", MenuCategory.FRUIT, "https://example.com/images/orange.jpg"),
+                Triple("Pineapple", MenuCategory.FRUIT, "https://example.com/images/pineapple.jpg"),
+                Triple("Mango", MenuCategory.FRUIT, "https://example.com/images/mango.jpg"),
+                Triple("Strawberry", MenuCategory.FRUIT, "https://example.com/images/strawberry.jpg"),
+                Triple("Blueberry", MenuCategory.FRUIT, "https://example.com/images/blueberry.jpg"),
+                Triple("Grape", MenuCategory.FRUIT, "https://example.com/images/grape.jpg"),
+                Triple("Watermelon", MenuCategory.FRUIT, "https://example.com/images/watermelon.jpg"),
+                Triple("Kiwi", MenuCategory.FRUIT, "https://example.com/images/kiwi.jpg"),
+                Triple("Peach", MenuCategory.FRUIT, "https://example.com/images/peach.jpg"),
+                Triple("Pear", MenuCategory.FRUIT, "https://example.com/images/pear.jpg"),
+                Triple("Plum", MenuCategory.FRUIT, "https://example.com/images/plum.jpg"),
+                Triple("Cherry", MenuCategory.FRUIT, "https://example.com/images/cherry.jpg"),
+                Triple("Raspberry", MenuCategory.FRUIT, "https://example.com/images/raspberry.jpg"),
+                Triple("Blackberry", MenuCategory.FRUIT, "https://example.com/images/blackberry.jpg"),
+                Triple("Dragon Fruit", MenuCategory.FRUIT, "https://example.com/images/dragon-fruit.jpg"),
+                Triple("Papaya", MenuCategory.FRUIT, "https://example.com/images/papaya.jpg"),
+                Triple("Lemon", MenuCategory.FRUIT, "https://example.com/images/lemon.jpg"),
+                Triple("Lime", MenuCategory.FRUIT, "https://example.com/images/lime.jpg"),
+                Triple("Coconut", MenuCategory.FRUIT, "https://example.com/images/coconut.jpg"),
+                Triple("Pomegranate", MenuCategory.FRUIT, "https://example.com/images/pomegranate.jpg"),
+                Triple("Grapefruit", MenuCategory.FRUIT, "https://example.com/images/grapefruit.jpg"),
+                Triple("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg")
+            )
+
+            val entities = items.map { (name, category, img) ->
+                MenuItem(name = name, category = category, isActive = true, imageUrl = img)
+            }
+            menuItemRepository.saveAll(entities)
+            println("✓ Menu items seeded: ${'$'}{entities.size}")
         } else {
             println("⏭ Menu items table not empty, skipping")
         }
@@ -319,14 +458,49 @@ class DataInitializer {
             println("⏭ Step items table not empty, skipping")
         }
 
-        // NUTRIENTS
+        // NUTRIENTS (expanded)
         if (nutrientRepository.count() == 0L) {
             println("Seeding nutrients...")
-            nutrientRepository.save(Nutrient(name = "Protein", baseUnit = UnitType.G))
-            nutrientRepository.save(Nutrient(name = "Carbohydrates", baseUnit = UnitType.G))
-            nutrientRepository.save(Nutrient(name = "Fat", baseUnit = UnitType.G))
-            nutrientRepository.save(Nutrient(name = "Fiber", baseUnit = UnitType.G))
-            println("✓ Nutrients seeded")
+            val nutrientNames = listOf(
+                "Protein",
+                "Carbohydrates",
+                "Fat",
+                "Fiber",
+                "Sugar",
+                "Sodium",
+                "Potassium",
+                "Calcium",
+                "Iron",
+                "Vitamin C",
+                "Vitamin A",
+                "Cholesterol",
+                "Saturated Fat",
+                "Trans Fat",
+                "Omega-3",
+                "Omega-6",
+                "Vitamin D",
+                "Vitamin E",
+                "Vitamin K",
+                "Vitamin B6",
+                "Vitamin B12",
+                "Folate",
+                "Niacin",
+                "Thiamin",
+                "Riboflavin",
+                "Magnesium",
+                "Phosphorus",
+                "Zinc",
+                "Copper",
+                "Manganese",
+                "Selenium",
+                "Iodine",
+                "Chloride",
+                "Biotin",
+                "Pantothenic Acid"
+            )
+            val nutrients = nutrientNames.map { Nutrient(name = it, baseUnit = UnitType.G) }
+            nutrientRepository.saveAll(nutrients)
+            println("✓ Nutrients seeded: ${'$'}{nutrients.size}")
         } else {
             println("⏭ Nutrients table not empty, skipping")
         }
@@ -336,30 +510,286 @@ class DataInitializer {
             println("Seeding menu item nutrients...")
             val items = menuItemRepository.findAll()
             val nutrients = nutrientRepository.findAll()
-            val rice = items.find { it.name == "White Rice" }
-            val grilledChicken = items.find { it.name == "Grilled Chicken" }
-            val broccoli = items.find { it.name == "Broccoli" }
-            val protein = nutrients.find { it.name == "Protein" } ?: nutrientRepository.findByName("Protein")
-            val carbs = nutrients.find { it.name == "Carbohydrates" } ?: nutrientRepository.findByName("Carbohydrates")
-            val fat = nutrients.find { it.name == "Fat" } ?: nutrientRepository.findByName("Fat")
-            val fiber = nutrients.find { it.name == "Fiber" } ?: nutrientRepository.findByName("Fiber")
+            val nutrientByName = nutrients.associateBy { it.name }
 
-            val newLinks = mutableListOf<MenuItemNutrient>()
-            if (rice != null && carbs != null) newLinks.add(MenuItemNutrient(menuItem = rice, nutrient = carbs, quantity = BigDecimal("45.0")))
-            if (rice != null && protein != null) newLinks.add(MenuItemNutrient(menuItem = rice, nutrient = protein, quantity = BigDecimal("4.0")))
-            if (rice != null && fat != null) newLinks.add(MenuItemNutrient(menuItem = rice, nutrient = fat, quantity = BigDecimal("0.5")))
+            fun jitter(base: BigDecimal, itemName: String, nutrientName: String, percent: Int = 10): BigDecimal {
+                val seed = (itemName + ":" + nutrientName).hashCode()
+                val delta = (((kotlin.math.abs(seed) % (percent * 2 + 1)) - percent).toDouble()) / 100.0
+                val factor = BigDecimal.valueOf(1.0 + delta)
+                return base.multiply(factor).setScale(2, RoundingMode.HALF_UP)
+            }
 
-            if (grilledChicken != null && protein != null) newLinks.add(MenuItemNutrient(menuItem = grilledChicken, nutrient = protein, quantity = BigDecimal("31.0")))
-            if (grilledChicken != null && fat != null) newLinks.add(MenuItemNutrient(menuItem = grilledChicken, nutrient = fat, quantity = BigDecimal("3.6")))
-            if (grilledChicken != null && carbs != null) newLinks.add(MenuItemNutrient(menuItem = grilledChicken, nutrient = carbs, quantity = BigDecimal("0.0")))
+            fun nutrientsForCategory(category: MenuCategory): List<Pair<String, BigDecimal>> = when (category) {
+                MenuCategory.CARB -> listOf(
+                    "Carbohydrates" to BigDecimal("35.0"),
+                    "Protein" to BigDecimal("4.0"),
+                    "Fat" to BigDecimal("1.5"),
+                    "Fiber" to BigDecimal("3.0"),
+                    "Sodium" to BigDecimal("0.10"),
+                    "Potassium" to BigDecimal("0.15"),
+                )
+                MenuCategory.PROTEIN -> listOf(
+                    "Protein" to BigDecimal("28.0"),
+                    "Fat" to BigDecimal("6.0"),
+                    "Carbohydrates" to BigDecimal("0.5"),
+                    "Cholesterol" to BigDecimal("0.20"),
+                    "Sodium" to BigDecimal("0.30"),
+                    "Iron" to BigDecimal("0.01"),
+                )
+                MenuCategory.VEGETABLE -> listOf(
+                    "Carbohydrates" to BigDecimal("5.0"),
+                    "Fiber" to BigDecimal("3.5"),
+                    "Protein" to BigDecimal("2.0"),
+                    "Vitamin C" to BigDecimal("0.05"),
+                    "Vitamin A" to BigDecimal("0.03"),
+                    "Potassium" to BigDecimal("0.25"),
+                )
+                MenuCategory.SAUCE -> listOf(
+                    "Sodium" to BigDecimal("1.20"),
+                    "Sugar" to BigDecimal("6.0"),
+                    "Fat" to BigDecimal("2.0"),
+                    "Carbohydrates" to BigDecimal("8.0"),
+                    "Protein" to BigDecimal("0.5"),
+                    "Cholesterol" to BigDecimal("0.05"),
+                )
+                MenuCategory.DAIRY -> listOf(
+                    "Protein" to BigDecimal("6.0"),
+                    "Fat" to BigDecimal("8.0"),
+                    "Carbohydrates" to BigDecimal("4.0"),
+                    "Calcium" to BigDecimal("0.25"),
+                    "Sodium" to BigDecimal("0.20"),
+                    "Vitamin D" to BigDecimal("0.01"),
+                )
+                MenuCategory.FRUIT -> listOf(
+                    "Carbohydrates" to BigDecimal("12.0"),
+                    "Sugar" to BigDecimal("10.0"),
+                    "Fiber" to BigDecimal("2.5"),
+                    "Vitamin C" to BigDecimal("0.06"),
+                    "Potassium" to BigDecimal("0.20"),
+                    "Protein" to BigDecimal("1.0"),
+                )
+            }
 
-            if (broccoli != null && carbs != null) newLinks.add(MenuItemNutrient(menuItem = broccoli, nutrient = carbs, quantity = BigDecimal("7.0")))
-            if (broccoli != null && protein != null) newLinks.add(MenuItemNutrient(menuItem = broccoli, nutrient = protein, quantity = BigDecimal("2.8")))
-            if (broccoli != null && fiber != null) newLinks.add(MenuItemNutrient(menuItem = broccoli, nutrient = fiber, quantity = BigDecimal("2.6")))
+            fun specificForItem(name: String): List<Pair<String, BigDecimal>>? {
+                return when (name.lowercase()) {
+                    "white rice" -> listOf(
+                        "Carbohydrates" to BigDecimal("45.0"),
+                        "Protein" to BigDecimal("4.0"),
+                        "Fat" to BigDecimal("0.5"),
+                        "Fiber" to BigDecimal("0.4"),
+                        "Sodium" to BigDecimal("0.01"),
+                        "Potassium" to BigDecimal("0.03")
+                    )
+                    "brown rice" -> listOf(
+                        "Carbohydrates" to BigDecimal("44.0"),
+                        "Protein" to BigDecimal("5.0"),
+                        "Fat" to BigDecimal("1.0"),
+                        "Fiber" to BigDecimal("3.5"),
+                        "Sodium" to BigDecimal("0.01"),
+                        "Potassium" to BigDecimal("0.05")
+                    )
+                    "quinoa" -> listOf(
+                        "Carbohydrates" to BigDecimal("39.0"),
+                        "Protein" to BigDecimal("8.0"),
+                        "Fat" to BigDecimal("3.5"),
+                        "Fiber" to BigDecimal("5.0"),
+                        "Sodium" to BigDecimal("0.01"),
+                        "Potassium" to BigDecimal("0.32")
+                    )
+                    "sweet potato" -> listOf(
+                        "Carbohydrates" to BigDecimal("27.0"),
+                        "Protein" to BigDecimal("2.0"),
+                        "Fat" to BigDecimal("0.1"),
+                        "Fiber" to BigDecimal("4.0"),
+                        "Vitamin A" to BigDecimal("0.02"),
+                        "Potassium" to BigDecimal("0.44")
+                    )
+                    "grilled chicken" -> listOf(
+                        "Protein" to BigDecimal("31.0"),
+                        "Fat" to BigDecimal("3.6"),
+                        "Carbohydrates" to BigDecimal("0.0"),
+                        "Sodium" to BigDecimal("0.20"),
+                        "Cholesterol" to BigDecimal("0.09"),
+                        "Iron" to BigDecimal("0.01")
+                    )
+                    "fried chicken" -> listOf(
+                        "Protein" to BigDecimal("25.0"),
+                        "Fat" to BigDecimal("13.0"),
+                        "Carbohydrates" to BigDecimal("8.0"),
+                        "Sodium" to BigDecimal("0.40"),
+                        "Cholesterol" to BigDecimal("0.12"),
+                        "Iron" to BigDecimal("0.01")
+                    )
+                    "beef steak" -> listOf(
+                        "Protein" to BigDecimal("26.0"),
+                        "Fat" to BigDecimal("20.0"),
+                        "Carbohydrates" to BigDecimal("0.0"),
+                        "Iron" to BigDecimal("0.03"),
+                        "Zinc" to BigDecimal("0.005"),
+                        "Cholesterol" to BigDecimal("0.09")
+                    )
+                    "firm tofu" -> listOf(
+                        "Protein" to BigDecimal("8.0"),
+                        "Fat" to BigDecimal("4.0"),
+                        "Carbohydrates" to BigDecimal("2.0"),
+                        "Calcium" to BigDecimal("0.35"),
+                        "Iron" to BigDecimal("0.05"),
+                        "Sodium" to BigDecimal("0.01")
+                    )
+                    "salmon fillet" -> listOf(
+                        "Protein" to BigDecimal("25.0"),
+                        "Fat" to BigDecimal("14.0"),
+                        "Omega-3" to BigDecimal("1.5"),
+                        "Cholesterol" to BigDecimal("0.06"),
+                        "Sodium" to BigDecimal("0.09"),
+                        "Potassium" to BigDecimal("0.36")
+                    )
+                    "shrimp" -> listOf(
+                        "Protein" to BigDecimal("24.0"),
+                        "Fat" to BigDecimal("0.3"),
+                        "Carbohydrates" to BigDecimal("0.2"),
+                        "Cholesterol" to BigDecimal("0.22"),
+                        "Sodium" to BigDecimal("0.11"),
+                        "Iron" to BigDecimal("0.003")
+                    )
+                    "boiled egg" -> listOf(
+                        "Protein" to BigDecimal("13.0"),
+                        "Fat" to BigDecimal("11.0"),
+                        "Carbohydrates" to BigDecimal("1.1"),
+                        "Cholesterol" to BigDecimal("0.37"),
+                        "Sodium" to BigDecimal("0.12"),
+                        "Vitamin D" to BigDecimal("0.002")
+                    )
+                    "broccoli" -> listOf(
+                        "Carbohydrates" to BigDecimal("7.0"),
+                        "Protein" to BigDecimal("2.8"),
+                        "Fiber" to BigDecimal("2.6"),
+                        "Vitamin C" to BigDecimal("0.09"),
+                        "Vitamin A" to BigDecimal("0.003"),
+                        "Potassium" to BigDecimal("0.316")
+                    )
+                    "carrot" -> listOf(
+                        "Carbohydrates" to BigDecimal("10.0"),
+                        "Protein" to BigDecimal("0.9"),
+                        "Fiber" to BigDecimal("2.8"),
+                        "Vitamin A" to BigDecimal("0.009"),
+                        "Sugar" to BigDecimal("4.7"),
+                        "Potassium" to BigDecimal("0.320")
+                    )
+                    "spinach" -> listOf(
+                        "Carbohydrates" to BigDecimal("3.6"),
+                        "Protein" to BigDecimal("2.9"),
+                        "Fiber" to BigDecimal("2.2"),
+                        "Vitamin A" to BigDecimal("0.009"),
+                        "Vitamin C" to BigDecimal("0.028"),
+                        "Iron" to BigDecimal("0.026")
+                    )
+                    "tomato" -> listOf(
+                        "Carbohydrates" to BigDecimal("3.9"),
+                        "Protein" to BigDecimal("0.9"),
+                        "Fiber" to BigDecimal("1.2"),
+                        "Vitamin C" to BigDecimal("0.014"),
+                        "Potassium" to BigDecimal("0.237"),
+                        "Sugar" to BigDecimal("2.6")
+                    )
+                    "cucumber" -> listOf(
+                        "Carbohydrates" to BigDecimal("3.6"),
+                        "Protein" to BigDecimal("0.7"),
+                        "Fiber" to BigDecimal("0.5"),
+                        "Vitamin K" to BigDecimal("0.016"),
+                        "Potassium" to BigDecimal("0.147"),
+                        "Sodium" to BigDecimal("0.002")
+                    )
+                    "apple" -> listOf(
+                        "Carbohydrates" to BigDecimal("14.0"),
+                        "Protein" to BigDecimal("0.3"),
+                        "Fiber" to BigDecimal("2.4"),
+                        "Sugar" to BigDecimal("10.0"),
+                        "Potassium" to BigDecimal("0.107"),
+                        "Vitamin C" to BigDecimal("0.004")
+                    )
+                    "banana" -> listOf(
+                        "Carbohydrates" to BigDecimal("23.0"),
+                        "Protein" to BigDecimal("1.3"),
+                        "Fiber" to BigDecimal("2.6"),
+                        "Sugar" to BigDecimal("12.0"),
+                        "Potassium" to BigDecimal("0.358"),
+                        "Vitamin C" to BigDecimal("0.009")
+                    )
+                    "strawberry" -> listOf(
+                        "Carbohydrates" to BigDecimal("7.7"),
+                        "Protein" to BigDecimal("0.7"),
+                        "Fiber" to BigDecimal("2.0"),
+                        "Sugar" to BigDecimal("4.9"),
+                        "Vitamin C" to BigDecimal("0.059"),
+                        "Potassium" to BigDecimal("0.153")
+                    )
+                    "teriyaki sauce" -> listOf(
+                        "Sodium" to BigDecimal("0.55"),
+                        "Sugar" to BigDecimal("8.0"),
+                        "Carbohydrates" to BigDecimal("9.0"),
+                        "Protein" to BigDecimal("1.0"),
+                        "Fat" to BigDecimal("0.1"),
+                        "Cholesterol" to BigDecimal("0.00")
+                    )
+                    "bbq sauce" -> listOf(
+                        "Sugar" to BigDecimal("10.0"),
+                        "Carbohydrates" to BigDecimal("12.0"),
+                        "Sodium" to BigDecimal("0.50"),
+                        "Protein" to BigDecimal("0.6"),
+                        "Fat" to BigDecimal("0.2"),
+                        "Cholesterol" to BigDecimal("0.00")
+                    )
+                    "mayonnaise" -> listOf(
+                        "Fat" to BigDecimal("10.0"),
+                        "Carbohydrates" to BigDecimal("0.6"),
+                        "Protein" to BigDecimal("0.1"),
+                        "Sodium" to BigDecimal("0.09"),
+                        "Cholesterol" to BigDecimal("0.015"),
+                        "Sugar" to BigDecimal("0.5")
+                    )
+                    "cheddar cheese" -> listOf(
+                        "Protein" to BigDecimal("25.0"),
+                        "Fat" to BigDecimal("33.0"),
+                        "Carbohydrates" to BigDecimal("1.3"),
+                        "Calcium" to BigDecimal("0.721"),
+                        "Sodium" to BigDecimal("0.621"),
+                        "Vitamin A" to BigDecimal("0.265")
+                    )
+                    "greek yogurt" -> listOf(
+                        "Protein" to BigDecimal("10.0"),
+                        "Fat" to BigDecimal("0.4"),
+                        "Carbohydrates" to BigDecimal("3.6"),
+                        "Calcium" to BigDecimal("0.11"),
+                        "Sodium" to BigDecimal("0.036"),
+                        "Vitamin B12" to BigDecimal("0.0005")
+                    )
+                    "milk" -> listOf(
+                        "Protein" to BigDecimal("3.4"),
+                        "Fat" to BigDecimal("3.7"),
+                        "Carbohydrates" to BigDecimal("4.8"),
+                        "Calcium" to BigDecimal("0.125"),
+                        "Sodium" to BigDecimal("0.044"),
+                        "Vitamin D" to BigDecimal("0.001")
+                    )
+                    else -> null
+                }
+            }
 
-            if (newLinks.isNotEmpty()) {
-                menuItemNutrientRepository.saveAll(newLinks)
-                println("✓ Menu item nutrients seeded")
+            val links = items.flatMap { item ->
+                val base = specificForItem(item.name)
+                    ?: nutrientsForCategory(item.category).map { (n, v) ->
+                        n to jitter(v, item.name, n)
+                    }
+                base.mapNotNull { (nName, qty) ->
+                    val nutrient = nutrientByName[nName]
+                    if (nutrient != null) MenuItemNutrient(menuItem = item, nutrient = nutrient, quantity = qty) else null
+                }
+            }
+
+            if (links.isNotEmpty()) {
+                menuItemNutrientRepository.saveAll(links)
+                println("✓ Menu item nutrients seeded for ${'$'}{items.size} items, total links: ${'$'}{links.size}")
             } else {
                 println("⚠️ Skipped seeding menu item nutrients: missing items or nutrients")
             }

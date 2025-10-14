@@ -41,9 +41,9 @@ class JwtServiceImpl(
             .signWith(key, SignatureAlgorithm.HS256)
             .compact()
 
-    override fun getExpiryDate(idToken: Boolean): Date {
+    override fun getExpiryDate(accessToken: Boolean): Date {
         val now = Date()
-        return if (idToken) Date(now.time + expiration) else Date(now.time + 10 * expiration)
+        return if (accessToken) Date(now.time + expiration) else Date(now.time + 10 * expiration)
     }
 
     override fun isTokenValid(token: String, userDetails: UserDetails): Boolean {
