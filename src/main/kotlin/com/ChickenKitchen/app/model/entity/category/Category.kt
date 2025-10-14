@@ -11,10 +11,10 @@ class Category(
     val id: Long? = null,
 
     @Column(nullable = false)
-    val name: String,
+    var name: String,
 
     @Column
-    val description: String? = null,
+    var description: String? = null,
 
     @OneToMany(mappedBy = "category")
     val steps: MutableList<Step> = mutableListOf()

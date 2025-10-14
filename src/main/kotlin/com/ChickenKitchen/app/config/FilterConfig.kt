@@ -24,7 +24,7 @@ class FilterConfig(
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-ui.html",
-        "/api/auth/provider/login",
+        "/api/auth/login",
         "/api/auth/refresh",
     )
 
