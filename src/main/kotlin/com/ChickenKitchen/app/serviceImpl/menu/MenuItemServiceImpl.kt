@@ -80,7 +80,7 @@ class MenuItemServiceImpl(
                 isActive = item.isActive,
                 imageUrl = item.imageUrl,
                 createdAt = item.createdAt,
-                stepItems = item.stepItems,
+                // stepItems = item.stepItems,
                 dailyMenus = item.dailyMenus,
                 recipes = item.recipes,
             )

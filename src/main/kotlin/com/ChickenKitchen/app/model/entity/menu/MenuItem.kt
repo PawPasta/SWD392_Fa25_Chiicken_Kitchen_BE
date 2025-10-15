@@ -2,7 +2,7 @@ package com.ChickenKitchen.app.model.entity.menu
 
 import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
-import com.ChickenKitchen.app.model.entity.step.StepItem
+import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 import java.sql.Timestamp
 import org.hibernate.annotations.CreationTimestamp
@@ -33,7 +33,7 @@ data class MenuItem(
     val createdAt: Timestamp? = null,
 
     @OneToMany(mappedBy = "menuItem")
-    val stepItems: MutableList<StepItem> = mutableListOf(),
+    val orderSteps: MutableList<OrderStep> = mutableListOf(),
 
     @OneToMany(mappedBy = "menuItem")
     val dailyMenus: MutableList<DailyMenu> = mutableListOf(),

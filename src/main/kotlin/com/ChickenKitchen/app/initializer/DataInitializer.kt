@@ -16,7 +16,7 @@ import com.ChickenKitchen.app.model.entity.menu.Nutrient
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
-import com.ChickenKitchen.app.model.entity.step.StepItem
+// import com.ChickenKitchen.app.model.entity.step.StepItem
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
@@ -28,7 +28,7 @@ import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.NutrientRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
-import com.ChickenKitchen.app.repository.step.StepItemRepository
+// import com.ChickenKitchen.app.repository.step.StepItemRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import org.springframework.boot.CommandLineRunner
@@ -52,7 +52,6 @@ class DataInitializer {
         categoryRepository: CategoryRepository,
         stepRepository: StepRepository,
         menuItemRepository: MenuItemRepository,
-        stepItemRepository: StepItemRepository,
         nutrientRepository: NutrientRepository,
         menuItemNutrientRepository: MenuItemNutrientRepository,
         ingredientRepository: IngredientRepository,
@@ -251,21 +250,24 @@ class DataInitializer {
                     Step(
                         category = carbCategory,
                         name = "Choose Your Base",
-                        description = "Select your carbohydrate base"
+                        description = "Select your carbohydrate base",
+                        stepNumber = 1
                     )
                 )
                 stepRepository.save(
                     Step(
                         category = proteinCategory,
                         name = "Choose Your Protein",
-                        description = "Select your protein"
+                        description = "Select your protein",
+                        stepNumber = 2
                     )
                 )
                 stepRepository.save(
                     Step(
                         category = vegetableCategory,
                         name = "Choose Your Vegetables",
-                        description = "Select your vegetables"
+                        description = "Select your vegetables",
+                        stepNumber = 3
                     )
                 )
                 println("✓ Steps seeded")
@@ -441,46 +443,6 @@ class DataInitializer {
             println("✓ Menu items seeded: ${'$'}{entities.size}")
         } else {
             println("⏭ Menu items table not empty, skipping")
-        }
-
-        // STEP ITEMS (Link menu items to steps)
-        if (stepItemRepository.count() == 0L) {
-            println("Seeding step items...")
-            val steps = stepRepository.findAll()
-            val step1 = steps.find { it.name == "Choose Your Base" } ?: steps.firstOrNull()
-            val step2 = steps.find { it.name == "Choose Your Protein" } ?: steps.getOrNull(1)
-            val step3 = steps.find { it.name == "Choose Your Vegetables" } ?: steps.getOrNull(2)
-
-            val items = menuItemRepository.findAll()
-            val rice = items.find { it.name == "White Rice" }
-            val brownRice = items.find { it.name == "Brown Rice" }
-            val grilledChicken = items.find { it.name == "Grilled Chicken" }
-            val friedChicken = items.find { it.name == "Fried Chicken" }
-            val broccoli = items.find { it.name == "Broccoli" }
-            val carrot = items.find { it.name == "Carrot" }
-
-            val newStepItems = mutableListOf<StepItem>()
-            if (step1 != null) {
-                if (rice != null) newStepItems.add(StepItem(step = step1, menuItem = rice))
-                if (brownRice != null) newStepItems.add(StepItem(step = step1, menuItem = brownRice))
-            }
-            if (step2 != null) {
-                if (grilledChicken != null) newStepItems.add(StepItem(step = step2, menuItem = grilledChicken))
-                if (friedChicken != null) newStepItems.add(StepItem(step = step2, menuItem = friedChicken))
-            }
-            if (step3 != null) {
-                if (broccoli != null) newStepItems.add(StepItem(step = step3, menuItem = broccoli))
-                if (carrot != null) newStepItems.add(StepItem(step = step3, menuItem = carrot))
-            }
-
-            if (newStepItems.isNotEmpty()) {
-                stepItemRepository.saveAll(newStepItems)
-                println("✓ Step items seeded")
-            } else {
-                println("⚠️ Skipped seeding step items: missing steps or items")
-            }
-        } else {
-            println("⏭ Step items table not empty, skipping")
         }
 
         // NUTRIENTS (expanded)
