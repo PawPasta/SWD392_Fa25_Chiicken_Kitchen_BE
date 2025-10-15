@@ -14,27 +14,27 @@ class NutrientController(
     private val nutrientService: NutrientService
 ) {
 
-    @Operation(summary = "Get all nutrients")
+    @Operation(summary = "Get all nutrients (all actor)")
     @GetMapping
     fun getAll(): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(nutrientService.getAll(), "Fetched nutrients"))
 
-    @Operation(summary = "Get nutrient by id")
+    @Operation(summary = "Get nutrient by id (all actor)")
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(nutrientService.getById(id), "Fetched nutrient"))
 
-    @Operation(summary = "Create new nutrient")
+    @Operation(summary = "Create new nutrient (manager only)" )
     @PostMapping
     fun create(@RequestBody req: CreateNutrientRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(nutrientService.create(req), "Nutrient created"))
 
-    @Operation(summary = "Update nutrient")
+    @Operation(summary = "Update nutrient (manager only)")
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody req: UpdateNutrientRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(nutrientService.update(id, req), "Nutrient updated"))
 
-    @Operation(summary = "Delete nutrient")
+    @Operation(summary = "Delete nutrient (manager only)")
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         nutrientService.delete(id)

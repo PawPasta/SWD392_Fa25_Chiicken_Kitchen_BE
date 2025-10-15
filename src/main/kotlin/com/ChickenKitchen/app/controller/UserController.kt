@@ -26,48 +26,48 @@ class UserController(
 
     // ===================== MANAGER: CRUD =====================
 
-    @Operation(summary = "Get all users (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Get all users (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     fun getAllUsers(): ResponseEntity<ResponseModel> {
         val users = userService.getAll()
         return ResponseEntity.ok(ResponseModel.success(users, "Fetched users successfully"))
     }
 
-    @Operation(summary = "Get user by id (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Get user by id (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     fun getUserById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val user = userService.getById(id)
         return ResponseEntity.ok(ResponseModel.success(user, "Fetched user successfully"))
     }
 
-    @Operation(summary = "Create new user (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Create new user (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     fun createUser(@RequestBody req: CreateUserRequest): ResponseEntity<ResponseModel> {
         val created = userService.create(req)
         return ResponseEntity.ok(ResponseModel.success(created, "User created successfully"))
     }
 
-    @Operation(summary = "Update user by id (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Update user by id (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateUserRequest): ResponseEntity<ResponseModel> {
         val updated = userService.update(id, req)
         return ResponseEntity.ok(ResponseModel.success(updated, "User updated successfully"))
     }
 
-    @Operation(summary = "Delete user by id (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Delete user by id (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         userService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "User deleted successfully"))
     }
 
-    @Operation(summary = "Toggle user status (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Toggle user status (ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     fun changeStatus(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val result = userService.changeStatus(id)

@@ -13,27 +13,27 @@ import org.springframework.web.bind.annotation.*
 class CategoryController(
     private val categoryService: CategoryService
 ) {
-    @Operation(summary = "Get all categories")
+    @Operation(summary = "Get all categories (all actor)")
     @GetMapping
     fun getAll(): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(categoryService.getAll(), "Fetched categories"))
 
-    @Operation(summary = "Get category by id")
+    @Operation(summary = "Get category by id (all actor)")
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(categoryService.getById(id), "Fetched category"))
 
-    @Operation(summary = "Create a new category")
+    @Operation(summary = "Create a new category (manager only)")
     @PostMapping
     fun create(@RequestBody req: CreateCategoryRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(categoryService.create(req), "Category created"))
 
-    @Operation(summary = "Update category")
+    @Operation(summary = "Update category (manager only)")
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody req: UpdateCategoryRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(categoryService.update(id, req), "Category updated"))
 
-    @Operation(summary = "Delete category")
+    @Operation(summary = "Delete category (manager only)")
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         categoryService.delete(id)
