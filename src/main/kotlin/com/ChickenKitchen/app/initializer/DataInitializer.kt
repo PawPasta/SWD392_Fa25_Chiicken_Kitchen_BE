@@ -37,7 +37,6 @@ import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Configuration
@@ -67,11 +66,11 @@ class DataInitializer {
                 User(
                     role = Role.ADMIN,
                     uid = "admin-uid-001",
-                    email = "admin@chickenkitchen.com",
+                    email = "chickenkitchen785@gmail.com",
                     isVerified = true,
                     phone = "0901234567",
                     isActive = true,
-                    fullName = "Admin Nguyen",
+                    fullName = "Admin Con Ga",
                     provider = "Local",
                     imageURL = null
                 )
@@ -93,7 +92,7 @@ class DataInitializer {
                 User(
                     role = Role.EMPLOYEE,
                     uid = "employee-uid-001",
-                    email = "employee1@chickenkitchen.com",
+                    email = "baoltgse182138@fpt.edu.vn",
                     isVerified = true,
                     phone = "0901234569",
                     isActive = true,
@@ -119,7 +118,7 @@ class DataInitializer {
                 User(
                     role = Role.STORE,
                     uid = "store-uid-002",
-                    email = "store@chickenkitchen.com",
+                    email = "letrangiabao2004@gmail.com",
                     isVerified = true,
                     phone = "0901234570",
                     isActive = true,
