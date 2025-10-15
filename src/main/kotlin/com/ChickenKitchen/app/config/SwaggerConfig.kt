@@ -41,12 +41,12 @@ class SwaggerConfig {
                 )
             )
             .addSecurityItem(SecurityRequirement().addList("bearerAuth"))
-            
-            // .servers(
-            //     listOf(
-            //         Server().url("https://chickenkitchen.milize-lena.space")
-            //             .description("Production server")
-            //     )
-            // )
+            // Chạy local thì phong ấn cái này lại.
+            .servers(
+                listOf(
+                    Server().url("https://chickenkitchen.milize-lena.space")
+                        .description("Production server")
+                )
+            )
     }
 }

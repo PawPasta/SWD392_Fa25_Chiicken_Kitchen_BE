@@ -24,7 +24,7 @@ class AuthServiceImpl(
     private val jwtService: JwtServiceImpl,
 ) : AuthService {
 
-
+    // Chưa viết phần kiểm tra idToken có hêt hạn chưa sau khi decode để test cho nhanh
     override fun loginWithFirebase(req: FirebaseLoginRequest): TokenResponse {
         val payload = jwtService.decodeUnverifiedJwtPayload(req.idToken)
 
