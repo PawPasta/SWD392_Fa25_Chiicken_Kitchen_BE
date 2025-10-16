@@ -9,6 +9,7 @@ import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
+import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
@@ -21,6 +22,7 @@ import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
+import com.ChickenKitchen.app.repository.ingredient.StoreIngredientBatchRepository
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemNutrientRepository
@@ -57,6 +59,7 @@ class DataInitializer {
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
         dailyMenuRepository: DailyMenuRepository,
+        storeIngredientBatchRepository : StoreIngredientBatchRepository
     ) = CommandLineRunner {
 
         // USERS
@@ -829,6 +832,83 @@ class DataInitializer {
             println("✓ Ingredients seeded")
         } else {
             println("⏭ Ingredients table not empty, skipping")
+        }
+
+        // STORE INGREDIENT BATCHES (Many-to-Many relationship)
+        if (storeIngredientBatchRepository.count() == 0L) {
+            println("Seeding store ingredient batches...")
+            val stores = storeRepository.findAll()
+            val ingredients = ingredientRepository.findAll()
+
+            val store1 = stores.getOrNull(0)
+            val store2 = stores.getOrNull(1)
+
+            val chickenBreast = ingredients.find { it.name == "Chicken Breast" }
+            val riceIngredient = ingredients.find { it.name == "White Rice" }
+            val broccoliIngredient = ingredients.find { it.name == "Fresh Broccoli" }
+
+            val batches = mutableListOf<StoreIngredientBatch>()
+
+            // Store 1 inventory
+            if (store1 != null) {
+                if (chickenBreast != null) {
+                    batches.add(StoreIngredientBatch(
+                        store = store1,
+                        ingredient = chickenBreast,
+                        quantity = 5000 // 5kg
+                    ))
+                }
+                if (riceIngredient != null) {
+                    batches.add(StoreIngredientBatch(
+                        store = store1,
+                        ingredient = riceIngredient,
+                        quantity = 10000 // 10kg
+                    ))
+                }
+                if (broccoliIngredient != null) {
+                    batches.add(StoreIngredientBatch(
+                        store = store1,
+                        ingredient = broccoliIngredient,
+                        quantity = 3000 // 3kg
+                    ))
+                }
+            }
+
+            // Store 2 inventory
+            if (store2 != null) {
+                if (chickenBreast != null) {
+                    batches.add(StoreIngredientBatch(
+                        store = store2,
+                        ingredient = chickenBreast,
+                        quantity = 4000 // 4kg
+                    ))
+                }
+                if (riceIngredient != null) {
+                    batches.add(StoreIngredientBatch(
+                        store = store2,
+                        ingredient = riceIngredient,
+                        quantity = 8000 // 8kg
+                    ))
+                }
+                if (broccoliIngredient != null) {
+                    batches.add(
+                        StoreIngredientBatch(
+                            store = store2,
+                            ingredient = broccoliIngredient,
+                            quantity = 2500 // 2.5kg
+                        )
+                    )
+                }
+            }
+
+            if (batches.isNotEmpty()) {
+                storeIngredientBatchRepository.saveAll(batches)
+                println("✓ Store ingredient batches seeded: ${batches.size}")
+            } else {
+                println("⚠️ Skipped seeding store ingredient batches: missing stores or ingredients")
+            }
+        } else {
+            println("⏭ Store ingredient batches table not empty, skipping")
         }
 
         // RECIPES (Link ingredients to menu items)
