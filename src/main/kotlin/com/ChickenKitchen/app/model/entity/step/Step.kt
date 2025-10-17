@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.step
 
 import com.ChickenKitchen.app.model.entity.category.Category
+import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 
 @Entity
@@ -20,6 +21,13 @@ class Step(
     @Column
     val description: String? = null,
 
+    @Column(name = "is_active", nullable = false)
+    var isActive: Boolean = true,
+
+    @Column(name = "step_number", nullable = false)
+    val stepNumber: Int,
+
     @OneToMany(mappedBy = "step")
-    val stepItems: MutableList<StepItem> = mutableListOf()
+    val orderSteps: MutableList<OrderStep> = mutableListOf()
+    
 )

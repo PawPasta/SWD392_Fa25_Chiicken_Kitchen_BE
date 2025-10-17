@@ -6,6 +6,7 @@ import com.ChickenKitchen.app.model.entity.payment.Transaction
 import com.ChickenKitchen.app.model.entity.promotion.OrderPromotion
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
+import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 import java.sql.Timestamp
 
@@ -52,5 +53,8 @@ class Order(
     val orderPromotions: MutableList<OrderPromotion> = mutableListOf(),
 
     @OneToMany(mappedBy = "order")
-    val transactions: MutableList<Transaction> = mutableListOf()
+    val transactions: MutableList<Transaction> = mutableListOf(),
+
+    @OneToMany(mappedBy = "order")
+    val orderSteps: MutableList<OrderStep> = mutableListOf()
 )
