@@ -7,7 +7,6 @@ import io.swagger.v3.oas.models.info.License
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
-import io.swagger.v3.oas.models.servers.Server
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -41,12 +40,12 @@ class SwaggerConfig {
                 )
             )
             .addSecurityItem(SecurityRequirement().addList("bearerAuth"))
-            // Chạy local thì phong ấn cái này lại.
-            .servers(
-                listOf(
-                    Server().url("https://chickenkitchen.milize-lena.space")
-                        .description("Production server")
-                )
-            )
+//            // Chạy local thì phong ấn cái này lại.
+//            .servers(
+//                listOf(
+//                    Server().url("https://chickenkitchen.milize-lena.space")
+//                        .description("Production server")
+//                )
+//            )
     }
 }
