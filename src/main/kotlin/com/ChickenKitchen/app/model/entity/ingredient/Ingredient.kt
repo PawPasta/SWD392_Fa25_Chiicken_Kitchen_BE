@@ -13,25 +13,25 @@ class Ingredient(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column
-    val name: String? = null,
+    @Column(name = "name", nullable = false)
+    var name: String? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "base_unit")
-    val baseUnit: UnitType? = null,
+    var baseUnit: UnitType? = null,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Timestamp? = null,
+    var createdAt: Timestamp? = null,
 
     @Column(name = "image_url")
-    val imageUrl: String? = null,
+    var imageUrl: String? = null,
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,
 
-    @Column(name = "batch_number", nullable = false)
-    val batchNumber: String,
+    @Column(name = "batch_number", nullable = false, unique = true)
+    var batchNumber: String,
 
     @OneToMany(mappedBy = "ingredient")
     val storeBatches: MutableList<StoreIngredientBatch> = mutableListOf(),
