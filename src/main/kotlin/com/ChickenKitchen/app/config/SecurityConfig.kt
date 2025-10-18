@@ -25,16 +25,31 @@ class SecurityConfig(
         http
             .csrf { it.disable() }
             .authorizeHttpRequests {
+                // Public docs
                 it.requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                 ).permitAll()
-                it.requestMatchers( // Endpoint Auth nè
-                    "/api/auth/login",
-                    "/api/auth/refresh",
+
+                // Temporarily public application APIs
+                it.requestMatchers(
+                    "/api/auth/**",
+                    "/api/categories/**",
+                    "/api/daily-menu/**",
+                    "/api/ingredient/**",
+                    "/api/menu-items/**",
+                    "/api/nutrients/**",
+                    "/api/orders/**",
+                    "/api/promotion/**",
+                    "/api/steps/**",
+                    "/api/store/**",
+                    "/api/transaction/**",
+                    "/api/users/**",
                 ).permitAll()
-                .anyRequest().authenticated()
+
+                // .anyRequest().authenticated() // Temporarily disabled to make everything public
+                .anyRequest().permitAll()
             }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

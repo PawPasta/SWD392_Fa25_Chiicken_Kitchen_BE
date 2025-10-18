@@ -27,7 +27,7 @@ class UserController(
     // ===================== MANAGER: CRUD =====================
 
     @Operation(summary = "Get all users (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @GetMapping
     fun getAllUsers(): ResponseEntity<ResponseModel> {
         val users = userService.getAll()
@@ -35,7 +35,7 @@ class UserController(
     }
 
     @Operation(summary = "Get user by id (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @GetMapping("/{id}")
     fun getUserById(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val user = userService.getById(id)
@@ -43,7 +43,7 @@ class UserController(
     }
 
     @Operation(summary = "Create new user (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @PostMapping
     fun createUser(@RequestBody req: CreateUserRequest): ResponseEntity<ResponseModel> {
         val created = userService.create(req)
@@ -51,7 +51,7 @@ class UserController(
     }
 
     @Operation(summary = "Update user by id (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @PutMapping("/{id}")
     fun updateUser(@PathVariable id: Long, @RequestBody req: UpdateUserRequest): ResponseEntity<ResponseModel> {
         val updated = userService.update(id, req)
@@ -59,7 +59,7 @@ class UserController(
     }
 
     @Operation(summary = "Delete user by id (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         userService.delete(id)
@@ -67,7 +67,7 @@ class UserController(
     }
 
     @Operation(summary = "Toggle user status (ADMIN)")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @PatchMapping("/{id}/status")
     fun changeStatus(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         val result = userService.changeStatus(id)
