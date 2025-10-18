@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.repository.user
 
-import com.ChickenKitchen.app.enum.Role
+import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.model.entity.user.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

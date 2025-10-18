@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.ingredient
 
-import com.ChickenKitchen.app.enum.UnitType
+import com.ChickenKitchen.app.enums.UnitType
 import jakarta.persistence.*
 import java.sql.Timestamp
 import org.hibernate.annotations.CreationTimestamp

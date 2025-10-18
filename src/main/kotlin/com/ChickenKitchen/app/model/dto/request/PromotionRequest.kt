@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.dto.request
 
-import com.ChickenKitchen.app.enum.DiscountType
+import com.ChickenKitchen.app.enums.DiscountType
 import java.time.LocalDateTime
 
 

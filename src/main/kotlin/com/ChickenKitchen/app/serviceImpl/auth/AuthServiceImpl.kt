@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.serviceImpl.auth
 
-import com.ChickenKitchen.app.enum.Role
+import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.handler.AuthenticationException
 import com.ChickenKitchen.app.model.dto.request.FirebaseLoginRequest
 import com.ChickenKitchen.app.model.dto.request.TokenRefreshRequest

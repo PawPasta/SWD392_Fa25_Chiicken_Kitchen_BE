@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.payment
 
-import com.ChickenKitchen.app.enum.TransactionStatus
+import com.ChickenKitchen.app.enums.TransactionStatus
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*

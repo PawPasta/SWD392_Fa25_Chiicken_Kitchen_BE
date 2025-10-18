@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.user
 
-import com.ChickenKitchen.app.enum.Role
+import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.entity.order.Order

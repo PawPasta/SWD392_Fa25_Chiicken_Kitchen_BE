@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.mapper
 
-import com.ChickenKitchen.app.enum.UnitType
+import com.ChickenKitchen.app.enums.UnitType
 import com.ChickenKitchen.app.model.dto.response.IngredientDetailResponse
 import com.ChickenKitchen.app.model.dto.response.StoreIngredientBatchResponse
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient

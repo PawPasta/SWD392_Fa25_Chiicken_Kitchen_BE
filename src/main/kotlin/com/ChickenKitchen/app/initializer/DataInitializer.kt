@@ -1,11 +1,11 @@
 package com.ChickenKitchen.app.initializer
 
 
-import com.ChickenKitchen.app.enum.DiscountType
-import com.ChickenKitchen.app.enum.Role
-import com.ChickenKitchen.app.enum.UnitType
+import com.ChickenKitchen.app.enums.DiscountType
+import com.ChickenKitchen.app.enums.Role
+import com.ChickenKitchen.app.enums.UnitType
 import com.ChickenKitchen.app.model.entity.category.Category
-import com.ChickenKitchen.app.enum.MenuCategory
+import com.ChickenKitchen.app.enums.MenuCategory
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
@@ -427,13 +427,13 @@ class DataInitializer {
             val entities = items.map { (name, catAny, img) ->
                 val categoryName = when (catAny) {
                     is String -> catAny
-                    is com.ChickenKitchen.app.enum.MenuCategory -> when (catAny) {
-                        com.ChickenKitchen.app.enum.MenuCategory.CARB -> "Carbohydrates"
-                        com.ChickenKitchen.app.enum.MenuCategory.PROTEIN -> "Proteins"
-                        com.ChickenKitchen.app.enum.MenuCategory.VEGETABLE -> "Vegetables"
-                        com.ChickenKitchen.app.enum.MenuCategory.SAUCE -> "Sauces"
-                        com.ChickenKitchen.app.enum.MenuCategory.DAIRY -> "Dairy"
-                        com.ChickenKitchen.app.enum.MenuCategory.FRUIT -> "Fruits"
+                    is MenuCategory -> when (catAny) {
+                        MenuCategory.CARB -> "Carbohydrates"
+                        MenuCategory.PROTEIN -> "Proteins"
+                        MenuCategory.VEGETABLE -> "Vegetables"
+                        MenuCategory.SAUCE -> "Sauces"
+                        MenuCategory.DAIRY -> "Dairy"
+                        MenuCategory.FRUIT -> "Fruits"
                     }
                     else -> throw IllegalArgumentException("Unsupported category type: ${'$'}catAny")
                 }

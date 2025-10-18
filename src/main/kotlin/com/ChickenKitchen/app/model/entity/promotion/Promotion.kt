@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.promotion
 
-import com.ChickenKitchen.app.enum.DiscountType
+import com.ChickenKitchen.app.enums.DiscountType
 import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.persistence.*
 import java.time.LocalDateTime

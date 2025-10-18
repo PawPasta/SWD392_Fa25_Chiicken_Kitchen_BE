@@ -1,4 +1,4 @@
-package com.ChickenKitchen.app.enum
+package com.ChickenKitchen.app.enums
 
 enum class Role {
     USER, EMPLOYEE, MANAGER, ADMIN, STORE

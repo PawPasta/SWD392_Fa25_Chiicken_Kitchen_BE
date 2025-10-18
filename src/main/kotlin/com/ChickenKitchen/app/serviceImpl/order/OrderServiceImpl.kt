@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.serviceImpl.order
 
-import com.ChickenKitchen.app.enum.OrderStatus
+import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep

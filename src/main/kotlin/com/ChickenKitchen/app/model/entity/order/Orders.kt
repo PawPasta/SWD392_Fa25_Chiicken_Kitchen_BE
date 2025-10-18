@@ -1,12 +1,11 @@
 package com.ChickenKitchen.app.model.entity.order
 
-import com.ChickenKitchen.app.enum.OrderStatus
+import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.model.entity.payment.Transaction
 import com.ChickenKitchen.app.model.entity.promotion.OrderPromotion
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
-import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 import java.sql.Timestamp
 

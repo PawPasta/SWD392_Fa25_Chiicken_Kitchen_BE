@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.menu
 
-import com.ChickenKitchen.app.enum.UnitType
+import com.ChickenKitchen.app.enums.UnitType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

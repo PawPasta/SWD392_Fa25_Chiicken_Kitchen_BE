@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.dto.response
 
-import com.ChickenKitchen.app.enum.Role
+import com.ChickenKitchen.app.enums.Role
 import java.time.LocalDate
 
 // Những response này chỉ dùng cho admin

@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.dto.response
 
-import com.ChickenKitchen.app.enum.UnitType
+import com.ChickenKitchen.app.enums.UnitType
 import java.sql.Timestamp
 
 

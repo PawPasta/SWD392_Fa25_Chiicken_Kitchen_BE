@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.dto.response
 
-import com.ChickenKitchen.app.enum.TransactionStatus
+import com.ChickenKitchen.app.enums.TransactionStatus
 import java.sql.Timestamp
 
 
