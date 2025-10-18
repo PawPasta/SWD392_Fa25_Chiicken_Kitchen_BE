@@ -36,7 +36,7 @@ data class MenuItem(
     val orderSteps: MutableList<OrderStep> = mutableListOf(),
 
     @OneToMany(mappedBy = "menuItem")
-    val dailyMenus: MutableList<DailyMenu> = mutableListOf(),
+    val dailyMenuItems: MutableList<DailyMenuItem> = mutableListOf(),
 
     @OneToMany(mappedBy = "menuItem")
     val recipes: MutableList<Recipe> = mutableListOf()

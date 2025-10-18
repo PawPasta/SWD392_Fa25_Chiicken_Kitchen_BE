@@ -32,8 +32,8 @@ class Store(
     @OneToMany(mappedBy = "store")
     val orders: MutableList<Order> = mutableListOf(),
 
-    @OneToMany(mappedBy = "store")
-    val dailyMenus: MutableList<DailyMenu> = mutableListOf(),
+    @ManyToMany(mappedBy = "stores")
+    val dailyMenus: MutableSet<DailyMenu> = mutableSetOf(),
 
     @OneToMany(mappedBy = "store")
     val ingredientBatches: MutableList<StoreIngredientBatch> = mutableListOf()

@@ -32,7 +32,7 @@ class MenuItemServiceImpl(
     }
 
     override fun getById(id: Long): MenuItemDetailResponse {
-        var item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
+        val item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
         return buildDetail(item)
     }
 
@@ -81,7 +81,7 @@ class MenuItemServiceImpl(
                 imageUrl = item.imageUrl,
                 createdAt = item.createdAt,
                 // stepItems = item.stepItems,
-                dailyMenus = item.dailyMenus,
+                dailyMenuItems = item.dailyMenuItems,
                 recipes = item.recipes,
             )
             // Persist replaced entity

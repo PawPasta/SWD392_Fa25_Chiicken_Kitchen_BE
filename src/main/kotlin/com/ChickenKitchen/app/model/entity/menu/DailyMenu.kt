@@ -8,25 +8,31 @@ import org.hibernate.annotations.CreationTimestamp
 
 @Entity
 @Table(
-    name = "daily_menu",
+    name = "daily_menus",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["store_id", "menu_date"])]
 )
 class DailyMenu(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", nullable = false)
-    val store: Store,
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_item_id", nullable = false)
-    val menuItem: MenuItem,
-
     @Column(name = "menu_date", nullable = false)
-    val menuDate: Timestamp? = null,
+    var menuDate: Timestamp,
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     val createdAt: Timestamp? = null,
+
+    // Daily menu có nhiều món
+    @OneToMany(mappedBy = "dailyMenu", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val dailyMenuItems: MutableList<DailyMenuItem> = mutableListOf(),
+
+    // Daily menu áp dụng cho nhiều store
+    @ManyToMany
+    @JoinTable(
+        name = "daily_menu_stores",
+        joinColumns = [JoinColumn(name = "daily_menu_id")],
+        inverseJoinColumns = [JoinColumn(name = "store_id")]
+    )
+    var stores: MutableSet<Store> = mutableSetOf()
 )

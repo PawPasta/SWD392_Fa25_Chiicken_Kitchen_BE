@@ -427,13 +427,13 @@ class DataInitializer {
             val entities = items.map { (name, catAny, img) ->
                 val categoryName = when (catAny) {
                     is String -> catAny
-                    is MenuCategory -> when (catAny) {
-                        MenuCategory.CARB -> "Carbohydrates"
-                        MenuCategory.PROTEIN -> "Proteins"
-                        MenuCategory.VEGETABLE -> "Vegetables"
-                        MenuCategory.SAUCE -> "Sauces"
-                        MenuCategory.DAIRY -> "Dairy"
-                        MenuCategory.FRUIT -> "Fruits"
+                    is com.ChickenKitchen.app.enums.MenuCategory -> when (catAny) {
+                        com.ChickenKitchen.app.enums.MenuCategory.CARB -> "Carbohydrates"
+                        com.ChickenKitchen.app.enums.MenuCategory.PROTEIN -> "Proteins"
+                        com.ChickenKitchen.app.enums.MenuCategory.VEGETABLE -> "Vegetables"
+                        com.ChickenKitchen.app.enums.MenuCategory.SAUCE -> "Sauces"
+                        com.ChickenKitchen.app.enums.MenuCategory.DAIRY -> "Dairy"
+                        com.ChickenKitchen.app.enums.MenuCategory.FRUIT -> "Fruits"
                     }
                     else -> throw IllegalArgumentException("Unsupported category type: ${'$'}catAny")
                 }
@@ -928,46 +928,5 @@ class DataInitializer {
             println("⏭ Recipes table not empty, skipping")
         }
 
-        // DAILY MENU
-        if (dailyMenuRepository.count() == 0L) {
-            println("Seeding daily menu...")
-            val stores = storeRepository.findAll()
-            val items = menuItemRepository.findAll()
-            val store1 = stores.getOrNull(0)
-            val store2 = stores.getOrNull(1) ?: store1
-            val rice = items.find { it.name == "White Rice" }
-            val brownRice = items.find { it.name == "Brown Rice" }
-            val grilledChicken = items.find { it.name == "Grilled Chicken" }
-            val friedChicken = items.find { it.name == "Fried Chicken" }
-            val broccoli = items.find { it.name == "Broccoli" }
-            val carrot = items.find { it.name == "Carrot" }
-            val teriyakiSauce = items.find { it.name == "Teriyaki Sauce" }
-
-            val date = Timestamp.valueOf("2025-10-13 12:30:00")
-            val daily = mutableListOf<DailyMenu>()
-            if (store1 != null) {
-                if (rice != null) daily.add(DailyMenu(store = store1, menuItem = rice, menuDate = date))
-                if (brownRice != null) daily.add(DailyMenu(store = store1, menuItem = brownRice, menuDate = date))
-                if (grilledChicken != null) daily.add(DailyMenu(store = store1, menuItem = grilledChicken, menuDate = date))
-                if (friedChicken != null) daily.add(DailyMenu(store = store1, menuItem = friedChicken, menuDate = date))
-                if (broccoli != null) daily.add(DailyMenu(store = store1, menuItem = broccoli, menuDate = date))
-                if (carrot != null) daily.add(DailyMenu(store = store1, menuItem = carrot, menuDate = date))
-                if (teriyakiSauce != null) daily.add(DailyMenu(store = store1, menuItem = teriyakiSauce, menuDate = date))
-            }
-            if (store2 != null) {
-                if (rice != null) daily.add(DailyMenu(store = store2, menuItem = rice, menuDate = date))
-                if (grilledChicken != null) daily.add(DailyMenu(store = store2, menuItem = grilledChicken, menuDate = date))
-                if (broccoli != null) daily.add(DailyMenu(store = store2, menuItem = broccoli, menuDate = date))
-            }
-
-            if (daily.isNotEmpty()) {
-                dailyMenuRepository.saveAll(daily)
-                println("✓ Daily menu seeded")
-            } else {
-                println("⚠️ Skipped seeding daily menu: missing stores or items")
-            }
-        } else {
-            println("⏭ Daily menu table not empty, skipping")
-        }
     }
 }
