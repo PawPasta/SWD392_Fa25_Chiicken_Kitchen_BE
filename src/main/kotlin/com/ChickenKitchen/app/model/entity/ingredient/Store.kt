@@ -13,10 +13,10 @@ class Store(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     val name: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     val address: String,
 
     @Column(nullable = false, length = 100)

@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PaymentMethodRepository : JpaRepository<PaymentMethod, Long> {
+
+    fun findByName(name: String) : PaymentMethod?
 }

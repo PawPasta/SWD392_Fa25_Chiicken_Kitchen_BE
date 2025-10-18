@@ -1,7 +1,10 @@
 package com.ChickenKitchen.app.serviceImpl.category
 
+import com.ChickenKitchen.app.handler.CategoryHasMenuItemsException
+import com.ChickenKitchen.app.handler.CategoryNameExistException
+import com.ChickenKitchen.app.handler.CategoryNotFoundException
 import com.ChickenKitchen.app.mapper.toCategoryDetailResponse
-import com.ChickenKitchen.app.mapper.toCategoryResponse
+
 import com.ChickenKitchen.app.mapper.toCategoryResponseList
 import com.ChickenKitchen.app.model.dto.request.CreateCategoryRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateCategoryRequest
@@ -24,11 +27,18 @@ class CategoryServiceImpl(
     }
 
     override fun getById(id: Long): CategoryDetailResponse {
-        val entity = categoryRepository.findById(id).orElseThrow { NoSuchElementException("Category with id $id not found") }
+        val entity = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
         return entity.toCategoryDetailResponse()
     }
 
     override fun create(req: CreateCategoryRequest): CategoryDetailResponse {
+
+        val current = categoryRepository.findByName(req.name)
+
+        if (current != null) {
+            throw CategoryNameExistException("Category name '${req.name}' already exists")
+        }
+
         val entity = Category(
             name = req.name,
             description = req.description,
@@ -38,7 +48,7 @@ class CategoryServiceImpl(
     }
 
     override fun update(id: Long, req: UpdateCategoryRequest): CategoryDetailResponse {
-        val current = categoryRepository.findById(id).orElseThrow { NoSuchElementException("Category with id $id not found") }
+        val current = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
         val updated = Category(
             id = current.id,
             name = req.name ?: current.name,
@@ -50,7 +60,12 @@ class CategoryServiceImpl(
     }
 
     override fun delete(id: Long) {
-        val entity = categoryRepository.findById(id).orElseThrow { NoSuchElementException("Category with id $id not found") }
+        val entity = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
+
+        if (entity.menuItems.isNotEmpty()) {
+            throw CategoryHasMenuItemsException("Category with id $id has menu items and cannot be deleted")
+        }
+
         categoryRepository.delete(entity)
     }
 }

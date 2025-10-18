@@ -1,5 +1,8 @@
 package com.ChickenKitchen.app.serviceImpl.menu
 
+import com.ChickenKitchen.app.handler.DailyMenuAlreadyExistsException
+import com.ChickenKitchen.app.handler.DailyMenuHasStoresException
+import com.ChickenKitchen.app.handler.DailyMenuNotFoundException
 import com.ChickenKitchen.app.mapper.toDailyMenuListResponse
 import com.ChickenKitchen.app.mapper.toDailyMenuResponse
 import com.ChickenKitchen.app.model.dto.request.CreateDailyMenuRequest
@@ -29,13 +32,14 @@ class DailyMenuServiceImpl(
     }
 
     override fun getById(id: Long): DailyMenuResponse {
-        val dailyMenu = dailyMenuRepository.findById(id).orElseThrow { NoSuchElementException("Cannot find daily menu with that $id") }
+        val dailyMenu = dailyMenuRepository.findById(id)
+            .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
         return dailyMenu.toDailyMenuResponse()
     }
 
     override fun create(req: CreateDailyMenuRequest): DailyMenuResponse {
         if (dailyMenuRepository.existsByMenuDate(req.menuDate)) {
-            throw IllegalArgumentException("Daily menu for date ${req.menuDate} already exists")
+            throw DailyMenuAlreadyExistsException("Daily menu for date ${req.menuDate} already exists")
         }
 
         val allStores = storeRepository.findAll().toMutableSet()
@@ -64,15 +68,14 @@ class DailyMenuServiceImpl(
         req: UpdateDailyMenuRequest
     ): DailyMenuResponse {
         val dailyMenu = dailyMenuRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Cannot find daily menu with id $id") }
+            .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
 
         req.menuDate?.let { newDate ->
             if (dailyMenu.menuDate != newDate && dailyMenuRepository.existsByMenuDate(newDate)) {
-                throw IllegalArgumentException("Daily menu for date $newDate already exists")
+                throw DailyMenuAlreadyExistsException("Daily menu for date $newDate already exists")
             }
             dailyMenu.menuDate = newDate
         }
-
 
         req.menuItemIds?.let { ids ->
 
@@ -101,9 +104,17 @@ class DailyMenuServiceImpl(
         return updatedMenu.toDailyMenuResponse()
     }
 
-
-    // Cái này thì khoen đã, không nghĩ là có thể đặt được
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val dailyMenu = dailyMenuRepository.findById(id)
+            .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
+
+        // Kiểm tra nếu vẫn còn liên kết store
+        if (dailyMenu.stores.isNotEmpty()) {
+            throw DailyMenuHasStoresException(
+                "Cannot delete daily menu with id $id: it is associated with ${dailyMenu.stores.size} stores"
+            )
+        }
+
+        dailyMenuRepository.delete(dailyMenu)
     }
 }

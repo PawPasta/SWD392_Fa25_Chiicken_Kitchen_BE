@@ -1,5 +1,7 @@
 package com.ChickenKitchen.app.serviceImpl.promotion
 
+import com.ChickenKitchen.app.handler.PromotionHasOrdersException
+import com.ChickenKitchen.app.handler.PromotionNotFoundException
 import com.ChickenKitchen.app.mapper.toPromotionDetailResponse
 import com.ChickenKitchen.app.mapper.toPromotionList
 import com.ChickenKitchen.app.mapper.toPromotionResponse
@@ -26,7 +28,8 @@ class PromotionServiceImpl (
     }
 
     override fun changeStatus(id: Long): PromotionResponse {
-        val promotion = promotionRepository.findById(id).orElseThrow { NoSuchElementException ("Cannot find promotion with $id") }
+        val promotion = promotionRepository.findById(id)
+            .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
         promotion.isActive = !promotion.isActive
         val updated = promotionRepository.save(promotion)
         return updated.toPromotionResponse()
@@ -39,11 +42,13 @@ class PromotionServiceImpl (
     }
 
     override fun getById(id: Long): PromotionDetailResponse {
-        val getById = promotionRepository.findById(id).orElseThrow { NoSuchElementException ("Cannot find promotion with $id") }
-        return getById.toPromotionDetailResponse()
+        val promotion = promotionRepository.findById(id)
+            .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
+        return promotion.toPromotionDetailResponse()
     }
 
     override fun create(req: CreatePromotionRequest): PromotionDetailResponse {
+
        val promotion = Promotion(
            discountType = req.discountType,
            discountValue = req.discountValue,
@@ -56,27 +61,29 @@ class PromotionServiceImpl (
         return save.toPromotionDetailResponse()
     }
 
-    override fun update(
-        id: Long,
-        req: UpdatePromotionRequest
-    ): PromotionDetailResponse {
-        val currentPromotion = promotionRepository.findById(id).orElseThrow { NoSuchElementException ("Cannot find promotion with $id") }
+    override fun update(id: Long, req: UpdatePromotionRequest): PromotionDetailResponse {
+        val promotion = promotionRepository.findById(id)
+            .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
 
-        val update = Promotion (
-            discountType = currentPromotion.discountType,
-            discountValue = req.discountValue ?: currentPromotion.discountValue,
-            startDate = currentPromotion.startDate,
-            endDate = req.endDate ?: currentPromotion.endDate,
-        )
+        promotion.discountValue = req.discountValue ?: promotion.discountValue
+        promotion.endDate = req.endDate ?: promotion.endDate
+        promotion.isActive = req.isActive ?: promotion.isActive
+        promotion.quantity = req.quantity ?: promotion.quantity
 
-        val saved = promotionRepository.save(update)
-
+        val saved = promotionRepository.save(promotion)
         return saved.toPromotionDetailResponse()
-
     }
 
-    // Cai nay chac chi co the xoa duoc khi OrderPromotion dang null
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val promotion = promotionRepository.findById(id)
+            .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
+
+        if (promotion.orderPromotions.isNotEmpty()) {
+            throw PromotionHasOrdersException(
+                "Cannot delete promotion with id $id: it is associated with ${promotion.orderPromotions.size} orders"
+            )
+        }
+
+        promotionRepository.delete(promotion)
     }
 }

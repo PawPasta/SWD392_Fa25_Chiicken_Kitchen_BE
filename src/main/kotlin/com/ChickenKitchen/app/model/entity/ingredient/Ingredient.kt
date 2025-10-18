@@ -13,7 +13,7 @@ class Ingredient(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     var name: String? = null,
 
     @Enumerated(EnumType.STRING)

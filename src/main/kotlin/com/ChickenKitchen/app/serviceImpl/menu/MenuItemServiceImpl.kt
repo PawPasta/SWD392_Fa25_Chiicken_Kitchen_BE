@@ -1,5 +1,11 @@
 package com.ChickenKitchen.app.serviceImpl.menu
 
+import com.ChickenKitchen.app.handler.CategoryNotFoundException
+import com.ChickenKitchen.app.handler.MenuItemHasOrdersException
+import com.ChickenKitchen.app.handler.MenuItemHasRecipesException
+import com.ChickenKitchen.app.handler.MenuItemNotFoundException
+import com.ChickenKitchen.app.handler.MenuItemUsedInDailyMenuException
+import com.ChickenKitchen.app.handler.NutrientNotFoundException
 import com.ChickenKitchen.app.model.dto.request.CreateMenuItemRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateMenuItemRequest
 import com.ChickenKitchen.app.model.dto.response.MenuItemDetailResponse
@@ -32,13 +38,15 @@ class MenuItemServiceImpl(
     }
 
     override fun getById(id: Long): MenuItemDetailResponse {
-        val item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
+        val item = menuItemRepository.findById(id)
+            .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
         return buildDetail(item)
     }
 
     override fun create(req: CreateMenuItemRequest): MenuItemDetailResponse {
         val category = categoryRepository.findById(req.categoryId)
-            .orElseThrow { NoSuchElementException("Category with id ${req.categoryId} not found") }
+            .orElseThrow { CategoryNotFoundException("Category with id ${req.categoryId} not found") }
+
         val entity = MenuItem(
             name = req.name,
             category = category,
@@ -51,7 +59,8 @@ class MenuItemServiceImpl(
             if (inputs.isNotEmpty()) {
                 val links = inputs.map { input ->
                     val nutrient = nutrientRepository.findById(input.nutrientId)
-                        .orElseThrow { NoSuchElementException("Nutrient with id ${input.nutrientId} not found") }
+                        .orElseThrow { NutrientNotFoundException("Nutrient with id ${input.nutrientId} not found") }
+
                     MenuItemNutrient(
                         menuItem = saved,
                         nutrient = nutrient,
@@ -66,58 +75,65 @@ class MenuItemServiceImpl(
     }
 
     override fun update(id: Long, req: UpdateMenuItemRequest): MenuItemDetailResponse {
-        var item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
-        if (req.isActive != null) item.isActive = req.isActive
-        if (req.imageUrl != null) item.imageUrl = req.imageUrl
-        if (req.categoryId != null) {
-            val newCategory = categoryRepository.findById(req.categoryId)
-                .orElseThrow { NoSuchElementException("Category with id ${req.categoryId} not found") }
-            // Create a new entity instance since category is val
-            val replaced = MenuItem(
-                id = item.id,
-                name = item.name,
-                category = newCategory,
-                isActive = item.isActive,
-                imageUrl = item.imageUrl,
-                createdAt = item.createdAt,
-                // stepItems = item.stepItems,
-                dailyMenuItems = item.dailyMenuItems,
-                recipes = item.recipes,
-            )
-            // Persist replaced entity
-            val saved = menuItemRepository.save(replaced)
-            // Continue with saved for subsequent updates
-            item = saved
-        }
-        val updated = menuItemRepository.save(item)
+        val item = menuItemRepository.findById(id)
+            .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
 
-        if (req.nutrients != null) {
-            // Replace existing nutrients with provided list
+        // Update simple fields
+        req.isActive?.let { item.isActive = it }
+        req.imageUrl?.let { item.imageUrl = it }
+
+        // Update category if provided
+        if (req.categoryId != null && req.categoryId != item.category.id) {
+            val newCategory = categoryRepository.findById(req.categoryId)
+                .orElseThrow { CategoryNotFoundException("Category with id ${req.categoryId} not found") }
+            val updatedItem = item.copy(category = newCategory)
+            menuItemRepository.save(updatedItem)
+        } else {
+            menuItemRepository.save(item)
+        }
+
+        // Update nutrients
+        req.nutrients?.let { inputs ->
             val existing = menuItemNutrientRepository.findByMenuItemId(id)
             if (existing.isNotEmpty()) menuItemNutrientRepository.deleteAll(existing)
 
-            val newLinks = req.nutrients!!.map { input ->
+            val newLinks = inputs.map { input ->
                 val nutrient = nutrientRepository.findById(input.nutrientId)
-                    .orElseThrow { NoSuchElementException("Nutrient with id ${input.nutrientId} not found") }
-                MenuItemNutrient(
-                    menuItem = updated,
-                    nutrient = nutrient,
-                    quantity = input.quantity,
-                )
+                    .orElseThrow { NutrientNotFoundException("Nutrient with id ${input.nutrientId} not found") }
+                MenuItemNutrient(menuItem = item, nutrient = nutrient, quantity = input.quantity)
             }
             if (newLinks.isNotEmpty()) menuItemNutrientRepository.saveAll(newLinks)
         }
 
-        return buildDetail(updated)
+        return buildDetail(item)
     }
 
     override fun delete(id: Long) {
-        val item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
+        val item = menuItemRepository.findById(id)
+            .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
+
+        if (item.orderSteps.isNotEmpty()) {
+            throw MenuItemHasOrdersException("Cannot delete MenuItem with id $id: it has ${item.orderSteps.size} orders")
+        }
+
+        if (item.dailyMenuItems.isNotEmpty()) {
+            throw MenuItemUsedInDailyMenuException("Cannot delete MenuItem with id $id: it is used in ${item.dailyMenuItems.size} daily menus")
+        }
+
+        if (item.recipes.isNotEmpty()) {
+            throw MenuItemHasRecipesException("Cannot delete MenuItem with id $id: it has ${item.recipes.size} recipes")
+        }
+
+        // Delete nutrients first
+        val nutrients = menuItemNutrientRepository.findByMenuItemId(id)
+        if (nutrients.isNotEmpty()) menuItemNutrientRepository.deleteAll(nutrients)
+
         menuItemRepository.delete(item)
     }
 
     override fun changeStatus(id: Long): MenuItemResponse {
-        val item = menuItemRepository.findById(id).orElseThrow { NoSuchElementException("MenuItem with id $id not found") }
+        val item = menuItemRepository.findById(id)
+            .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
         item.isActive = !item.isActive
         val saved = menuItemRepository.save(item)
         return saved.toMenuItemResponse()

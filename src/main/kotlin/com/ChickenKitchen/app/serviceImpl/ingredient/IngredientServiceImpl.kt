@@ -1,5 +1,8 @@
 package com.ChickenKitchen.app.serviceImpl.ingredient
 
+import com.ChickenKitchen.app.handler.IngredientHasBatchesException
+import com.ChickenKitchen.app.handler.IngredientNameExistException
+import com.ChickenKitchen.app.handler.IngredientNotFoundException
 import com.ChickenKitchen.app.mapper.toIngredientDetailResponse
 import com.ChickenKitchen.app.mapper.toListIngredientResponse
 import com.ChickenKitchen.app.model.dto.request.CreateIngredientRequest
@@ -38,11 +41,15 @@ class IngredientServiceImpl (
 
     override fun getById(id: Long): IngredientDetailResponse {
         val ingredient = ingredientRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Cannot find Ingredient with id $id") }
+            .orElseThrow { IngredientNotFoundException("Ingredient with id $id not found") }
         return ingredient.toIngredientDetailResponse()
     }
 
     override fun create(req: CreateIngredientRequest): IngredientDetailResponse {
+
+        if (ingredientRepository.findByName(req.name) != null) {
+            throw IngredientNameExistException("Ingredient name '${req.name}' already exists")
+        }
 
         val stores = storeRepository.findAllById(req.storeIds)
 
@@ -80,9 +87,8 @@ class IngredientServiceImpl (
     @Transactional
     override fun update(id: Long, req: UpdateIngredientRequest): IngredientDetailResponse {
         val ingredient = ingredientRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Ingredient not found with id: $id") }
+            .orElseThrow { IngredientNotFoundException("Ingredient with id $id not found") }
 
-        // Cập nhật các trường được gửi lên
         req.name?.let { ingredient.name = it }
         req.imageUrl?.let { ingredient.imageUrl = it }
         req.baseUnit.let { ingredient.baseUnit = it }
@@ -101,8 +107,14 @@ class IngredientServiceImpl (
     }
 
 
-    // Cái này vẫn nghĩ là không cần thiết, nhưng thôi cứ để đại đây đi
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val ingredient = ingredientRepository.findById(id)
+            .orElseThrow { IngredientNotFoundException("Ingredient with id $id not found") }
+
+        if (ingredient.storeBatches.isNotEmpty()) {
+            throw IngredientHasBatchesException("Cannot delete ingredient with id $id because it has batches")
+        }
+
+        ingredientRepository.delete(ingredient)
     }
 }

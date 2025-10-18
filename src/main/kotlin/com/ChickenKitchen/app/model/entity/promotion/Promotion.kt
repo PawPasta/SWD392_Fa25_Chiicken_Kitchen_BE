@@ -20,7 +20,7 @@ class Promotion(
     val discountType: DiscountType,
 
     @Column(name = "discount_value", nullable = false)
-    val discountValue: Int,
+    var discountValue: Int,
 
     @field:JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "start_date", nullable = false)
@@ -28,7 +28,7 @@ class Promotion(
 
     @field:JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "end_date", nullable = false)
-    val endDate: LocalDateTime,
+    var endDate: LocalDateTime,
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = false,

@@ -18,7 +18,7 @@ class Nutrient(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     val name: String,
 
     @Enumerated(EnumType.STRING)

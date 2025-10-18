@@ -9,11 +9,11 @@ class PaymentMethod(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
-    val name: String,
+    @Column(nullable = false, unique = true)
+    var name: String,
 
     @Column
-    val description: String? = null,
+    var description: String? = null,
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,

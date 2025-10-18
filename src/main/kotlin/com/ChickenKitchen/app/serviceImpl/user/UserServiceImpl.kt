@@ -1,5 +1,7 @@
 package com.ChickenKitchen.app.serviceImpl.user
 
+import com.ChickenKitchen.app.handler.UserCannotDeleteException
+import com.ChickenKitchen.app.handler.UserEmailRequiredException
 import com.ChickenKitchen.app.service.user.UserService
 import org.springframework.stereotype.Service
 import org.springframework.security.core.context.SecurityContextHolder
@@ -32,13 +34,14 @@ class UserServiceImpl (
     }
 
     override fun getById(id: Long) : UserDetailResponse {
-        val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
+        val user = userRepository.findById(id)
+            .orElseThrow { UserNotFoundException("User with id $id not found") }
         return user.toUserDetailResponse()
     }
 
     override fun create(req: CreateUserRequest) : UserDetailResponse {
-        if (req.email.isNullOrEmpty()) {
-            throw IllegalArgumentException("Email is required")
+        if (req.email.isEmpty()) {
+            throw UserEmailRequiredException("Email is required to create a user")
         }
         val newUser = userRepository.save(
             User(
@@ -55,7 +58,9 @@ class UserServiceImpl (
     }
 
     override fun update(id: Long, req: UpdateUserRequest) : UserDetailResponse {
-        val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
+        val user = userRepository.findById(id)
+            .orElseThrow { UserNotFoundException("User with id $id not found") }
+
         if (!req.fullName.isNullOrEmpty()) {
             user.fullName = req.fullName
         }
@@ -73,12 +78,18 @@ class UserServiceImpl (
     }
 
     override fun delete(id: Long) {
-        val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
+        val user = userRepository.findById(id)
+            .orElseThrow { UserNotFoundException("User with id $id not found") }
+
+        if (user.orders.isNotEmpty()) {
+            throw UserCannotDeleteException("Cannot delete user with id $id: has ${user.orders.size} associated orders")
+        }
         userRepository.delete(user)
     }
 
     override fun changeStatus(id: Long) : UserResponse {
-        val user = userRepository.findById(id).orElse(null) ?: throw UserNotFoundException("User with id $id not found")
+        val user = userRepository.findById(id)
+            .orElseThrow { UserNotFoundException("User with id $id not found") }
         user.isActive = !user.isActive
         val updatedUser = userRepository.save(user)
         return updatedUser.toUserResponse()
@@ -86,24 +97,25 @@ class UserServiceImpl (
 
     override fun getProfile() : UserProfileResponse {
         val email = SecurityContextHolder.getContext().authentication.name
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User not found")
+        val user = userRepository.findByEmail(email)
+            ?: throw UserNotFoundException("User with email $email not found")
         return user.toUserProfileResponse()
     }
 
     override fun updateProfile(req: UpdateUserProfileRequest) : UserProfileResponse {
         val email = SecurityContextHolder.getContext().authentication.name
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User not found")
+        val user = userRepository.findByEmail(email)
+            ?: throw UserNotFoundException("User with email $email not found")
 
-        if (!req.fullName.isNullOrEmpty()) {
-            user.fullName = req.fullName
-        }
-        if (req.birthday != null) {
-            user.birthday = req.birthday
-        }
+        req.fullName?.let { user.fullName = it }
+        req.birthday?.let { user.birthday = it }
 
         val updatedUser = userRepository.save(user)
+
+
         val userSessions = userSessionRepository.findAllByUserEmailAndIsCancelledFalse(email)
-        userSessions[0].lastActivity = Timestamp(System.currentTimeMillis())
+        val now = Timestamp(System.currentTimeMillis())
+        userSessions.forEach { it.lastActivity = now }
         userSessionRepository.saveAll(userSessions)
 
         return updatedUser.toUserProfileResponse()

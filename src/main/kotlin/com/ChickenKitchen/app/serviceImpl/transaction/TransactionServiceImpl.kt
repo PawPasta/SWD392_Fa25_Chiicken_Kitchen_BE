@@ -1,5 +1,6 @@
 package com.ChickenKitchen.app.serviceImpl.transaction
 
+import com.ChickenKitchen.app.handler.TransactionNotFoundException
 import com.ChickenKitchen.app.mapper.toListTransactionResponse
 import com.ChickenKitchen.app.mapper.toTransactionResponse
 import com.ChickenKitchen.app.model.dto.response.TransactionResponse
@@ -19,7 +20,7 @@ class TransactionServiceImpl (
     }
 
     override fun getById(id: Long): TransactionResponse {
-        val transaction = transactionRepository.findById(id).orElseThrow { NoSuchElementException("Cannot find transaction with $id") }
+        val transaction = transactionRepository.findById(id).orElseThrow { TransactionNotFoundException("Cannot find Transaction with id $id") }
         return transaction.toTransactionResponse()
     }
 }

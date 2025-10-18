@@ -1,5 +1,8 @@
 package com.ChickenKitchen.app.serviceImpl.transaction
 
+import com.ChickenKitchen.app.handler.PaymentMethodHasTransactionsException
+import com.ChickenKitchen.app.handler.PaymentMethodNameExistException
+import com.ChickenKitchen.app.handler.PaymentMethodNotFoundException
 import com.ChickenKitchen.app.mapper.toListPaymentMethodResponse
 import com.ChickenKitchen.app.mapper.toPaymentMethodResponse
 import com.ChickenKitchen.app.model.dto.request.CreatePaymentMethodRequest
@@ -22,11 +25,16 @@ class PaymentMethodServiceImpl (
     }
 
     override fun getById(id: Long): PaymentMethodResponse {
-        val paymentMethod = paymentMethodRepository.findById(id).orElseThrow { NoSuchElementException("Cannot fine paymentMethod with $id") }
-        return paymentMethod.toPaymentMethodResponse()
+        val method = paymentMethodRepository.findById(id)
+            .orElseThrow { PaymentMethodNotFoundException("Cannot find PaymentMethod with id $id") }
+        return method.toPaymentMethodResponse()
     }
 
     override fun create(req: CreatePaymentMethodRequest): PaymentMethodResponse {
+        val existedByName = paymentMethodRepository.findByName(req.name)
+        if(existedByName != null){
+            throw PaymentMethodNameExistException("Payment Method Name is already exists")
+        }
         val paymentMethod = PaymentMethod(
             name = req.name,
             description = req.description,
@@ -41,28 +49,38 @@ class PaymentMethodServiceImpl (
         id: Long,
         req: UpdatePaymentMethodRequest
     ): PaymentMethodResponse {
-        val paymentMethod = paymentMethodRepository.findById(id).orElseThrow { NoSuchElementException("Cannot fine paymentMethod with $id") }
+        val method = paymentMethodRepository.findById(id)
+            .orElseThrow { PaymentMethodNotFoundException("Cannot find PaymentMethod with id $id") }
 
-        val updateMethod = PaymentMethod(
-            name = req.name ?: paymentMethod.name,
-            description = req.description ?: paymentMethod.description,
-            isActive = req.isActive
-        )
-        val saved = paymentMethodRepository.save(updateMethod)
+        method.name = req.name ?: method.name
+        method.description = req.description ?: method.description
+        method.isActive = req.isActive
 
+        val saved = paymentMethodRepository.save(method)
         return saved.toPaymentMethodResponse()
     }
 
     // Delete tam thoi khong ghi
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val method = paymentMethodRepository.findById(id)
+            .orElseThrow { PaymentMethodNotFoundException("Cannot find PaymentMethod with id $id") }
+
+        if (method.transactions.isNotEmpty()) {
+            throw PaymentMethodHasTransactionsException(
+                "Cannot delete PaymentMethod with id $id: it has ${method.transactions.size} transactions"
+            )
+        }
+
+        paymentMethodRepository.delete(method)
     }
 
     override fun changeStatus(id: Long): PaymentMethodResponse {
-        val paymentMethod = paymentMethodRepository.findById(id).orElseThrow { NoSuchElementException("Cannot fine paymentMethod with $id") }
-        paymentMethod.isActive = !paymentMethod.isActive
+        val method = paymentMethodRepository.findById(id)
+            .orElseThrow { PaymentMethodNotFoundException("Cannot find PaymentMethod with id $id") }
 
-        val save = paymentMethodRepository.save(paymentMethod)
+        method.isActive = !method.isActive
+
+        val save = paymentMethodRepository.save(method)
 
         return save.toPaymentMethodResponse()
     }
