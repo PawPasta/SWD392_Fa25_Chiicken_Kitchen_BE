@@ -7,10 +7,12 @@ import com.ChickenKitchen.app.service.transaction.PaymentMethodService
 import com.ChickenKitchen.app.service.transaction.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -43,7 +45,7 @@ class TransactionController (
     }
 
     @Operation(summary = "update payment method (admin only)")
-    @PostMapping("/payment-method/{id}")
+    @PutMapping("/payment-method/{id}")
     fun updatePaymentMethod (@PathVariable id : Long, @RequestBody req : UpdatePaymentMethodRequest) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(paymentMethodService.update(id, req), "Updated Payment Method Successfully"))
     }
@@ -52,6 +54,12 @@ class TransactionController (
     @PatchMapping("/payment-method/{id}")
     fun updatePaymentMethodStatus (@PathVariable id : Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(paymentMethodService.changeStatus(id),"Updated Status Successfully"))
+    }
+
+    @Operation(summary = "Delete payment method with condition")
+    @DeleteMapping("/payment-method/{id}")
+    fun delete (@PathVariable id :Long) : ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(paymentMethodService.delete(id), "Delete payment method Successfully"))
     }
 
     @Operation(summary = "Get All Transaction (manager only)")
