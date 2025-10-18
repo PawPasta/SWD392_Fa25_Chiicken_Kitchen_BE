@@ -29,19 +29,19 @@ class StepController(
 
     // Manager-only operations
     @Operation(summary = "Create step (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')") // Temporarily public
     @PostMapping
     fun create(@RequestBody req: CreateStepRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(stepService.create(req), "Step created"))
 
     @Operation(summary = "Update step (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')") // Temporarily public
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody req: UpdateStepRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(stepService.update(id, req), "Step updated"))
 
     @Operation(summary = "Delete step (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')") // Temporarily public
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<ResponseModel> {
         stepService.delete(id)
@@ -49,9 +49,8 @@ class StepController(
     }
 
     @Operation(summary = "Change step order (MANAGER)")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')") // Temporarily public
     @PatchMapping("/{id}/order")
     fun changeOrder(@PathVariable id: Long, @RequestBody req: StepOrderRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(stepService.changeOrder(id, req), "Step order updated"))
 }
-

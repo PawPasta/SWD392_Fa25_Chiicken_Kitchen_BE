@@ -21,11 +21,32 @@ class FilterConfig(
 ) : OncePerRequestFilter() {
 
     private val publicApis = listOf(
+        // Swagger/OpenAPI
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-ui.html",
+
+        // Auth endpoints
         "/api/auth/login",
         "/api/auth/refresh",
+        "/api/auth/logout",
+
+        // Temporarily making all application APIs public
+        // Add base paths for each controller
+        "/api/categories",
+        "/api/daily-menu",
+        "/api/ingredient",
+        "/api/menu-items",
+        "/api/nutrients",
+        "/api/orders",
+        "/api/promotion",
+        "/api/steps",
+        "/api/store",
+        "/api/transaction",
+        "/api/users",
+
+        // Broad allow for all APIs (temporary)
+        // "/api" // uncomment to allow absolutely all under /api
     )
 
     override fun doFilterInternal(
@@ -41,33 +62,31 @@ class FilterConfig(
                 filterChain.doFilter(request, response) 
                 return
             }
-//            ================================
-//              BỎ QUA KIỂM TRA TOKEN TẠM THỜI
-//            ================================
-//            val authHeader = request.getHeader("Authorization")
-//
-//            // Chặn lại kiểm tra giấy tờ
-//            if (authHeader == null || !authHeader.startsWith("Bearer ")) throw TokenException("Missing or invalid Authorization header")
-//
-//            // Có giấy thì vô
-//            val token = authHeader.substring(7)
-//            val email = jwtService.getEmail(token)
-//
-//            if (email != null && SecurityContextHolder.getContext().authentication == null) {
-//                val userDetails = userDetailsService.loadUserByUsername(email)
-//
-//                if (jwtService.isTokenValid(token, userDetails)) {
-//                    val authToken = UsernamePasswordAuthenticationToken(
-//                        userDetails,
-//                        null,
-//                        userDetails.authorities
-//                    )
-//                    authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-//                    SecurityContextHolder.getContext().authentication = authToken
-//                } else {
-//                    throw TokenException("Invalid or expired token")
-//                }
-//            }
+
+           val authHeader = request.getHeader("Authorization")
+
+           // Chặn lại kiểm tra giấy tờ
+           if (authHeader == null || !authHeader.startsWith("Bearer ")) throw TokenException("Missing or invalid Authorization header")
+
+           // Có giấy thì vô
+           val token = authHeader.substring(7)
+           val email = jwtService.getEmail(token)
+
+           if (email != null && SecurityContextHolder.getContext().authentication == null) {
+               val userDetails = userDetailsService.loadUserByUsername(email)
+
+               if (jwtService.isTokenValid(token, userDetails)) {
+                   val authToken = UsernamePasswordAuthenticationToken(
+                       userDetails,
+                       null,
+                       userDetails.authorities
+                   )
+                   authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+                   SecurityContextHolder.getContext().authentication = authToken
+               } else {
+                   throw TokenException("Invalid or expired token")
+               }
+           }
 
             // Tạo authentication tạm thời (Optional, để Spring Security coi request là authenticated)
             SecurityContextHolder.getContext().authentication =
