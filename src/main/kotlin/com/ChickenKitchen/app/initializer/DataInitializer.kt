@@ -1,6 +1,5 @@
 package com.ChickenKitchen.app.initializer
 
-
 import com.ChickenKitchen.app.enums.DiscountType
 import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.enums.UnitType
@@ -11,13 +10,13 @@ import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
+import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.model.entity.menu.Nutrient
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
-// import com.ChickenKitchen.app.model.entity.step.StepItem
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
@@ -30,7 +29,6 @@ import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.NutrientRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
-// import com.ChickenKitchen.app.repository.step.StepItemRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import org.springframework.boot.CommandLineRunner
@@ -41,6 +39,7 @@ import java.math.RoundingMode
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
+import kotlin.random.Random
 
 @Configuration
 class DataInitializer {
@@ -60,139 +59,164 @@ class DataInitializer {
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
         dailyMenuRepository: DailyMenuRepository,
-        storeIngredientBatchRepository : StoreIngredientBatchRepository
+        storeIngredientBatchRepository: StoreIngredientBatchRepository
     ) = CommandLineRunner {
 
-        // USERS
+        // ==================== USERS ====================
         if (userRepository.count() == 0L) {
             println("Seeding users...")
-            userRepository.save(
-                User(
-                    role = Role.ADMIN,
-                    uid = "admin-uid-001",
-                    email = "chickenkitchen785@gmail.com",
-                    isVerified = true,
-                    phone = "0901234567",
-                    isActive = true,
-                    fullName = "Admin Con Ga",
-                    provider = "Local",
-                    imageURL = null
-                )
+
+            // Admin users
+            userRepository.save(User(
+                role = Role.ADMIN,
+                uid = "admin-uid-001",
+                email = "chickenkitchen785@gmail.com",
+                isVerified = true,
+                phone = "0901234567",
+                isActive = true,
+                fullName = "Admin Con Ga",
+                provider = "Local",
+                imageURL = null
+            ))
+
+            userRepository.save(User(
+                role = Role.ADMIN,
+                uid = "admin-uid-002",
+                email = "admin2@chickenkitchen.com",
+                isVerified = true,
+                phone = "0901234590",
+                isActive = true,
+                fullName = "Admin Nguyen Van A",
+                provider = "Google",
+                imageURL = "https://example.com/admin2.jpg"
+            ))
+
+            // Manager users
+            userRepository.save(User(
+                role = Role.MANAGER,
+                uid = "manager-uid-001",
+                email = "khiem1371@gmail.com",
+                isVerified = true,
+                phone = "0901234568",
+                isActive = true,
+                fullName = "Manager Tran",
+                provider = "Local",
+                imageURL = null
+            ))
+
+            userRepository.save(User(
+                role = Role.MANAGER,
+                uid = "manager-uid-002",
+                email = "manager2@chickenkitchen.com",
+                isVerified = true,
+                phone = "0901234591",
+                isActive = true,
+                fullName = "Manager Le Thi B",
+                provider = "Local",
+                imageURL = "https://example.com/manager2.jpg"
+            ))
+
+            // Employee users
+            val employeeData = listOf(
+                Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
+                Triple("employee-uid-002", "employee2@chickenkitchen.com", "Employee Pham"),
+                Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
+                Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
+                Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
+                Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
             )
-            userRepository.save(
-                User(
-                    role = Role.MANAGER,
-                    uid = "manager-uid-001",
-                    email = "khiem1371@gmail.com",
-                    isVerified = true,
-                    phone = "0901234568",
-                    isActive = true,
-                    fullName = "Manager Tran",
-                    provider = "Local",
-                    imageURL = null
-                )
-            )
-            userRepository.save(
-                User(
+
+            employeeData.forEachIndexed { idx, (uid, email, name) ->
+                userRepository.save(User(
                     role = Role.EMPLOYEE,
-                    uid = "employee-uid-001",
-                    email = "baoltgse182138@fpt.edu.vn",
+                    uid = uid,
+                    email = email,
                     isVerified = true,
-                    phone = "0901234569",
+                    phone = "090123456${9 + idx}",
                     isActive = true,
-                    fullName = "Employee Le",
+                    fullName = name,
                     provider = "Local",
                     imageURL = null
-                )
-            )
-            userRepository.save(
-                User(
-                    role = Role.EMPLOYEE,
-                    uid = "employee-uid-002",
-                    email = "employee2@chickenkitchen.com",
-                    isVerified = true,
-                    phone = "0901234570",
-                    isActive = true,
-                    fullName = "Employee Pham",
-                    provider = "Local",
-                    imageURL = null
-                )
-            )
-            userRepository.save(
-                User(
-                    role = Role.STORE,
-                    uid = "store-uid-002",
-                    email = "letrangiabao2004@gmail.com",
-                    isVerified = true,
-                    phone = "0901234570",
-                    isActive = true,
-                    fullName = "Store",
-                    provider = "Local",
-                    imageURL = null
-                )
-            )
-            println("✓ Users seeded")
+                ))
+            }
+
+            // Store user
+            userRepository.save(User(
+                role = Role.STORE,
+                uid = "store-uid-002",
+                email = "letrangiabao2004@gmail.com",
+                isVerified = true,
+                phone = "0901234570",
+                isActive = true,
+                fullName = "Store",
+                provider = "Local",
+                imageURL = null
+            ))
+
+            println("✓ Users seeded: ${1 + 1 + employeeData.size + 1 + 2}")
         } else {
             println("⏭ Users table not empty, skipping")
         }
 
-        // STORES
+        // ==================== STORES ====================
         if (storeRepository.count() == 0L) {
             println("Seeding stores...")
-            storeRepository.save(
-                Store(
-                    name = "Chicken Kitchen District 1",
-                    address = "123 Nguyen Hue, District 1, HCMC",
-                    phone = "0281234567",
-                    isActive = true,
-                )
+
+            val storesData = listOf(
+                Triple("Chicken Kitchen District 1", "123 Nguyen Hue, District 1, HCMC", "0281234567"),
+                Triple("Chicken Kitchen District 3", "456 Vo Van Tan, District 3, HCMC", "0281234568"),
+                Triple("Chicken Kitchen District 7", "789 Nguyen Thi Thap, District 7, HCMC", "0281234569"),
+                Triple("Chicken Kitchen Binh Thanh", "321 Xo Viet Nghe Tinh, Binh Thanh, HCMC", "0281234570"),
+                Triple("Chicken Kitchen Phu Nhuan", "654 Phan Xich Long, Phu Nhuan, HCMC", "0281234571"),
+                Triple("Chicken Kitchen District 10", "987 Ba Thang Hai, District 10, HCMC", "0281234572")
             )
-            storeRepository.save(
-                Store(
-                    name = "Chicken Kitchen District 3",
-                    address = "456 Vo Van Tan, District 3, HCMC",
-                    phone = "0281234568",
+
+            storesData.forEach { (name, address, phone) ->
+                storeRepository.save(Store(
+                    name = name,
+                    address = address,
+                    phone = phone,
                     isActive = true
-                )
-            )
-            println("✓ Stores seeded")
+                ))
+            }
+
+            println("✓ Stores seeded: ${storesData.size}")
         } else {
             println("⏭ Stores table not empty, skipping")
         }
 
-        // PAYMENT METHODS
+        // ==================== PAYMENT METHODS ====================
         if (paymentMethodRepository.count() == 0L) {
             println("Seeding payment methods...")
-            paymentMethodRepository.save(
-                PaymentMethod(
-                    name = "Cash",
-                    description = "Pay with cash on pickup",
-                    isActive = true
-                )
+
+            val paymentMethods = listOf(
+                Triple("Cash", "Pay with cash on pickup", true),
+                Triple("MoMo", "Pay with MoMo e-wallet", true),
+                Triple("VNPay", "Pay with VNPay", true),
+                Triple("ZaloPay", "Pay with ZaloPay e-wallet", true),
+                Triple("Bank Transfer", "Pay via bank transfer", true),
+                Triple("Credit Card", "Pay with Visa/Mastercard", false) // Inactive for testing
             )
-            paymentMethodRepository.save(
-                PaymentMethod(
-                    name = "MoMo",
-                    description = "Pay with MoMo e-wallet",
-                    isActive = true
-                )
-            )
-            paymentMethodRepository.save(
-                PaymentMethod(
-                    name = "VNPay",
-                    description = "Pay with VNPay",
-                    isActive = true
-                )
-            )
-            println("✓ Payment methods seeded")
+
+            paymentMethods.forEach { (name, desc, active) ->
+                paymentMethodRepository.save(PaymentMethod(
+                    name = name,
+                    description = desc,
+                    isActive = active
+                ))
+            }
+
+            println("✓ Payment methods seeded: ${paymentMethods.size}")
         } else {
             println("⏭ Payment methods table not empty, skipping")
         }
 
-        // PROMOTIONS
+        // ==================== PROMOTIONS ====================
         if (promotionRepository.count() == 0L) {
             println("Seeding promotions...")
-            promotionRepository.save(
+
+            val promotions = listOf(
+                // Active promotions
                 Promotion(
                     discountType = DiscountType.PERCENT,
                     discountValue = 20,
@@ -200,9 +224,7 @@ class DataInitializer {
                     endDate = LocalDateTime.now().plusDays(25),
                     isActive = true,
                     quantity = 100
-                )
-            )
-            promotionRepository.save(
+                ),
                 Promotion(
                     discountType = DiscountType.AMOUNT,
                     discountValue = 50000,
@@ -210,14 +232,50 @@ class DataInitializer {
                     endDate = LocalDateTime.now().plusDays(10),
                     isActive = true,
                     quantity = 50
+                ),
+                Promotion(
+                    discountType = DiscountType.PERCENT,
+                    discountValue = 15,
+                    startDate = LocalDateTime.now().minusDays(1),
+                    endDate = LocalDateTime.now().plusDays(30),
+                    isActive = true,
+                    quantity = 200
+                ),
+                Promotion(
+                    discountType = DiscountType.AMOUNT,
+                    discountValue = 30000,
+                    startDate = LocalDateTime.now(),
+                    endDate = LocalDateTime.now().plusDays(7),
+                    isActive = true,
+                    quantity = 75
+                ),
+                // Expired promotion
+                Promotion(
+                    discountType = DiscountType.PERCENT,
+                    discountValue = 25,
+                    startDate = LocalDateTime.now().minusDays(30),
+                    endDate = LocalDateTime.now().minusDays(1),
+                    isActive = false,
+                    quantity = 0
+                ),
+                // Future promotion
+                Promotion(
+                    discountType = DiscountType.PERCENT,
+                    discountValue = 30,
+                    startDate = LocalDateTime.now().plusDays(5),
+                    endDate = LocalDateTime.now().plusDays(15),
+                    isActive = true,
+                    quantity = 150
                 )
             )
-            println("✓ Promotions seeded")
+
+            promotionRepository.saveAll(promotions)
+            println("✓ Promotions seeded: ${promotions.size}")
         } else {
             println("⏭ Promotions table not empty, skipping")
         }
 
-        // CATEGORIES (ensure all needed categories exist)
+        // ==================== CATEGORIES ====================
         run {
             val categories = listOf(
                 "Carbohydrates" to "Base carb selection",
@@ -225,7 +283,7 @@ class DataInitializer {
                 "Vegetables" to "Vegetable selection",
                 "Sauces" to "Sauce selection",
                 "Dairy" to "Dairy selection",
-                "Fruits" to "Fruit selection",
+                "Fruits" to "Fruit selection"
             )
             var created = 0
             categories.forEach { (name, desc) ->
@@ -234,45 +292,79 @@ class DataInitializer {
                     created++
                 }
             }
-            if (created > 0) println("✓ Categories ensured/seeded: $created new") else println("⏭ Categories already present")
+            if (created > 0) println("✓ Categories ensured/seeded: $created new")
+            else println("⏭ Categories already present")
         }
 
-        // STEPS
+        // ==================== STEPS ====================
         if (stepRepository.count() == 0L) {
             println("Seeding steps...")
             val carbCategory = categoryRepository.findByName("Carbohydrates")
-                ?: categoryRepository.findAll().firstOrNull()
             val proteinCategory = categoryRepository.findByName("Proteins")
-                ?: categoryRepository.findAll().getOrNull(1) ?: carbCategory
             val vegetableCategory = categoryRepository.findByName("Vegetables")
-                ?: categoryRepository.findAll().getOrNull(2) ?: carbCategory
+            val sauceCategory = categoryRepository.findByName("Sauces")
+            val dairyCategory = categoryRepository.findByName("Dairy")
+            val fruitCategory = categoryRepository.findByName("Fruits")
 
-            if (carbCategory != null && proteinCategory != null && vegetableCategory != null) {
-                stepRepository.save(
-                    Step(
-                        category = carbCategory,
-                        name = "Choose Your Base",
-                        description = "Select your carbohydrate base",
-                        stepNumber = 1
-                    )
-                )
-                stepRepository.save(
-                    Step(
-                        category = proteinCategory,
-                        name = "Choose Your Protein",
-                        description = "Select your protein",
-                        stepNumber = 2
-                    )
-                )
-                stepRepository.save(
-                    Step(
-                        category = vegetableCategory,
-                        name = "Choose Your Vegetables",
-                        description = "Select your vegetables",
-                        stepNumber = 3
-                    )
-                )
-                println("✓ Steps seeded")
+            val steps = mutableListOf<Step>()
+
+            if (carbCategory != null) {
+                steps.add(Step(
+                    category = carbCategory,
+                    name = "Choose Your Base",
+                    description = "Select your carbohydrate base",
+                    stepNumber = 1
+                ))
+            }
+
+            if (proteinCategory != null) {
+                steps.add(Step(
+                    category = proteinCategory,
+                    name = "Choose Your Protein",
+                    description = "Select your protein",
+                    stepNumber = 2
+                ))
+            }
+
+            if (vegetableCategory != null) {
+                steps.add(Step(
+                    category = vegetableCategory,
+                    name = "Choose Your Vegetables",
+                    description = "Select your vegetables",
+                    stepNumber = 3
+                ))
+            }
+
+            if (sauceCategory != null) {
+                steps.add(Step(
+                    category = sauceCategory,
+                    name = "Add Your Sauce",
+                    description = "Select your favorite sauce",
+                    stepNumber = 4
+                ))
+            }
+
+            if (dairyCategory != null) {
+                steps.add(Step(
+                    category = dairyCategory,
+                    name = "Add Dairy (Optional)",
+                    description = "Add cheese or dairy products",
+                    stepNumber = 5
+                ))
+            }
+
+            if (fruitCategory != null) {
+                steps.add(Step(
+                    category = fruitCategory,
+                    name = "Add Fruit (Optional)",
+                    description = "Add fresh fruits to your meal",
+                    stepNumber = 6
+                ))
+            }
+
+            if (steps.isNotEmpty()) {
+                stepRepository.saveAll(steps)
+                println("✓ Steps seeded: ${steps.size}")
             } else {
                 println("⚠️ Cannot seed steps: categories missing")
             }
@@ -280,11 +372,11 @@ class DataInitializer {
             println("⏭ Steps table not empty, skipping")
         }
 
-        // MENU ITEMS
+        // ==================== MENU ITEMS ====================
         if (menuItemRepository.count() == 0L) {
             println("Seeding menu items...")
             val items: List<Triple<String, Any, String>> = listOf(
-                // CARB
+                // CARB (22 items)
                 Triple("White Rice", MenuCategory.CARB, "https://example.com/images/white-rice.jpg"),
                 Triple("Brown Rice", MenuCategory.CARB, "https://example.com/images/brown-rice.jpg"),
                 Triple("Quinoa", MenuCategory.CARB, "https://example.com/images/quinoa.jpg"),
@@ -308,7 +400,7 @@ class DataInitializer {
                 Triple("Baguette", MenuCategory.CARB, "https://example.com/images/baguette.jpg"),
                 Triple("Tortilla", MenuCategory.CARB, "https://example.com/images/tortilla.jpg"),
 
-                // PROTEIN
+                // PROTEIN (29 items)
                 Triple("Grilled Chicken", "Proteins", "https://example.com/images/grilled-chicken.jpg"),
                 Triple("Fried Chicken", "Proteins", "https://example.com/images/fried-chicken.jpg"),
                 Triple("Beef Steak", MenuCategory.PROTEIN, "https://example.com/images/beef-steak.jpg"),
@@ -339,7 +431,7 @@ class DataInitializer {
                 Triple("Smoked Salmon", MenuCategory.PROTEIN, "https://example.com/images/smoked-salmon.jpg"),
                 Triple("Sardines", MenuCategory.PROTEIN, "https://example.com/images/sardines.jpg"),
 
-                // VEGETABLE
+                // VEGETABLE (24 items)
                 Triple("Broccoli", MenuCategory.VEGETABLE, "https://example.com/images/broccoli.jpg"),
                 Triple("Carrot", MenuCategory.VEGETABLE, "https://example.com/images/carrot.jpg"),
                 Triple("Spinach", MenuCategory.VEGETABLE, "https://example.com/images/spinach.jpg"),
@@ -365,7 +457,7 @@ class DataInitializer {
                 Triple("Beetroot", MenuCategory.VEGETABLE, "https://example.com/images/beetroot.jpg"),
                 Triple("Pumpkin", MenuCategory.VEGETABLE, "https://example.com/images/pumpkin.jpg"),
 
-                // SAUCE
+                // SAUCE (15 items)
                 Triple("Teriyaki Sauce", MenuCategory.SAUCE, "https://example.com/images/teriyaki-sauce.jpg"),
                 Triple("Soy Sauce", MenuCategory.SAUCE, "https://example.com/images/soy-sauce.jpg"),
                 Triple("Chili Sauce", MenuCategory.SAUCE, "https://example.com/images/chili-sauce.jpg"),
@@ -382,7 +474,7 @@ class DataInitializer {
                 Triple("Buffalo Sauce", MenuCategory.SAUCE, "https://example.com/images/buffalo-sauce.jpg"),
                 Triple("Tartar Sauce", MenuCategory.SAUCE, "https://example.com/images/tartar-sauce.jpg"),
 
-                // DAIRY
+                // DAIRY (13 items)
                 Triple("Cheddar Cheese", MenuCategory.DAIRY, "https://example.com/images/cheddar-cheese.jpg"),
                 Triple("Mozzarella", MenuCategory.DAIRY, "https://example.com/images/mozzarella.jpg"),
                 Triple("Greek Yogurt", MenuCategory.DAIRY, "https://example.com/images/greek-yogurt.jpg"),
@@ -397,7 +489,7 @@ class DataInitializer {
                 Triple("Ice Cream", MenuCategory.DAIRY, "https://example.com/images/ice-cream.jpg"),
                 Triple("Cottage Cheese", MenuCategory.DAIRY, "https://example.com/images/cottage-cheese.jpg"),
 
-                // FRUIT
+                // FRUIT (24 items)
                 Triple("Apple", MenuCategory.FRUIT, "https://example.com/images/apple.jpg"),
                 Triple("Banana", MenuCategory.FRUIT, "https://example.com/images/banana.jpg"),
                 Triple("Orange", MenuCategory.FRUIT, "https://example.com/images/orange.jpg"),
@@ -427,27 +519,27 @@ class DataInitializer {
             val entities = items.map { (name, catAny, img) ->
                 val categoryName = when (catAny) {
                     is String -> catAny
-                    is com.ChickenKitchen.app.enums.MenuCategory -> when (catAny) {
-                        com.ChickenKitchen.app.enums.MenuCategory.CARB -> "Carbohydrates"
-                        com.ChickenKitchen.app.enums.MenuCategory.PROTEIN -> "Proteins"
-                        com.ChickenKitchen.app.enums.MenuCategory.VEGETABLE -> "Vegetables"
-                        com.ChickenKitchen.app.enums.MenuCategory.SAUCE -> "Sauces"
-                        com.ChickenKitchen.app.enums.MenuCategory.DAIRY -> "Dairy"
-                        com.ChickenKitchen.app.enums.MenuCategory.FRUIT -> "Fruits"
+                    is MenuCategory -> when (catAny) {
+                        MenuCategory.CARB -> "Carbohydrates"
+                        MenuCategory.PROTEIN -> "Proteins"
+                        MenuCategory.VEGETABLE -> "Vegetables"
+                        MenuCategory.SAUCE -> "Sauces"
+                        MenuCategory.DAIRY -> "Dairy"
+                        MenuCategory.FRUIT -> "Fruits"
                     }
-                    else -> throw IllegalArgumentException("Unsupported category type: ${'$'}catAny")
+                    else -> throw IllegalArgumentException("Unsupported category type: $catAny")
                 }
                 val cat = categoryRepository.findByName(categoryName)
                     ?: throw IllegalStateException("Category not found for seeding: $categoryName")
                 MenuItem(name = name, category = cat, isActive = true, imageUrl = img)
             }
             menuItemRepository.saveAll(entities)
-            println("✓ Menu items seeded: ${'$'}{entities.size}")
+            println("✓ Menu items seeded: ${entities.size}")
         } else {
             println("⏭ Menu items table not empty, skipping")
         }
 
-        // NUTRIENTS (expanded)
+        // ==================== NUTRIENTS ====================
         if (nutrientRepository.count() == 0L) {
             println("Seeding nutrients...")
             val nutrientNames = listOf(
@@ -489,12 +581,12 @@ class DataInitializer {
             )
             val nutrients = nutrientNames.map { Nutrient(name = it, baseUnit = UnitType.G) }
             nutrientRepository.saveAll(nutrients)
-            println("✓ Nutrients seeded: ${'$'}{nutrients.size}")
+            println("✓ Nutrients seeded: ${nutrients.size}")
         } else {
             println("⏭ Nutrients table not empty, skipping")
         }
 
-        // MENU ITEM NUTRIENTS
+        // ==================== MENU ITEM NUTRIENTS ====================
         if (menuItemNutrientRepository.count() == 0L) {
             println("Seeding menu item nutrients...")
             val items = menuItemRepository.findAll()
@@ -779,7 +871,7 @@ class DataInitializer {
 
             if (links.isNotEmpty()) {
                 menuItemNutrientRepository.saveAll(links)
-                println("✓ Menu item nutrients seeded for ${'$'}{items.size} items, total links: ${'$'}{links.size}")
+                println("✓ Menu item nutrients seeded for ${items.size} items, total links: ${links.size}")
             } else {
                 println("⚠️ Skipped seeding menu item nutrients: missing items or nutrients")
             }
@@ -787,111 +879,129 @@ class DataInitializer {
             println("⏭ Menu item nutrients table not empty, skipping")
         }
 
-        // INGREDIENTS
+        // ==================== INGREDIENTS ====================
         if (ingredientRepository.count() == 0L) {
             println("Seeding ingredients...")
-            ingredientRepository.save(
-                Ingredient(
-                    name = "Chicken Breast",
-                    baseUnit = UnitType.G,
-                    imageUrl = "https://example.com/chicken-breast.jpg",
-                    isActive = true,
-                    batchNumber = "CB-2024-001"
-                )
+
+            val ingredientsData = listOf(
+                // Proteins
+                Triple("Chicken Breast", UnitType.G, "CB"),
+                Triple("Chicken Thigh", UnitType.G, "CT"),
+                Triple("Beef Sirloin", UnitType.G, "BS"),
+                Triple("Ground Beef", UnitType.G, "GB"),
+                Triple("Pork Loin", UnitType.G, "PL"),
+                Triple("Pork Belly", UnitType.G, "PB"),
+                Triple("Salmon", UnitType.G, "SM"),
+                Triple("Tuna", UnitType.G, "TN"),
+                Triple("Shrimp", UnitType.G, "SH"),
+                Triple("Tofu Block", UnitType.G, "TF"),
+                Triple("Eggs", UnitType.G, "EG"),
+                Triple("Turkey Breast", UnitType.G, "TB"),
+
+                // Carbs
+                Triple("White Rice", UnitType.G, "WR"),
+                Triple("Brown Rice", UnitType.G, "BR"),
+                Triple("Quinoa", UnitType.G, "QN"),
+                Triple("Sweet Potato", UnitType.G, "SP"),
+                Triple("Regular Potato", UnitType.G, "RP"),
+                Triple("Pasta", UnitType.G, "PA"),
+                Triple("Noodles", UnitType.G, "ND"),
+                Triple("Bread", UnitType.G, "BD"),
+
+                // Vegetables
+                Triple("Fresh Broccoli", UnitType.G, "BR"),
+                Triple("Fresh Carrot", UnitType.G, "CR"),
+                Triple("Fresh Spinach", UnitType.G, "SN"),
+                Triple("Fresh Tomato", UnitType.G, "TM"),
+                Triple("Fresh Cucumber", UnitType.G, "CU"),
+                Triple("Fresh Lettuce", UnitType.G, "LT"),
+                Triple("Fresh Bell Pepper", UnitType.G, "BP"),
+                Triple("Fresh Onion", UnitType.G, "ON"),
+                Triple("Fresh Garlic", UnitType.G, "GL"),
+                Triple("Fresh Mushrooms", UnitType.G, "MS"),
+                Triple("Fresh Kale", UnitType.G, "KL"),
+                Triple("Fresh Cabbage", UnitType.G, "CB"),
+
+                // Sauces & Condiments
+                Triple("Teriyaki Sauce", UnitType.ML, "TS"),
+                Triple("Soy Sauce", UnitType.ML, "SS"),
+                Triple("BBQ Sauce", UnitType.ML, "BB"),
+                Triple("Mayonnaise", UnitType.ML, "MY"),
+                Triple("Chili Sauce", UnitType.ML, "CS"),
+                Triple("Garlic Sauce", UnitType.ML, "GS"),
+                Triple("Pesto", UnitType.ML, "PS"),
+                Triple("Olive Oil", UnitType.ML, "OO"),
+                Triple("Vegetable Oil", UnitType.ML, "VO"),
+
+                // Dairy
+                Triple("Cheddar Cheese", UnitType.G, "CC"),
+                Triple("Mozzarella", UnitType.G, "MZ"),
+                Triple("Greek Yogurt", UnitType.G, "GY"),
+                Triple("Milk", UnitType.ML, "MK"),
+                Triple("Butter", UnitType.G, "BT"),
+                Triple("Cream", UnitType.ML, "CM"),
+
+                // Fruits
+                Triple("Fresh Apple", UnitType.G, "AP"),
+                Triple("Fresh Banana", UnitType.G, "BN"),
+                Triple("Fresh Strawberry", UnitType.G, "ST"),
+                Triple("Fresh Blueberry", UnitType.G, "BL"),
+                Triple("Fresh Orange", UnitType.G, "OR"),
+                Triple("Fresh Mango", UnitType.G, "MG"),
+
+                // Spices & Herbs
+                Triple("Salt", UnitType.G, "SL"),
+                Triple("Black Pepper", UnitType.G, "PP"),
+                Triple("Paprika", UnitType.G, "PK"),
+                Triple("Cumin", UnitType.G, "CM"),
+                Triple("Fresh Basil", UnitType.G, "BS"),
+                Triple("Fresh Parsley", UnitType.G, "PR"),
+                Triple("Fresh Cilantro", UnitType.G, "CL")
             )
-            ingredientRepository.save(
-                Ingredient(
-                    name = "White Rice",
-                    baseUnit = UnitType.G,
-                    imageUrl = "https://example.com/white-rice.jpg",
+
+            ingredientsData.forEachIndexed { idx, (name, unit, prefix) ->
+                ingredientRepository.save(Ingredient(
+                    name = name,
+                    baseUnit = unit,
+                    imageUrl = "https://example.com/${name.lowercase().replace(" ", "-")}.jpg",
                     isActive = true,
-                    batchNumber = "WR-2024-001"
-                )
-            )
-            ingredientRepository.save(
-                Ingredient(
-                    name = "Fresh Broccoli",
-                    baseUnit = UnitType.G,
-                    imageUrl = "https://example.com/broccoli.jpg",
-                    isActive = true,
-                    batchNumber = "BR-2024-001"
-                )
-            )
-            println("✓ Ingredients seeded")
+                    batchNumber = "$prefix-2024-${(idx + 1).toString().padStart(3, '0')}"
+                ))
+            }
+
+            println("✓ Ingredients seeded: ${ingredientsData.size}")
         } else {
             println("⏭ Ingredients table not empty, skipping")
         }
 
-        // STORE INGREDIENT BATCHES (Many-to-Many relationship)
+        // ==================== STORE INGREDIENT BATCHES ====================
         if (storeIngredientBatchRepository.count() == 0L) {
             println("Seeding store ingredient batches...")
             val stores = storeRepository.findAll()
             val ingredients = ingredientRepository.findAll()
 
-            val store1 = stores.getOrNull(0)
-            val store2 = stores.getOrNull(1)
-
-            val chickenBreast = ingredients.find { it.name == "Chicken Breast" }
-            val riceIngredient = ingredients.find { it.name == "White Rice" }
-            val broccoliIngredient = ingredients.find { it.name == "Fresh Broccoli" }
-
             val batches = mutableListOf<StoreIngredientBatch>()
 
-            // Store 1 inventory
-            if (store1 != null) {
-                if (chickenBreast != null) {
-                    batches.add(StoreIngredientBatch(
-                        store = store1,
-                        ingredient = chickenBreast,
-                        quantity = 5000 // 5kg
-                    ))
-                }
-                if (riceIngredient != null) {
-                    batches.add(StoreIngredientBatch(
-                        store = store1,
-                        ingredient = riceIngredient,
-                        quantity = 10000 // 10kg
-                    ))
-                }
-                if (broccoliIngredient != null) {
-                    batches.add(StoreIngredientBatch(
-                        store = store1,
-                        ingredient = broccoliIngredient,
-                        quantity = 3000 // 3kg
-                    ))
-                }
-            }
+            stores.forEach { store ->
+                ingredients.forEach { ingredient ->
+                    // Random quantity between 1000g-10000g or 500ml-5000ml
+                    val baseQuantity = if (ingredient.baseUnit == UnitType.ML) {
+                        (Random.nextInt(1, 11) * 500).toLong()
+                    } else {
+                        (Random.nextInt(1, 11) * 500).toLong()
+                    }
 
-            // Store 2 inventory
-            if (store2 != null) {
-                if (chickenBreast != null) {
                     batches.add(StoreIngredientBatch(
-                        store = store2,
-                        ingredient = chickenBreast,
-                        quantity = 4000 // 4kg
+                        store = store,
+                        ingredient = ingredient,
+                        quantity = baseQuantity
                     ))
-                }
-                if (riceIngredient != null) {
-                    batches.add(StoreIngredientBatch(
-                        store = store2,
-                        ingredient = riceIngredient,
-                        quantity = 8000 // 8kg
-                    ))
-                }
-                if (broccoliIngredient != null) {
-                    batches.add(
-                        StoreIngredientBatch(
-                            store = store2,
-                            ingredient = broccoliIngredient,
-                            quantity = 2500 // 2.5kg
-                        )
-                    )
                 }
             }
 
             if (batches.isNotEmpty()) {
                 storeIngredientBatchRepository.saveAll(batches)
-                println("✓ Store ingredient batches seeded: ${batches.size}")
+                println("✓ Store ingredient batches seeded: ${batches.size} (${stores.size} stores × ${ingredients.size} ingredients)")
             } else {
                 println("⚠️ Skipped seeding store ingredient batches: missing stores or ingredients")
             }
@@ -899,28 +1009,174 @@ class DataInitializer {
             println("⏭ Store ingredient batches table not empty, skipping")
         }
 
-        // RECIPES (Link ingredients to menu items)
+        // ==================== RECIPES ====================
         if (recipeRepository.count() == 0L) {
             println("Seeding recipes...")
             val items = menuItemRepository.findAll()
-            val grilledChicken = items.find { it.name == "Grilled Chicken" }
-            val friedChicken = items.find { it.name == "Fried Chicken" }
-            val rice = items.find { it.name == "White Rice" }
-            val broccoli = items.find { it.name == "Broccoli" }
+            val ingredients = ingredientRepository.findAll()
 
-            val chickenBreast = ingredientRepository.findByName("Chicken Breast")
-            val riceIngredient = ingredientRepository.findByName("White Rice")
-            val broccoliIngredient = ingredientRepository.findByName("Fresh Broccoli")
+            val recipeMapping = mapOf(
+                // Chicken dishes
+                "Grilled Chicken" to listOf("Chicken Breast", "Olive Oil", "Salt", "Black Pepper", "Fresh Garlic"),
+                "Fried Chicken" to listOf("Chicken Thigh", "Vegetable Oil", "Salt", "Black Pepper", "Paprika"),
+                "Roast Chicken" to listOf("Chicken Breast", "Butter", "Fresh Garlic", "Fresh Parsley", "Salt"),
+                "Chicken Thigh" to listOf("Chicken Thigh", "Soy Sauce", "Fresh Garlic", "Salt"),
+                "Chicken Wings" to listOf("Chicken Thigh", "BBQ Sauce", "Salt", "Black Pepper"),
+                "Turkey Breast" to listOf("Turkey Breast", "Olive Oil", "Salt", "Fresh Parsley"),
+
+                // Beef dishes
+                "Beef Steak" to listOf("Beef Sirloin", "Salt", "Black Pepper", "Olive Oil", "Fresh Garlic"),
+                "Ground Beef" to listOf("Ground Beef", "Salt", "Black Pepper", "Fresh Onion"),
+                "Ribeye Steak" to listOf("Beef Sirloin", "Butter", "Fresh Garlic", "Salt"),
+                "Sirloin" to listOf("Beef Sirloin", "Olive Oil", "Salt", "Black Pepper"),
+
+                // Pork dishes
+                "Pork Chop" to listOf("Pork Loin", "Salt", "Black Pepper", "Olive Oil"),
+                "Pork Belly" to listOf("Pork Belly", "Soy Sauce", "Fresh Garlic", "Salt"),
+                "Ham" to listOf("Pork Loin", "Salt", "Black Pepper"),
+                "Bacon" to listOf("Pork Belly", "Salt", "Black Pepper"),
+
+                // Seafood
+                "Salmon Fillet" to listOf("Salmon", "Olive Oil", "Salt", "Fresh Parsley", "Fresh Garlic"),
+                "Smoked Salmon" to listOf("Salmon", "Salt", "Black Pepper"),
+                "Tuna" to listOf("Tuna", "Olive Oil", "Salt"),
+                "Shrimp" to listOf("Shrimp", "Olive Oil", "Fresh Garlic", "Salt"),
+                "Sardines" to listOf("Tuna", "Olive Oil", "Salt"),
+
+                // Vegetarian proteins
+                "Firm Tofu" to listOf("Tofu Block", "Soy Sauce", "Fresh Garlic"),
+                "Tempeh" to listOf("Tofu Block", "Soy Sauce", "Fresh Ginger"),
+                "Seitan" to listOf("Tofu Block", "Soy Sauce"),
+                "Boiled Egg" to listOf("Eggs", "Salt"),
+
+                // Legumes
+                "Black Beans" to listOf("Salt", "Fresh Garlic", "Cumin"),
+                "Chickpeas" to listOf("Salt", "Olive Oil", "Paprika"),
+                "Lentils" to listOf("Salt", "Fresh Onion", "Cumin"),
+                "Edamame" to listOf("Salt"),
+
+                // Carbs
+                "White Rice" to listOf("White Rice", "Salt"),
+                "Brown Rice" to listOf("Brown Rice", "Salt"),
+                "Quinoa" to listOf("Quinoa", "Salt", "Olive Oil"),
+                "Sweet Potato" to listOf("Sweet Potato", "Olive Oil", "Salt"),
+                "Mashed Potato" to listOf("Regular Potato", "Milk", "Butter", "Salt"),
+                "Whole Wheat Pasta" to listOf("Pasta", "Olive Oil", "Salt"),
+                "Udon Noodles" to listOf("Noodles", "Soy Sauce"),
+                "Soba Noodles" to listOf("Noodles", "Soy Sauce"),
+                "Rice Noodles" to listOf("Noodles", "Vegetable Oil"),
+                "Couscous" to listOf("Quinoa", "Olive Oil", "Salt"),
+                "Oatmeal" to listOf("Quinoa", "Milk", "Salt"),
+                "Garlic Bread" to listOf("Bread", "Butter", "Fresh Garlic", "Fresh Parsley"),
+                "Sourdough Bread" to listOf("Bread", "Salt"),
+                "Baguette" to listOf("Bread", "Salt"),
+                "Tortilla" to listOf("Bread", "Salt"),
+
+                // Vegetables
+                "Broccoli" to listOf("Fresh Broccoli", "Olive Oil", "Salt", "Fresh Garlic"),
+                "Carrot" to listOf("Fresh Carrot", "Olive Oil", "Salt"),
+                "Spinach" to listOf("Fresh Spinach", "Olive Oil", "Fresh Garlic", "Salt"),
+                "Kale" to listOf("Fresh Kale", "Olive Oil", "Fresh Garlic"),
+                "Lettuce" to listOf("Fresh Lettuce", "Olive Oil"),
+                "Tomato" to listOf("Fresh Tomato", "Olive Oil", "Salt", "Fresh Basil"),
+                "Cucumber" to listOf("Fresh Cucumber", "Salt"),
+                "Bell Pepper" to listOf("Fresh Bell Pepper", "Olive Oil", "Salt"),
+                "Mushrooms" to listOf("Fresh Mushrooms", "Olive Oil", "Fresh Garlic", "Salt"),
+                "Cabbage" to listOf("Fresh Cabbage", "Olive Oil", "Salt"),
+                "Onion" to listOf("Fresh Onion", "Olive Oil"),
+                "Garlic" to listOf("Fresh Garlic", "Olive Oil"),
+                "Asparagus" to listOf("Fresh Broccoli", "Olive Oil", "Salt"),
+                "Zucchini" to listOf("Fresh Cucumber", "Olive Oil", "Salt"),
+                "Eggplant" to listOf("Fresh Bell Pepper", "Olive Oil", "Salt", "Fresh Garlic"),
+                "Cauliflower" to listOf("Fresh Broccoli", "Olive Oil", "Salt"),
+                "Corn" to listOf("Fresh Carrot", "Butter", "Salt"),
+                "Green Beans" to listOf("Fresh Broccoli", "Olive Oil", "Fresh Garlic"),
+                "Peas" to listOf("Fresh Broccoli", "Butter", "Salt"),
+                "Brussels Sprouts" to listOf("Fresh Cabbage", "Olive Oil", "Salt"),
+                "Red Cabbage" to listOf("Fresh Cabbage", "Olive Oil"),
+                "Arugula" to listOf("Fresh Lettuce", "Olive Oil"),
+                "Beetroot" to listOf("Fresh Carrot", "Olive Oil", "Salt"),
+                "Pumpkin" to listOf("Fresh Carrot", "Olive Oil", "Salt"),
+
+                // Sauces
+                "Teriyaki Sauce" to listOf("Teriyaki Sauce"),
+                "Soy Sauce" to listOf("Soy Sauce"),
+                "Chili Sauce" to listOf("Chili Sauce"),
+                "Garlic Sauce" to listOf("Garlic Sauce", "Fresh Garlic"),
+                "BBQ Sauce" to listOf("BBQ Sauce"),
+                "Mayonnaise" to listOf("Mayonnaise"),
+                "Ketchup" to listOf("BBQ Sauce", "Salt"),
+                "Mustard" to listOf("Mayonnaise", "Salt"),
+                "Ranch" to listOf("Mayonnaise", "Fresh Garlic", "Fresh Parsley"),
+                "Caesar" to listOf("Mayonnaise", "Fresh Garlic"),
+                "Pesto" to listOf("Pesto", "Fresh Basil", "Fresh Garlic"),
+                "Sriracha" to listOf("Chili Sauce"),
+                "Honey Mustard" to listOf("Mayonnaise", "Salt"),
+                "Buffalo Sauce" to listOf("Chili Sauce", "Butter"),
+                "Tartar Sauce" to listOf("Mayonnaise", "Fresh Garlic"),
+
+                // Dairy
+                "Cheddar Cheese" to listOf("Cheddar Cheese"),
+                "Mozzarella" to listOf("Mozzarella"),
+                "Greek Yogurt" to listOf("Greek Yogurt"),
+                "Butter" to listOf("Butter"),
+                "Milk" to listOf("Milk"),
+                "Parmesan" to listOf("Cheddar Cheese"),
+                "Feta" to listOf("Cheddar Cheese"),
+                "Blue Cheese" to listOf("Cheddar Cheese"),
+                "Sour Cream" to listOf("Cream", "Salt"),
+                "Cream Cheese" to listOf("Cream"),
+                "Ricotta" to listOf("Mozzarella"),
+                "Ice Cream" to listOf("Milk", "Cream"),
+                "Cottage Cheese" to listOf("Cheddar Cheese"),
+
+                // Fruits
+                "Apple" to listOf("Fresh Apple"),
+                "Banana" to listOf("Fresh Banana"),
+                "Orange" to listOf("Fresh Orange"),
+                "Pineapple" to listOf("Fresh Mango"),
+                "Mango" to listOf("Fresh Mango"),
+                "Strawberry" to listOf("Fresh Strawberry"),
+                "Blueberry" to listOf("Fresh Blueberry"),
+                "Grape" to listOf("Fresh Apple"),
+                "Watermelon" to listOf("Fresh Mango"),
+                "Kiwi" to listOf("Fresh Apple"),
+                "Peach" to listOf("Fresh Mango"),
+                "Pear" to listOf("Fresh Apple"),
+                "Plum" to listOf("Fresh Apple"),
+                "Cherry" to listOf("Fresh Strawberry"),
+                "Raspberry" to listOf("Fresh Strawberry"),
+                "Blackberry" to listOf("Fresh Blueberry"),
+                "Dragon Fruit" to listOf("Fresh Mango"),
+                "Papaya" to listOf("Fresh Mango"),
+                "Lemon" to listOf("Fresh Orange"),
+                "Lime" to listOf("Fresh Orange"),
+                "Coconut" to listOf("Fresh Mango"),
+                "Pomegranate" to listOf("Fresh Apple"),
+                "Grapefruit" to listOf("Fresh Orange"),
+                "Avocado" to listOf("Fresh Mango")
+            )
 
             val newRecipes = mutableListOf<Recipe>()
-            if (chickenBreast != null && grilledChicken != null) newRecipes.add(Recipe(ingredient = chickenBreast, menuItem = grilledChicken))
-            if (chickenBreast != null && friedChicken != null) newRecipes.add(Recipe(ingredient = chickenBreast, menuItem = friedChicken))
-            if (riceIngredient != null && rice != null) newRecipes.add(Recipe(ingredient = riceIngredient, menuItem = rice))
-            if (broccoliIngredient != null && broccoli != null) newRecipes.add(Recipe(ingredient = broccoliIngredient, menuItem = broccoli))
+
+            recipeMapping.forEach { (itemName, ingredientNames) ->
+                val menuItem = items.find { it.name == itemName }
+                if (menuItem != null) {
+                    ingredientNames.forEach { ingName ->
+                        val ingredient = ingredients.find { it.name == ingName }
+                        if (ingredient != null) {
+                            newRecipes.add(Recipe(
+                                ingredient = ingredient,
+                                menuItem = menuItem
+                            ))
+                        }
+                    }
+                }
+            }
 
             if (newRecipes.isNotEmpty()) {
                 recipeRepository.saveAll(newRecipes)
-                println("✓ Recipes seeded")
+                println("✓ Recipes seeded: ${newRecipes.size}")
             } else {
                 println("⚠️ Skipped seeding recipes: missing ingredients or items")
             }
@@ -928,5 +1184,72 @@ class DataInitializer {
             println("⏭ Recipes table not empty, skipping")
         }
 
+        // ==================== DAILY MENU ====================
+        if (dailyMenuRepository.count() == 0L) {
+            println("Seeding daily menus...")
+
+            val stores = storeRepository.findAll()
+            val items = menuItemRepository.findAll()
+
+            // Create daily menus for the past 7 days and next 7 days
+            val dailyMenus = mutableListOf<DailyMenu>()
+
+            for (dayOffset in -7..7) {
+                val menuDate = Timestamp.valueOf(LocalDateTime.now().plusDays(dayOffset.toLong()).withHour(12).withMinute(0).withSecond(0).withNano(0))
+
+                val dailyMenu = DailyMenu(menuDate = menuDate)
+
+                // Add all stores to this daily menu
+                dailyMenu.stores.addAll(stores)
+
+                // Select random items from each category for variety
+                val carbItems = items.filter { it.category.name == "Carbohydrates" }.shuffled().take(5)
+                val proteinItems = items.filter { it.category.name == "Proteins" }.shuffled().take(8)
+                val vegItems = items.filter { it.category.name == "Vegetables" }.shuffled().take(6)
+                val sauceItems = items.filter { it.category.name == "Sauces" }.shuffled().take(4)
+                val dairyItems = items.filter { it.category.name == "Dairy" }.shuffled().take(3)
+                val fruitItems = items.filter { it.category.name == "Fruits" }.shuffled().take(3)
+
+                val selectedItems = carbItems + proteinItems + vegItems + sauceItems + dairyItems + fruitItems
+
+                selectedItems.forEach { menuItem ->
+                    val dailyMenuItem = DailyMenuItem(
+                        dailyMenu = dailyMenu,
+                        menuItem = menuItem
+                    )
+                    dailyMenu.dailyMenuItems.add(dailyMenuItem)
+                }
+
+                dailyMenus.add(dailyMenu)
+            }
+
+            if (dailyMenus.isNotEmpty()) {
+                dailyMenuRepository.saveAll(dailyMenus)
+                println("✓ Daily menus seeded: ${dailyMenus.size} days with varying items")
+            } else {
+                println("⚠️ Skipped seeding daily menus: missing stores or items")
+            }
+        } else {
+            println("⏭ Daily menu table not empty, skipping")
+        }
+
+        println("\n" + "=".repeat(50))
+        println("✅ DATA INITIALIZATION COMPLETE!")
+        println("=".repeat(50))
+        println("Summary:")
+        println("- Users: ${userRepository.count()}")
+        println("- Stores: ${storeRepository.count()}")
+        println("- Categories: ${categoryRepository.count()}")
+        println("- Steps: ${stepRepository.count()}")
+        println("- Menu Items: ${menuItemRepository.count()}")
+        println("- Nutrients: ${nutrientRepository.count()}")
+        println("- Menu Item Nutrients: ${menuItemNutrientRepository.count()}")
+        println("- Ingredients: ${ingredientRepository.count()}")
+        println("- Recipes: ${recipeRepository.count()}")
+        println("- Store Ingredient Batches: ${storeIngredientBatchRepository.count()}")
+        println("- Payment Methods: ${paymentMethodRepository.count()}")
+        println("- Promotions: ${promotionRepository.count()}")
+        println("- Daily Menus: ${dailyMenuRepository.count()}")
+        println("=".repeat(50))
     }
 }
