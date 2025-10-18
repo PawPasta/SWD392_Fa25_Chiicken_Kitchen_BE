@@ -14,6 +14,7 @@ fun MenuItem.toMenuItemResponse(): MenuItemResponse =
         categoryName = this.category.name,
         isActive = this.isActive,
         imageUrl = this.imageUrl,
+        price = this.price
     )
 
 fun List<MenuItem>.toMenuItemResponseList(): List<MenuItemResponse> =
@@ -29,6 +30,7 @@ fun MenuItem.toMenuItemDetailResponse(nutrients: List<MenuItemNutrientBriefRespo
         imageUrl = this.imageUrl,
         createdAt = this.createdAt.toString(),
         nutrients = nutrients,
+        price = this.price
     )
 
 fun List<MenuItemNutrient>.toBriefResponses(): List<MenuItemNutrientBriefResponse> =

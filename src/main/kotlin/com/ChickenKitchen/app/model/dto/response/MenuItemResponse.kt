@@ -8,6 +8,7 @@ data class MenuItemResponse(
     val categoryName: String,
     val isActive: Boolean,
     val imageUrl: String?,
+    val price: Int,
 )
 
 data class MenuItemNutrientBriefResponse(
@@ -24,5 +25,6 @@ data class MenuItemDetailResponse(
     val isActive: Boolean,
     val imageUrl: String?,
     val createdAt: String,
+    val price: Int,
     val nutrients: List<MenuItemNutrientBriefResponse> = emptyList(),
 )

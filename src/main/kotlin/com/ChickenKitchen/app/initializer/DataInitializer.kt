@@ -163,12 +163,12 @@ class DataInitializer {
             println("Seeding stores...")
 
             val storesData = listOf(
-                Triple("Chicken Kitchen District 1", "123 Nguyen Hue, District 1, HCMC", "0281234567"),
-                Triple("Chicken Kitchen District 3", "456 Vo Van Tan, District 3, HCMC", "0281234568"),
-                Triple("Chicken Kitchen District 7", "789 Nguyen Thi Thap, District 7, HCMC", "0281234569"),
-                Triple("Chicken Kitchen Binh Thanh", "321 Xo Viet Nghe Tinh, Binh Thanh, HCMC", "0281234570"),
-                Triple("Chicken Kitchen Phu Nhuan", "654 Phan Xich Long, Phu Nhuan, HCMC", "0281234571"),
-                Triple("Chicken Kitchen District 10", "987 Ba Thang Hai, District 10, HCMC", "0281234572")
+                Triple("Chicken Kitchen Binh Thanh", "720A Điện Biên Phủ, Phường 22, Bình Thạnh, Thành phố Hồ Chí Minh", "0281234567"),
+                Triple("Chicken Kitchen High Technology bay", "Lô E2a-7, Đường D1, Khu Công nghệ cao, Phường Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh", "0281234568"),
+                Triple("Chicken Kitchen District 3", "643 Điện Biên Phủ, Quận 3, Thành phố Hồ Chí Minh.", "0281234569"),
+                Triple("Chicken Kitchen Binh Duong", "Đường Lưu Hữu Phước, phường Đông Hòa, thành phố Dĩ An, tỉnh Bình Dương", "0281234570"),
+                Triple("Chicken Kitchen Phu Nhuan", "124 Phan Xích Long, Phường 2, Phú Nhuận, Thành phố Hồ Chí Minh ", "0281234571"),
+                Triple("Chicken Kitchen Binh Chanh", "240-242 Phạm Văn Đồng, phường Hiệp Bình Chánh, quận Thủ Đức, Thành phố Hồ Chí Minh", "0281234572")
             )
 
             storesData.forEach { (name, address, phone) ->
@@ -375,151 +375,155 @@ class DataInitializer {
         // ==================== MENU ITEMS ====================
         if (menuItemRepository.count() == 0L) {
             println("Seeding menu items...")
-            val items: List<Triple<String, Any, String>> = listOf(
-                // CARB (22 items)
-                Triple("White Rice", MenuCategory.CARB, "https://example.com/images/white-rice.jpg"),
-                Triple("Brown Rice", MenuCategory.CARB, "https://example.com/images/brown-rice.jpg"),
-                Triple("Quinoa", MenuCategory.CARB, "https://example.com/images/quinoa.jpg"),
-                Triple("Whole Wheat Pasta", MenuCategory.CARB, "https://example.com/images/whole-wheat-pasta.jpg"),
-                Triple("Sweet Potato", MenuCategory.CARB, "https://example.com/images/sweet-potato.jpg"),
-                Triple("Mashed Potato", MenuCategory.CARB, "https://example.com/images/mashed-potato.jpg"),
-                Triple("Udon Noodles", MenuCategory.CARB, "https://example.com/images/udon-noodles.jpg"),
-                Triple("Couscous", MenuCategory.CARB, "https://example.com/images/couscous.jpg"),
-                Triple("Oatmeal", MenuCategory.CARB, "https://example.com/images/oatmeal.jpg"),
-                Triple("Garlic Bread", MenuCategory.CARB, "https://example.com/images/garlic-bread.jpg"),
-                Triple("Jasmine Rice", MenuCategory.CARB, "https://example.com/images/jasmine-rice.jpg"),
-                Triple("Basmati Rice", MenuCategory.CARB, "https://example.com/images/basmati-rice.jpg"),
-                Triple("Soba Noodles", MenuCategory.CARB, "https://example.com/images/soba-noodles.jpg"),
-                Triple("Rice Noodles", MenuCategory.CARB, "https://example.com/images/rice-noodles.jpg"),
-                Triple("Buckwheat", MenuCategory.CARB, "https://example.com/images/buckwheat.jpg"),
-                Triple("Barley", MenuCategory.CARB, "https://example.com/images/barley.jpg"),
-                Triple("Bulgur", MenuCategory.CARB, "https://example.com/images/bulgur.jpg"),
-                Triple("Polenta", MenuCategory.CARB, "https://example.com/images/polenta.jpg"),
-                Triple("Farro", MenuCategory.CARB, "https://example.com/images/farro.jpg"),
-                Triple("Sourdough Bread", MenuCategory.CARB, "https://example.com/images/sourdough-bread.jpg"),
-                Triple("Baguette", MenuCategory.CARB, "https://example.com/images/baguette.jpg"),
-                Triple("Tortilla", MenuCategory.CARB, "https://example.com/images/tortilla.jpg"),
 
-                // PROTEIN (29 items)
-                Triple("Grilled Chicken", "Proteins", "https://example.com/images/grilled-chicken.jpg"),
-                Triple("Fried Chicken", "Proteins", "https://example.com/images/fried-chicken.jpg"),
-                Triple("Beef Steak", MenuCategory.PROTEIN, "https://example.com/images/beef-steak.jpg"),
-                Triple("Pork Chop", MenuCategory.PROTEIN, "https://example.com/images/pork-chop.jpg"),
-                Triple("Firm Tofu", MenuCategory.PROTEIN, "https://example.com/images/firm-tofu.jpg"),
-                Triple("Salmon Fillet", MenuCategory.PROTEIN, "https://example.com/images/salmon-fillet.jpg"),
-                Triple("Tuna", MenuCategory.PROTEIN, "https://example.com/images/tuna.jpg"),
-                Triple("Shrimp", MenuCategory.PROTEIN, "https://example.com/images/shrimp.jpg"),
-                Triple("Boiled Egg", MenuCategory.PROTEIN, "https://example.com/images/boiled-egg.jpg"),
-                Triple("Turkey Breast", MenuCategory.PROTEIN, "https://example.com/images/turkey-breast.jpg"),
-                Triple("Roast Chicken", MenuCategory.PROTEIN, "https://example.com/images/roast-chicken.jpg"),
-                Triple("Chicken Thigh", MenuCategory.PROTEIN, "https://example.com/images/chicken-thigh.jpg"),
-                Triple("Chicken Wings", MenuCategory.PROTEIN, "https://example.com/images/chicken-wings.jpg"),
-                Triple("Ground Beef", MenuCategory.PROTEIN, "https://example.com/images/ground-beef.jpg"),
-                Triple("Ribeye Steak", MenuCategory.PROTEIN, "https://example.com/images/ribeye-steak.jpg"),
-                Triple("Sirloin", MenuCategory.PROTEIN, "https://example.com/images/sirloin.jpg"),
-                Triple("Pork Belly", MenuCategory.PROTEIN, "https://example.com/images/pork-belly.jpg"),
-                Triple("Ham", MenuCategory.PROTEIN, "https://example.com/images/ham.jpg"),
-                Triple("Bacon", MenuCategory.PROTEIN, "https://example.com/images/bacon.jpg"),
-                Triple("Lamb Chops", MenuCategory.PROTEIN, "https://example.com/images/lamb-chops.jpg"),
-                Triple("Duck Breast", MenuCategory.PROTEIN, "https://example.com/images/duck-breast.jpg"),
-                Triple("Tempeh", MenuCategory.PROTEIN, "https://example.com/images/tempeh.jpg"),
-                Triple("Seitan", MenuCategory.PROTEIN, "https://example.com/images/seitan.jpg"),
-                Triple("Black Beans", MenuCategory.PROTEIN, "https://example.com/images/black-beans.jpg"),
-                Triple("Chickpeas", MenuCategory.PROTEIN, "https://example.com/images/chickpeas.jpg"),
-                Triple("Lentils", MenuCategory.PROTEIN, "https://example.com/images/lentils.jpg"),
-                Triple("Edamame", MenuCategory.PROTEIN, "https://example.com/images/edamame.jpg"),
-                Triple("Smoked Salmon", MenuCategory.PROTEIN, "https://example.com/images/smoked-salmon.jpg"),
-                Triple("Sardines", MenuCategory.PROTEIN, "https://example.com/images/sardines.jpg"),
+            // Đổi từ Triple thành data class hoặc dùng Quadruple
+            data class MenuItemSeed(val name: String, val category: Any, val imageUrl: String, val price: Int)
 
-                // VEGETABLE (24 items)
-                Triple("Broccoli", MenuCategory.VEGETABLE, "https://example.com/images/broccoli.jpg"),
-                Triple("Carrot", MenuCategory.VEGETABLE, "https://example.com/images/carrot.jpg"),
-                Triple("Spinach", MenuCategory.VEGETABLE, "https://example.com/images/spinach.jpg"),
-                Triple("Kale", MenuCategory.VEGETABLE, "https://example.com/images/kale.jpg"),
-                Triple("Lettuce", MenuCategory.VEGETABLE, "https://example.com/images/lettuce.jpg"),
-                Triple("Tomato", MenuCategory.VEGETABLE, "https://example.com/images/tomato.jpg"),
-                Triple("Cucumber", MenuCategory.VEGETABLE, "https://example.com/images/cucumber.jpg"),
-                Triple("Bell Pepper", MenuCategory.VEGETABLE, "https://example.com/images/bell-pepper.jpg"),
-                Triple("Corn", MenuCategory.VEGETABLE, "https://example.com/images/corn.jpg"),
-                Triple("Green Beans", MenuCategory.VEGETABLE, "https://example.com/images/green-beans.jpg"),
-                Triple("Asparagus", MenuCategory.VEGETABLE, "https://example.com/images/asparagus.jpg"),
-                Triple("Zucchini", MenuCategory.VEGETABLE, "https://example.com/images/zucchini.jpg"),
-                Triple("Eggplant", MenuCategory.VEGETABLE, "https://example.com/images/eggplant.jpg"),
-                Triple("Cauliflower", MenuCategory.VEGETABLE, "https://example.com/images/cauliflower.jpg"),
-                Triple("Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/cabbage.jpg"),
-                Triple("Mushrooms", MenuCategory.VEGETABLE, "https://example.com/images/mushrooms.jpg"),
-                Triple("Peas", MenuCategory.VEGETABLE, "https://example.com/images/peas.jpg"),
-                Triple("Brussels Sprouts", MenuCategory.VEGETABLE, "https://example.com/images/brussels-sprouts.jpg"),
-                Triple("Onion", MenuCategory.VEGETABLE, "https://example.com/images/onion.jpg"),
-                Triple("Garlic", MenuCategory.VEGETABLE, "https://example.com/images/garlic.jpg"),
-                Triple("Red Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/red-cabbage.jpg"),
-                Triple("Arugula", MenuCategory.VEGETABLE, "https://example.com/images/arugula.jpg"),
-                Triple("Beetroot", MenuCategory.VEGETABLE, "https://example.com/images/beetroot.jpg"),
-                Triple("Pumpkin", MenuCategory.VEGETABLE, "https://example.com/images/pumpkin.jpg"),
+            val items: List<MenuItemSeed> = listOf(
+                // CARB (22 items) - Giá từ 15,000 - 35,000 VND
+                MenuItemSeed("White Rice", MenuCategory.CARB, "https://example.com/images/white-rice.jpg", 15000),
+                MenuItemSeed("Brown Rice", MenuCategory.CARB, "https://example.com/images/brown-rice.jpg", 18000),
+                MenuItemSeed("Quinoa", MenuCategory.CARB, "https://example.com/images/quinoa.jpg", 35000),
+                MenuItemSeed("Whole Wheat Pasta", MenuCategory.CARB, "https://example.com/images/whole-wheat-pasta.jpg", 25000),
+                MenuItemSeed("Sweet Potato", MenuCategory.CARB, "https://example.com/images/sweet-potato.jpg", 20000),
+                MenuItemSeed("Mashed Potato", MenuCategory.CARB, "https://example.com/images/mashed-potato.jpg", 22000),
+                MenuItemSeed("Udon Noodles", MenuCategory.CARB, "https://example.com/images/udon-noodles.jpg", 28000),
+                MenuItemSeed("Couscous", MenuCategory.CARB, "https://example.com/images/couscous.jpg", 30000),
+                MenuItemSeed("Oatmeal", MenuCategory.CARB, "https://example.com/images/oatmeal.jpg", 20000),
+                MenuItemSeed("Garlic Bread", MenuCategory.CARB, "https://example.com/images/garlic-bread.jpg", 18000),
+                MenuItemSeed("Jasmine Rice", MenuCategory.CARB, "https://example.com/images/jasmine-rice.jpg", 15000),
+                MenuItemSeed("Basmati Rice", MenuCategory.CARB, "https://example.com/images/basmati-rice.jpg", 20000),
+                MenuItemSeed("Soba Noodles", MenuCategory.CARB, "https://example.com/images/soba-noodles.jpg", 32000),
+                MenuItemSeed("Rice Noodles", MenuCategory.CARB, "https://example.com/images/rice-noodles.jpg", 18000),
+                MenuItemSeed("Buckwheat", MenuCategory.CARB, "https://example.com/images/buckwheat.jpg", 25000),
+                MenuItemSeed("Barley", MenuCategory.CARB, "https://example.com/images/barley.jpg", 22000),
+                MenuItemSeed("Bulgur", MenuCategory.CARB, "https://example.com/images/bulgur.jpg", 28000),
+                MenuItemSeed("Polenta", MenuCategory.CARB, "https://example.com/images/polenta.jpg", 25000),
+                MenuItemSeed("Farro", MenuCategory.CARB, "https://example.com/images/farro.jpg", 30000),
+                MenuItemSeed("Sourdough Bread", MenuCategory.CARB, "https://example.com/images/sourdough-bread.jpg", 20000),
+                MenuItemSeed("Baguette", MenuCategory.CARB, "https://example.com/images/baguette.jpg", 15000),
+                MenuItemSeed("Tortilla", MenuCategory.CARB, "https://example.com/images/tortilla.jpg", 18000),
 
-                // SAUCE (15 items)
-                Triple("Teriyaki Sauce", MenuCategory.SAUCE, "https://example.com/images/teriyaki-sauce.jpg"),
-                Triple("Soy Sauce", MenuCategory.SAUCE, "https://example.com/images/soy-sauce.jpg"),
-                Triple("Chili Sauce", MenuCategory.SAUCE, "https://example.com/images/chili-sauce.jpg"),
-                Triple("Garlic Sauce", MenuCategory.SAUCE, "https://example.com/images/garlic-sauce.jpg"),
-                Triple("BBQ Sauce", MenuCategory.SAUCE, "https://example.com/images/bbq-sauce.jpg"),
-                Triple("Mayonnaise", MenuCategory.SAUCE, "https://example.com/images/mayonnaise.jpg"),
-                Triple("Ketchup", MenuCategory.SAUCE, "https://example.com/images/ketchup.jpg"),
-                Triple("Mustard", MenuCategory.SAUCE, "https://example.com/images/mustard.jpg"),
-                Triple("Ranch", MenuCategory.SAUCE, "https://example.com/images/ranch.jpg"),
-                Triple("Caesar", MenuCategory.SAUCE, "https://example.com/images/caesar.jpg"),
-                Triple("Pesto", MenuCategory.SAUCE, "https://example.com/images/pesto.jpg"),
-                Triple("Sriracha", MenuCategory.SAUCE, "https://example.com/images/sriracha.jpg"),
-                Triple("Honey Mustard", MenuCategory.SAUCE, "https://example.com/images/honey-mustard.jpg"),
-                Triple("Buffalo Sauce", MenuCategory.SAUCE, "https://example.com/images/buffalo-sauce.jpg"),
-                Triple("Tartar Sauce", MenuCategory.SAUCE, "https://example.com/images/tartar-sauce.jpg"),
+                // PROTEIN (29 items) - Giá từ 25,000 - 80,000 VND
+                MenuItemSeed("Grilled Chicken", MenuCategory.PROTEIN, "https://example.com/images/grilled-chicken.jpg", 45000),
+                MenuItemSeed("Fried Chicken", MenuCategory.PROTEIN, "https://example.com/images/fried-chicken.jpg", 45000),
+                MenuItemSeed("Beef Steak", MenuCategory.PROTEIN, "https://example.com/images/beef-steak.jpg", 80000),
+                MenuItemSeed("Pork Chop", MenuCategory.PROTEIN, "https://example.com/images/pork-chop.jpg", 50000),
+                MenuItemSeed("Firm Tofu", MenuCategory.PROTEIN, "https://example.com/images/firm-tofu.jpg", 25000),
+                MenuItemSeed("Salmon Fillet", MenuCategory.PROTEIN, "https://example.com/images/salmon-fillet.jpg", 75000),
+                MenuItemSeed("Tuna", MenuCategory.PROTEIN, "https://example.com/images/tuna.jpg", 60000),
+                MenuItemSeed("Shrimp", MenuCategory.PROTEIN, "https://example.com/images/shrimp.jpg", 65000),
+                MenuItemSeed("Boiled Egg", MenuCategory.PROTEIN, "https://example.com/images/boiled-egg.jpg", 10000),
+                MenuItemSeed("Turkey Breast", MenuCategory.PROTEIN, "https://example.com/images/turkey-breast.jpg", 55000),
+                MenuItemSeed("Roast Chicken", MenuCategory.PROTEIN, "https://example.com/images/roast-chicken.jpg", 50000),
+                MenuItemSeed("Chicken Thigh", MenuCategory.PROTEIN, "https://example.com/images/chicken-thigh.jpg", 40000),
+                MenuItemSeed("Chicken Wings", MenuCategory.PROTEIN, "https://example.com/images/chicken-wings.jpg", 45000),
+                MenuItemSeed("Ground Beef", MenuCategory.PROTEIN, "https://example.com/images/ground-beef.jpg", 55000),
+                MenuItemSeed("Ribeye Steak", MenuCategory.PROTEIN, "https://example.com/images/ribeye-steak.jpg", 85000),
+                MenuItemSeed("Sirloin", MenuCategory.PROTEIN, "https://example.com/images/sirloin.jpg", 75000),
+                MenuItemSeed("Pork Belly", MenuCategory.PROTEIN, "https://example.com/images/pork-belly.jpg", 55000),
+                MenuItemSeed("Ham", MenuCategory.PROTEIN, "https://example.com/images/ham.jpg", 40000),
+                MenuItemSeed("Bacon", MenuCategory.PROTEIN, "https://example.com/images/bacon.jpg", 45000),
+                MenuItemSeed("Lamb Chops", MenuCategory.PROTEIN, "https://example.com/images/lamb-chops.jpg", 90000),
+                MenuItemSeed("Duck Breast", MenuCategory.PROTEIN, "https://example.com/images/duck-breast.jpg", 70000),
+                MenuItemSeed("Tempeh", MenuCategory.PROTEIN, "https://example.com/images/tempeh.jpg", 30000),
+                MenuItemSeed("Seitan", MenuCategory.PROTEIN, "https://example.com/images/seitan.jpg", 35000),
+                MenuItemSeed("Black Beans", MenuCategory.PROTEIN, "https://example.com/images/black-beans.jpg", 20000),
+                MenuItemSeed("Chickpeas", MenuCategory.PROTEIN, "https://example.com/images/chickpeas.jpg", 22000),
+                MenuItemSeed("Lentils", MenuCategory.PROTEIN, "https://example.com/images/lentils.jpg", 20000),
+                MenuItemSeed("Edamame", MenuCategory.PROTEIN, "https://example.com/images/edamame.jpg", 25000),
+                MenuItemSeed("Smoked Salmon", MenuCategory.PROTEIN, "https://example.com/images/smoked-salmon.jpg", 85000),
+                MenuItemSeed("Sardines", MenuCategory.PROTEIN, "https://example.com/images/sardines.jpg", 35000),
 
-                // DAIRY (13 items)
-                Triple("Cheddar Cheese", MenuCategory.DAIRY, "https://example.com/images/cheddar-cheese.jpg"),
-                Triple("Mozzarella", MenuCategory.DAIRY, "https://example.com/images/mozzarella.jpg"),
-                Triple("Greek Yogurt", MenuCategory.DAIRY, "https://example.com/images/greek-yogurt.jpg"),
-                Triple("Butter", MenuCategory.DAIRY, "https://example.com/images/butter.jpg"),
-                Triple("Milk", MenuCategory.DAIRY, "https://example.com/images/milk.jpg"),
-                Triple("Parmesan", MenuCategory.DAIRY, "https://example.com/images/parmesan.jpg"),
-                Triple("Feta", MenuCategory.DAIRY, "https://example.com/images/feta.jpg"),
-                Triple("Blue Cheese", MenuCategory.DAIRY, "https://example.com/images/blue-cheese.jpg"),
-                Triple("Sour Cream", MenuCategory.DAIRY, "https://example.com/images/sour-cream.jpg"),
-                Triple("Cream Cheese", MenuCategory.DAIRY, "https://example.com/images/cream-cheese.jpg"),
-                Triple("Ricotta", MenuCategory.DAIRY, "https://example.com/images/ricotta.jpg"),
-                Triple("Ice Cream", MenuCategory.DAIRY, "https://example.com/images/ice-cream.jpg"),
-                Triple("Cottage Cheese", MenuCategory.DAIRY, "https://example.com/images/cottage-cheese.jpg"),
+                // VEGETABLE (24 items) - Giá từ 8,000 - 25,000 VND
+                MenuItemSeed("Broccoli", MenuCategory.VEGETABLE, "https://example.com/images/broccoli.jpg", 15000),
+                MenuItemSeed("Carrot", MenuCategory.VEGETABLE, "https://example.com/images/carrot.jpg", 10000),
+                MenuItemSeed("Spinach", MenuCategory.VEGETABLE, "https://example.com/images/spinach.jpg", 12000),
+                MenuItemSeed("Kale", MenuCategory.VEGETABLE, "https://example.com/images/kale.jpg", 18000),
+                MenuItemSeed("Lettuce", MenuCategory.VEGETABLE, "https://example.com/images/lettuce.jpg", 10000),
+                MenuItemSeed("Tomato", MenuCategory.VEGETABLE, "https://example.com/images/tomato.jpg", 12000),
+                MenuItemSeed("Cucumber", MenuCategory.VEGETABLE, "https://example.com/images/cucumber.jpg", 8000),
+                MenuItemSeed("Bell Pepper", MenuCategory.VEGETABLE, "https://example.com/images/bell-pepper.jpg", 15000),
+                MenuItemSeed("Corn", MenuCategory.VEGETABLE, "https://example.com/images/corn.jpg", 12000),
+                MenuItemSeed("Green Beans", MenuCategory.VEGETABLE, "https://example.com/images/green-beans.jpg", 10000),
+                MenuItemSeed("Asparagus", MenuCategory.VEGETABLE, "https://example.com/images/asparagus.jpg", 25000),
+                MenuItemSeed("Zucchini", MenuCategory.VEGETABLE, "https://example.com/images/zucchini.jpg", 15000),
+                MenuItemSeed("Eggplant", MenuCategory.VEGETABLE, "https://example.com/images/eggplant.jpg", 12000),
+                MenuItemSeed("Cauliflower", MenuCategory.VEGETABLE, "https://example.com/images/cauliflower.jpg", 15000),
+                MenuItemSeed("Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/cabbage.jpg", 10000),
+                MenuItemSeed("Mushrooms", MenuCategory.VEGETABLE, "https://example.com/images/mushrooms.jpg", 20000),
+                MenuItemSeed("Peas", MenuCategory.VEGETABLE, "https://example.com/images/peas.jpg", 12000),
+                MenuItemSeed("Brussels Sprouts", MenuCategory.VEGETABLE, "https://example.com/images/brussels-sprouts.jpg", 18000),
+                MenuItemSeed("Onion", MenuCategory.VEGETABLE, "https://example.com/images/onion.jpg", 8000),
+                MenuItemSeed("Garlic", MenuCategory.VEGETABLE, "https://example.com/images/garlic.jpg", 10000),
+                MenuItemSeed("Red Cabbage", MenuCategory.VEGETABLE, "https://example.com/images/red-cabbage.jpg", 12000),
+                MenuItemSeed("Arugula", MenuCategory.VEGETABLE, "https://example.com/images/arugula.jpg", 15000),
+                MenuItemSeed("Beetroot", MenuCategory.VEGETABLE, "https://example.com/images/beetroot.jpg", 15000),
+                MenuItemSeed("Pumpkin", MenuCategory.VEGETABLE, "https://example.com/images/pumpkin.jpg", 12000),
 
-                // FRUIT (24 items)
-                Triple("Apple", MenuCategory.FRUIT, "https://example.com/images/apple.jpg"),
-                Triple("Banana", MenuCategory.FRUIT, "https://example.com/images/banana.jpg"),
-                Triple("Orange", MenuCategory.FRUIT, "https://example.com/images/orange.jpg"),
-                Triple("Pineapple", MenuCategory.FRUIT, "https://example.com/images/pineapple.jpg"),
-                Triple("Mango", MenuCategory.FRUIT, "https://example.com/images/mango.jpg"),
-                Triple("Strawberry", MenuCategory.FRUIT, "https://example.com/images/strawberry.jpg"),
-                Triple("Blueberry", MenuCategory.FRUIT, "https://example.com/images/blueberry.jpg"),
-                Triple("Grape", MenuCategory.FRUIT, "https://example.com/images/grape.jpg"),
-                Triple("Watermelon", MenuCategory.FRUIT, "https://example.com/images/watermelon.jpg"),
-                Triple("Kiwi", MenuCategory.FRUIT, "https://example.com/images/kiwi.jpg"),
-                Triple("Peach", MenuCategory.FRUIT, "https://example.com/images/peach.jpg"),
-                Triple("Pear", MenuCategory.FRUIT, "https://example.com/images/pear.jpg"),
-                Triple("Plum", MenuCategory.FRUIT, "https://example.com/images/plum.jpg"),
-                Triple("Cherry", MenuCategory.FRUIT, "https://example.com/images/cherry.jpg"),
-                Triple("Raspberry", MenuCategory.FRUIT, "https://example.com/images/raspberry.jpg"),
-                Triple("Blackberry", MenuCategory.FRUIT, "https://example.com/images/blackberry.jpg"),
-                Triple("Dragon Fruit", MenuCategory.FRUIT, "https://example.com/images/dragon-fruit.jpg"),
-                Triple("Papaya", MenuCategory.FRUIT, "https://example.com/images/papaya.jpg"),
-                Triple("Lemon", MenuCategory.FRUIT, "https://example.com/images/lemon.jpg"),
-                Triple("Lime", MenuCategory.FRUIT, "https://example.com/images/lime.jpg"),
-                Triple("Coconut", MenuCategory.FRUIT, "https://example.com/images/coconut.jpg"),
-                Triple("Pomegranate", MenuCategory.FRUIT, "https://example.com/images/pomegranate.jpg"),
-                Triple("Grapefruit", MenuCategory.FRUIT, "https://example.com/images/grapefruit.jpg"),
-                Triple("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg")
+                // SAUCE (15 items) - Giá từ 5,000 - 15,000 VND
+                MenuItemSeed("Teriyaki Sauce", MenuCategory.SAUCE, "https://example.com/images/teriyaki-sauce.jpg", 10000),
+                MenuItemSeed("Soy Sauce", MenuCategory.SAUCE, "https://example.com/images/soy-sauce.jpg", 5000),
+                MenuItemSeed("Chili Sauce", MenuCategory.SAUCE, "https://example.com/images/chili-sauce.jpg", 8000),
+                MenuItemSeed("Garlic Sauce", MenuCategory.SAUCE, "https://example.com/images/garlic-sauce.jpg", 8000),
+                MenuItemSeed("BBQ Sauce", MenuCategory.SAUCE, "https://example.com/images/bbq-sauce.jpg", 10000),
+                MenuItemSeed("Mayonnaise", MenuCategory.SAUCE, "https://example.com/images/mayonnaise.jpg", 8000),
+                MenuItemSeed("Ketchup", MenuCategory.SAUCE, "https://example.com/images/ketchup.jpg", 5000),
+                MenuItemSeed("Mustard", MenuCategory.SAUCE, "https://example.com/images/mustard.jpg", 7000),
+                MenuItemSeed("Ranch", MenuCategory.SAUCE, "https://example.com/images/ranch.jpg", 12000),
+                MenuItemSeed("Caesar", MenuCategory.SAUCE, "https://example.com/images/caesar.jpg", 12000),
+                MenuItemSeed("Pesto", MenuCategory.SAUCE, "https://example.com/images/pesto.jpg", 15000),
+                MenuItemSeed("Sriracha", MenuCategory.SAUCE, "https://example.com/images/sriracha.jpg", 10000),
+                MenuItemSeed("Honey Mustard", MenuCategory.SAUCE, "https://example.com/images/honey-mustard.jpg", 10000),
+                MenuItemSeed("Buffalo Sauce", MenuCategory.SAUCE, "https://example.com/images/buffalo-sauce.jpg", 12000),
+                MenuItemSeed("Tartar Sauce", MenuCategory.SAUCE, "https://example.com/images/tartar-sauce.jpg", 10000),
+
+                // DAIRY (13 items) - Giá từ 10,000 - 35,000 VND
+                MenuItemSeed("Cheddar Cheese", MenuCategory.DAIRY, "https://example.com/images/cheddar-cheese.jpg", 25000),
+                MenuItemSeed("Mozzarella", MenuCategory.DAIRY, "https://example.com/images/mozzarella.jpg", 25000),
+                MenuItemSeed("Greek Yogurt", MenuCategory.DAIRY, "https://example.com/images/greek-yogurt.jpg", 20000),
+                MenuItemSeed("Butter", MenuCategory.DAIRY, "https://example.com/images/butter.jpg", 15000),
+                MenuItemSeed("Milk", MenuCategory.DAIRY, "https://example.com/images/milk.jpg", 12000),
+                MenuItemSeed("Parmesan", MenuCategory.DAIRY, "https://example.com/images/parmesan.jpg", 30000),
+                MenuItemSeed("Feta", MenuCategory.DAIRY, "https://example.com/images/feta.jpg", 28000),
+                MenuItemSeed("Blue Cheese", MenuCategory.DAIRY, "https://example.com/images/blue-cheese.jpg", 35000),
+                MenuItemSeed("Sour Cream", MenuCategory.DAIRY, "https://example.com/images/sour-cream.jpg", 18000),
+                MenuItemSeed("Cream Cheese", MenuCategory.DAIRY, "https://example.com/images/cream-cheese.jpg", 22000),
+                MenuItemSeed("Ricotta", MenuCategory.DAIRY, "https://example.com/images/ricotta.jpg", 25000),
+                MenuItemSeed("Ice Cream", MenuCategory.DAIRY, "https://example.com/images/ice-cream.jpg", 20000),
+                MenuItemSeed("Cottage Cheese", MenuCategory.DAIRY, "https://example.com/images/cottage-cheese.jpg", 22000),
+
+                // FRUIT (24 items) - Giá từ 8,000 - 40,000 VND
+                MenuItemSeed("Apple", MenuCategory.FRUIT, "https://example.com/images/apple.jpg", 15000),
+                MenuItemSeed("Banana", MenuCategory.FRUIT, "https://example.com/images/banana.jpg", 10000),
+                MenuItemSeed("Orange", MenuCategory.FRUIT, "https://example.com/images/orange.jpg", 12000),
+                MenuItemSeed("Pineapple", MenuCategory.FRUIT, "https://example.com/images/pineapple.jpg", 25000),
+                MenuItemSeed("Mango", MenuCategory.FRUIT, "https://example.com/images/mango.jpg", 20000),
+                MenuItemSeed("Strawberry", MenuCategory.FRUIT, "https://example.com/images/strawberry.jpg", 30000),
+                MenuItemSeed("Blueberry", MenuCategory.FRUIT, "https://example.com/images/blueberry.jpg", 35000),
+                MenuItemSeed("Grape", MenuCategory.FRUIT, "https://example.com/images/grape.jpg", 25000),
+                MenuItemSeed("Watermelon", MenuCategory.FRUIT, "https://example.com/images/watermelon.jpg", 15000),
+                MenuItemSeed("Kiwi", MenuCategory.FRUIT, "https://example.com/images/kiwi.jpg", 18000),
+                MenuItemSeed("Peach", MenuCategory.FRUIT, "https://example.com/images/peach.jpg", 20000),
+                MenuItemSeed("Pear", MenuCategory.FRUIT, "https://example.com/images/pear.jpg", 18000),
+                MenuItemSeed("Plum", MenuCategory.FRUIT, "https://example.com/images/plum.jpg", 15000),
+                MenuItemSeed("Cherry", MenuCategory.FRUIT, "https://example.com/images/cherry.jpg", 40000),
+                MenuItemSeed("Raspberry", MenuCategory.FRUIT, "https://example.com/images/raspberry.jpg", 35000),
+                MenuItemSeed("Blackberry", MenuCategory.FRUIT, "https://example.com/images/blackberry.jpg", 35000),
+                MenuItemSeed("Dragon Fruit", MenuCategory.FRUIT, "https://example.com/images/dragon-fruit.jpg", 25000),
+                MenuItemSeed("Papaya", MenuCategory.FRUIT, "https://example.com/images/papaya.jpg", 15000),
+                MenuItemSeed("Lemon", MenuCategory.FRUIT, "https://example.com/images/lemon.jpg", 8000),
+                MenuItemSeed("Lime", MenuCategory.FRUIT, "https://example.com/images/lime.jpg", 8000),
+                MenuItemSeed("Coconut", MenuCategory.FRUIT, "https://example.com/images/coconut.jpg", 15000),
+                MenuItemSeed("Pomegranate", MenuCategory.FRUIT, "https://example.com/images/pomegranate.jpg", 30000),
+                MenuItemSeed("Grapefruit", MenuCategory.FRUIT, "https://example.com/images/grapefruit.jpg", 18000),
+                MenuItemSeed("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg", 35000)
             )
 
-            val entities = items.map { (name, catAny, img) ->
-                val categoryName = when (catAny) {
-                    is String -> catAny
-                    is MenuCategory -> when (catAny) {
+            val entities = items.map { item ->
+                val categoryName = when (item.category) {
+                    is String -> item.category
+                    is MenuCategory -> when (item.category) {
                         MenuCategory.CARB -> "Carbohydrates"
                         MenuCategory.PROTEIN -> "Proteins"
                         MenuCategory.VEGETABLE -> "Vegetables"
@@ -527,11 +531,17 @@ class DataInitializer {
                         MenuCategory.DAIRY -> "Dairy"
                         MenuCategory.FRUIT -> "Fruits"
                     }
-                    else -> throw IllegalArgumentException("Unsupported category type: $catAny")
+                    else -> throw IllegalArgumentException("Unsupported category type: ${item.category}")
                 }
                 val cat = categoryRepository.findByName(categoryName)
                     ?: throw IllegalStateException("Category not found for seeding: $categoryName")
-                MenuItem(name = name, category = cat, isActive = true, imageUrl = img)
+                MenuItem(
+                    name = item.name,
+                    category = cat,
+                    imageUrl = item.imageUrl,
+                    price = item.price,
+                    isActive = true
+                )
             }
             menuItemRepository.saveAll(entities)
             println("✓ Menu items seeded: ${entities.size}")
