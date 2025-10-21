@@ -1,5 +1,6 @@
 package com.ChickenKitchen.app.model.entity.menu
 
+import com.ChickenKitchen.app.model.entity.order.OrderStepItem
 import jakarta.persistence.*
 
 
@@ -16,5 +17,8 @@ class DailyMenuItem(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_item_id", nullable = false)
-    val menuItem: MenuItem
+    val menuItem: MenuItem,
+
+    @OneToMany(mappedBy = "dailyMenuItem")
+    val orderStepItems: MutableList<OrderStepItem> = mutableListOf()
 )

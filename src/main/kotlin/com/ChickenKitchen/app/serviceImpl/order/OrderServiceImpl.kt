@@ -6,11 +6,13 @@ import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep
+import com.ChickenKitchen.app.model.dto.response.CreatedStepItem
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
+import com.ChickenKitchen.app.repository.menu.DailyMenuItemRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
@@ -29,6 +31,7 @@ class OrderServiceImpl(
     private val storeRepository: StoreRepository,
     private val stepRepository: StepRepository,
     private val menuItemRepository: MenuItemRepository,
+    private val dailyMenuItemRepository: DailyMenuItemRepository,
     private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
 ) : OrderService {
 
@@ -75,35 +78,37 @@ class OrderServiceImpl(
         val sortedSelections = req.selections.sortedBy { stepMap[it.stepId]?.stepNumber ?: Int.MAX_VALUE }
 
         val created = mutableListOf<CreatedOrderStep>()
-        val orderStepsToSave = mutableListOf<OrderStep>()
+        val savedSteps = mutableListOf<OrderStep>()
         for (sel in sortedSelections) {
             val step = stepMap[sel.stepId] ?: throw NoSuchElementException("Step with id ${sel.stepId} not found")
-            require(sel.items.isNotEmpty()) { "Each step selection must include at least one menu item" }
-            sel.items.forEach { item ->
-                require(item.quantity > 0) { "Quantity must be > 0" }
-                val menuItem = menuItemRepository.findById(item.menuItemId)
-                    .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
-                orderStepsToSave.add(
-                    OrderStep(
-                        dish = savedDish,
-                        step = step,
-                        menuItem = menuItem,
-                        quantity = item.quantity
-                    )
-                )
-            }
-        }
+            require(sel.items.isNotEmpty()) { "Each step selection must include at least one item" }
 
-        val savedLines = orderStepRepository.saveAll(orderStepsToSave)
-        savedLines.forEach { line ->
-            created.add(
-                CreatedOrderStep(
-                    id = line.id!!,
-                    stepId = line.step.id!!,
-                    menuItemId = line.menuItem.id!!,
-                    quantity = line.quantity
+            val orderStep = orderStepRepository.save(
+                OrderStep(
+                    dish = savedDish,
+                    step = step,
                 )
             )
+            savedSteps.add(orderStep)
+
+            val createdItems = mutableListOf<CreatedStepItem>()
+            sel.items.forEach { item ->
+                require(item.quantity > 0) { "Quantity must be > 0" }
+                val dmi = dailyMenuItemRepository.findById(item.dailyMenuItemId)
+                    .orElseThrow { NoSuchElementException("Daily menu item with id ${item.dailyMenuItemId} not found") }
+                val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
+                    orderStep = orderStep,
+                    dailyMenuItem = dmi,
+                    quantity = item.quantity
+                )
+                // Persist link
+                // Because OrderStep.items is cascade ALL, add to collection is enough if orderStep managed
+                orderStep.items.add(link)
+                createdItems.add(CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity))
+            }
+            // Save with items
+            orderStepRepository.save(orderStep)
+            created.add(CreatedOrderStep(id = orderStep.id!!, stepId = step.id!!, items = createdItems))
         }
 
         return AddDishResponse(
