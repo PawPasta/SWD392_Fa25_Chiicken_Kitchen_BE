@@ -2,26 +2,35 @@ package com.ChickenKitchen.app.mapper
 
 import com.ChickenKitchen.app.enums.UnitType
 import com.ChickenKitchen.app.model.dto.response.IngredientDetailResponse
-import com.ChickenKitchen.app.model.dto.response.StoreIngredientBatchResponse
+import com.ChickenKitchen.app.model.dto.response.IngredientResponse
+//import com.ChickenKitchen.app.model.dto.response.StoreIngredientBatchResponse
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
-import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
+//import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
 
-fun StoreIngredientBatch.toStoreIngredientBatchResponse() : StoreIngredientBatchResponse =
-    StoreIngredientBatchResponse(
+
+// === CHUA CO Y DINH DUNG TOI BATCH
+
+//fun StoreIngredientBatch.toStoreIngredientBatchResponse() : StoreIngredientBatchResponse =
+//    StoreIngredientBatchResponse(
+//        id = this.id!!,
+//        ingredientId = this.ingredient.id,
+//        quantity = this.quantity,
+//        storeId = this.store.id,
+//        storeName = this.store.name
+//    )
+
+fun Ingredient.toIngredientResponse() : IngredientResponse =
+    IngredientResponse (
         id = this.id!!,
-        ingredientId = this.ingredient.id,
-        quantity = this.quantity,
-        storeId = this.store.id,
-
+        name = this.name,
+        imageUrl = this.imageUrl
     )
 
 fun Ingredient.toIngredientDetailResponse(): IngredientDetailResponse {
-    val firstBatch = this.storeBatches.firstOrNull()
-        ?: throw IllegalStateException("Ingredient ${this.id} has no store batches")
+//    val firstBatch = this.storeBatches.firstOrNull()
+//        ?: throw IllegalStateException("Ingredient ${this.id} has no store batches")
 
-    val mainStore = firstBatch.store.toStoreResponse()
-
-    val batchResponses = this.storeBatches.map { it.toStoreIngredientBatchResponse() }
+//    val batchResponses = this.storeBatches.map { it.toStoreIngredientBatchResponse() }
 
     return IngredientDetailResponse(
         id = this.id!!,
@@ -31,10 +40,9 @@ fun Ingredient.toIngredientDetailResponse(): IngredientDetailResponse {
         imageUrl = this.imageUrl,
         isActive = this.isActive,
         createdAt = this.createdAt,
-        store = mainStore,
-        storeBatches = batchResponses,
+//        storeBatches = batchResponses,
     )
 }
 
-fun List<Ingredient>.toListIngredientResponse() : List<IngredientDetailResponse> =
-    this.map { it.toIngredientDetailResponse() }
+fun List<Ingredient>.toListIngredientResponse() : List<IngredientResponse> =
+    this.map { it.toIngredientResponse() }

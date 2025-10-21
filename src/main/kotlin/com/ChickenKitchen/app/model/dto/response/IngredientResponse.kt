@@ -4,6 +4,13 @@ import com.ChickenKitchen.app.enums.UnitType
 import java.sql.Timestamp
 
 
+data class IngredientResponse (
+    val id: Long,
+    val name: String?,
+    val baseUnit: UnitType? = UnitType.G,
+    val imageUrl: String?,
+)
+
 data class IngredientDetailResponse (
     val id: Long,
     val name: String?,
@@ -12,6 +19,5 @@ data class IngredientDetailResponse (
     val imageUrl: String?,
     val isActive: Boolean,
     val createdAt: Timestamp?,
-    val store: StoreResponse,
-    val storeBatches: List<StoreIngredientBatchResponse>,
+//    val storeBatches: List<StoreIngredientBatchResponse>,
 )

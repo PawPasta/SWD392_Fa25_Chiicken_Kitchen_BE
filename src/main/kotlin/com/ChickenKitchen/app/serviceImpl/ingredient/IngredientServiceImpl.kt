@@ -8,6 +8,7 @@ import com.ChickenKitchen.app.mapper.toListIngredientResponse
 import com.ChickenKitchen.app.model.dto.request.CreateIngredientRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateIngredientRequest
 import com.ChickenKitchen.app.model.dto.response.IngredientDetailResponse
+import com.ChickenKitchen.app.model.dto.response.IngredientResponse
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
@@ -33,7 +34,7 @@ class IngredientServiceImpl (
         return ingredient.toIngredientDetailResponse()
     }
 
-    override fun getAll(): List<IngredientDetailResponse>? {
+    override fun getAll(): List<IngredientResponse>? {
         val list = ingredientRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListIngredientResponse()

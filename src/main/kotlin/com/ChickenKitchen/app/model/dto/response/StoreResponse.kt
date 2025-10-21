@@ -11,9 +11,12 @@ data class StoreResponse (
     val createAt: Timestamp?,
 )
 
-data class StoreIngredientBatchResponse (
-    val id: Long,
-    val storeId: Long?,
-    val ingredientId: Long?,
-    val quantity: Long,
-)
+
+// Chua co y dinh dung batches
+//data class StoreIngredientBatchResponse (
+//    val id: Long,
+//    val storeId: Long?,
+//    val storeName: String?,
+//    val ingredientId: Long?,
+//    val quantity: Long,
+//)
