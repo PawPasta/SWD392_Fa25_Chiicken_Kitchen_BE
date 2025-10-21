@@ -25,7 +25,7 @@ data class MenuItem(
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", length = 500)
     var imageUrl: String? = null,
 
     @CreationTimestamp
