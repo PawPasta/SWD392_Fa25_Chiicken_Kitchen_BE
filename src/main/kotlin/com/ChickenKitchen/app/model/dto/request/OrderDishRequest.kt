@@ -12,6 +12,6 @@ data class StepSelection(
 )
 
 data class SelectionItem(
-    val dailyMenuItemId: Long,
+    val menuItemId: Long,
     val quantity: Int
 )

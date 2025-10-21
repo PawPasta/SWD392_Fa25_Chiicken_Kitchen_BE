@@ -12,6 +12,7 @@ import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuItemRepository
+import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
@@ -32,6 +33,7 @@ class OrderServiceImpl(
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
     private val stepRepository: StepRepository,
+    private val menuItemRepository: MenuItemRepository,
     private val dailyMenuItemRepository: DailyMenuItemRepository,
     private val dailyMenuRepository: DailyMenuRepository,
     private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
@@ -98,34 +100,31 @@ class OrderServiceImpl(
             val createdItems = mutableListOf<CreatedStepItem>()
             sel.items.forEach { item ->
                 require(item.quantity > 0) { "Quantity must be > 0" }
-                val dmi = dailyMenuItemRepository.findById(item.dailyMenuItemId).orElseGet {
-                    // If not a valid DailyMenuItem id, try resolving as MenuItem id in today's menu for this store
-                    val today = java.time.LocalDate.now()
-                    val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
-                    val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
-                    val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-                        ?: throw NoSuchElementException("No daily menu for store ${store.id} today; cannot resolve id ${item.dailyMenuItemId}")
-                    todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.dailyMenuItemId }
-                        ?: throw NoSuchElementException("Menu item ${item.dailyMenuItemId} not in today's daily menu for store ${store.id}")
+                // FE sends MenuItem ID
+                val menuItem = menuItemRepository.findById(item.menuItemId)
+                    .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
+                if (menuItem.category.id != step.category.id) {
+                    throw IllegalArgumentException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
                 }
-                // Ensure DMI belongs to the same category as the step
-                if (dmi.menuItem.category.id != step.category.id) {
-                    System.err.println("DailyMenuItem ${dmi.id} category ${dmi.menuItem.category.id} does not match Step ${step.id} category ${step.category.id}")
-                    throw IllegalArgumentException("DailyMenuItem ${dmi.id} does not belong to step ${step.id} category")
-                }
+                val today = java.time.LocalDate.now()
+                val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
+                val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+                val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
+                    ?: throw NoSuchElementException("No daily menu for store ${store.id} today; cannot resolve menu item ${item.menuItemId}")
+                val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
+                    ?: throw NoSuchElementException("Menu item ${item.menuItemId} not in today's daily menu for store ${store.id}")
+
                 val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
                     orderStep = orderStep,
                     dailyMenuItem = dmi,
                     quantity = item.quantity
                 )
-                // Persist link
-                // Because OrderStep.items is cascade ALL, add to collection is enough if orderStep managed
                 orderStep.items.add(link)
                 createdItems.add(CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity))
 
                 // Accumulate totals from MenuItem base values
-                totalPrice += (dmi.menuItem.price * item.quantity)
-                totalCal += (dmi.menuItem.cal * item.quantity)
+                totalPrice += (menuItem.price * item.quantity)
+                totalCal += (menuItem.cal * item.quantity)
             }
             // Save with items
             orderStepRepository.save(orderStep)
