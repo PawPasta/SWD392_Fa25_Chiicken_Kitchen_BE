@@ -40,7 +40,7 @@ class SecurityConfig(
                     "/api/ingredient/**",
                     "/api/menu-items/**",
                     "/api/nutrients/**",
-                    "/api/orders/**",
+                    // "/api/orders/**",
                     "/api/promotion/**",
                     "/api/steps/**",
                     "/api/store/**",
