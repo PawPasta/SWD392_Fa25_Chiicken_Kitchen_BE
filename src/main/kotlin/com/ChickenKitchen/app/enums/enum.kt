@@ -16,6 +16,10 @@ enum class TransactionStatus {
     PENDING, SUCCESS, REFUND, FAILED
 }
 
+enum class PaymentStatus {
+    PENDING, FINISHED, CANCELLED
+}
+
 enum class MenuCategory {
     CARB, PROTEIN, VEGETABLE, SAUCE, DAIRY, FRUIT
 }

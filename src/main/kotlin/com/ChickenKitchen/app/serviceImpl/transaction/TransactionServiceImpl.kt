@@ -20,7 +20,8 @@ class TransactionServiceImpl (
     }
 
     override fun getById(id: Long): TransactionResponse {
-        val transaction = transactionRepository.findById(id).orElseThrow { TransactionNotFoundException("Cannot find Transaction with id $id") }
+        val transaction = transactionRepository.findById(id)
+            .orElseThrow { TransactionNotFoundException("Cannot find Transaction with id $id") }
         return transaction.toTransactionResponse()
     }
 }

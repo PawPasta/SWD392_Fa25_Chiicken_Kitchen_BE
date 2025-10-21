@@ -26,10 +26,9 @@ fun Transaction.toTransactionResponse() : TransactionResponse =
         amount = this.amount,
         createAt = this.createdAt,
         note = this.note,
-        orderId = this.order.id,
-        userId = this.user.id,
+        paymentId = this.payment.id,
         paymentMethodId = this.paymentMethod.id,
-        transactionStatus = this.transactionStatus,
+        transactionType = this.transactionType,
     )
 
 fun List<Transaction>.toListTransactionResponse() : List<TransactionResponse> =

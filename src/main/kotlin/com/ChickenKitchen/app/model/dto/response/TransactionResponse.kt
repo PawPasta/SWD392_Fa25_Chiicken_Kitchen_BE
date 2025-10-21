@@ -13,10 +13,9 @@ data class PaymentMethodResponse (
 
 data class TransactionResponse (
     val id: Long,
-    val userId: Long?,
-    val orderId: Long?,
+    val paymentId: Long?,
     val paymentMethodId: Long?,
-    val transactionStatus: TransactionStatus,
+    val transactionType: TransactionStatus,
     val amount: Int,
     val createAt: Timestamp?,
     val note: String?,
