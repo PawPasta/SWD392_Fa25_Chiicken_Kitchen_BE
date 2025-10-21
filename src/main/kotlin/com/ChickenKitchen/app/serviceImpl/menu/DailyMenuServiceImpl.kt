@@ -143,6 +143,8 @@ class DailyMenuServiceImpl(
                 isActive = mi.isActive,
                 imageUrl = mi.imageUrl,
                 price = mi.price,
+                cal = mi.cal,
+                description = mi.description,
             )
         }
         val grouped = items.groupBy { it.categoryId }

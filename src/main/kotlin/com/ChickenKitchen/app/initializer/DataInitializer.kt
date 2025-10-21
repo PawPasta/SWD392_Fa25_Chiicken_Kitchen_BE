@@ -40,6 +40,7 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 import kotlin.random.Random
+import kotlin.math.absoluteValue
 
 @Configuration
 class DataInitializer {
@@ -520,6 +521,30 @@ class DataInitializer {
                 MenuItemSeed("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg", 35000)
             )
 
+            fun calFor(categoryName: String, price: Int, name: String): Int {
+                val base = when (categoryName) {
+                    "Carbohydrates" -> 180
+                    "Proteins" -> 220
+                    "Vegetables" -> 40
+                    "Sauces" -> 60
+                    "Dairy" -> 140
+                    "Fruits" -> 80
+                    else -> 120
+                }
+                val scale = when (categoryName) {
+                    "Carbohydrates" -> 5
+                    "Proteins" -> 4
+                    "Vegetables" -> 2
+                    "Sauces" -> 3
+                    "Dairy" -> 4
+                    "Fruits" -> 2
+                    else -> 3
+                }
+                val byPrice = (price / 1000) * scale
+                val jitter = (name.hashCode().absoluteValue % 21) - 10 // -10..+10
+                return (base + byPrice + jitter).coerceAtLeast(10)
+            }
+
             val entities = items.map { item ->
                 val categoryName = when (item.category) {
                     is String -> item.category
@@ -535,11 +560,15 @@ class DataInitializer {
                 }
                 val cat = categoryRepository.findByName(categoryName)
                     ?: throw IllegalStateException("Category not found for seeding: $categoryName")
+                val cal = calFor(categoryName, item.price, item.name)
+                val desc = "Delicious ${item.name} from ${categoryName.lowercase()} category"
                 MenuItem(
                     name = item.name,
                     category = cat,
                     imageUrl = item.imageUrl,
                     price = item.price,
+                    cal = cal,
+                    description = desc,
                     isActive = true
                 )
             }

@@ -12,6 +12,8 @@ data class CreateMenuItemRequest(
     val isActive: Boolean = true,
     val imageUrl: String? = null,
     val price: Int,
+    val cal: Int = 0,
+    val description: String? = null,
     val nutrients: List<MenuItemNutrientInput>? = null,
 )
 
@@ -22,5 +24,7 @@ data class UpdateMenuItemRequest(
     val imageUrl: String? = null,
     val categoryId: Long? = null,
     val price: Int? = null,
+    val cal: Int? = null,
+    val description: String? = null,
     val nutrients: List<MenuItemNutrientInput>? = null,
 )

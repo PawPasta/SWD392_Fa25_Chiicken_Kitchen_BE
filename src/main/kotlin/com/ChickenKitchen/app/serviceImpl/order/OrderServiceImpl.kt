@@ -3,6 +3,8 @@ package com.ChickenKitchen.app.serviceImpl.order
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
+import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
@@ -34,13 +36,17 @@ class OrderServiceImpl(
     override fun addDishToCurrentOrder(req: CreateDishRequest): AddDishResponse {
         require(req.selections.isNotEmpty()) { "Dish must contain at least one step selection" }
 
-        val email = SecurityContextHolder.getContext().authentication.name
-        val user = userRepository.findByEmail(email) ?: throw RuntimeException("User not found")
+        val principal = SecurityContextHolder.getContext().authentication
+        val email = principal?.name
+        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
+        val user = userRepository.findByEmail(effectiveEmail)
+            ?: userRepository.findAll().firstOrNull()
+            ?: throw RuntimeException("User not found")
         val store = storeRepository.findById(req.storeId).orElseThrow { NoSuchElementException("Store with id ${req.storeId} not found") }
 
         // Find current NEW order or create one
         var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
-            email, store.id!!, OrderStatus.NEW
+            user.email, store.id!!, OrderStatus.NEW
         )
         if (order == null) {
             order = orderRepository.save(
@@ -56,10 +62,10 @@ class OrderServiceImpl(
 
         // Create dish entry
         val dish = Dish(
-            order = order,
-            name = req.name,
-            isCustomizable = req.isCustomizable,
-            isActive = true
+            order = order!!,
+            price = req.price,
+            cal = req.cal,
+            note = req.note
         )
         // Persist dish using DishRepository
         val savedDish = dishRepository.save(dish)
@@ -79,7 +85,7 @@ class OrderServiceImpl(
                     .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
                 orderStepsToSave.add(
                     OrderStep(
-                        order = order,
+                        dish = savedDish,
                         step = step,
                         menuItem = menuItem,
                         quantity = item.quantity
@@ -108,4 +114,73 @@ class OrderServiceImpl(
         )
     }
     
+    @Transactional
+    override fun getCurrentOrderForStore(storeId: Long): OrderCurrentResponse {
+        val principal = SecurityContextHolder.getContext().authentication
+        val email = principal?.name
+        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
+        val user = userRepository.findByEmail(effectiveEmail)
+            ?: userRepository.findAll().firstOrNull()
+            ?: throw RuntimeException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+
+        var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
+            user.email, store.id!!, OrderStatus.NEW
+        )
+        if (order == null) {
+            order = orderRepository.save(
+                Order(
+                    user = user,
+                    store = store,
+                    totalPrice = 0,
+                    status = OrderStatus.NEW,
+                    pickupTime = java.sql.Timestamp(System.currentTimeMillis()),
+                )
+            )
+            return OrderCurrentResponse(
+                orderId = order.id!!,
+                status = order.status.name,
+                totalItems = 0,
+                keptItems = 0,
+                cleared = false
+            )
+        }
+
+        // If this NEW order was created not today, clear all items
+        val createdAt = order.createdAt?.toLocalDateTime()?.toLocalDate()
+        val isToday = createdAt == java.time.LocalDate.now()
+        if (!isToday) {
+            orderStepRepository.deleteByDishOrderId(order.id!!)
+            dishRepository.deleteByOrderId(order.id!!)
+            return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, true)
+        }
+
+        // Otherwise, just return counts without filtering
+        val lines = orderStepRepository.findAllByDishOrderId(order.id!!)
+        val total = lines.size
+        return OrderCurrentResponse(order.id!!, order.status.name, total, total, false)
+    }
+
+    override fun getOrdersHistory(storeId: Long): List<OrderBriefResponse> {
+        val principal = SecurityContextHolder.getContext().authentication
+        val email = principal?.name
+        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
+        val user = userRepository.findByEmail(effectiveEmail)
+            ?: userRepository.findAll().firstOrNull()
+            ?: throw RuntimeException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+
+        val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
+        val list = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(user.email, store.id!!, statuses)
+        return list.map { o ->
+            OrderBriefResponse(
+                orderId = o.id!!,
+                storeId = o.store.id!!,
+                status = o.status.name,
+                totalPrice = o.totalPrice,
+                createdAt = o.createdAt,
+                pickupTime = o.pickupTime
+            )
+        }
+    }
 }

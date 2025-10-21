@@ -1,6 +1,11 @@
 package com.ChickenKitchen.app.model.entity.step
+
 import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
+import java.sql.Timestamp
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 
 @Entity
 @Table(name = "dishes")
@@ -13,12 +18,23 @@ class Dish(
     @JoinColumn(name = "order_id", nullable = false)
     val order: Order,
 
-    @Column
-    val name: String? = null,
+    @Column(name = "price", nullable = false)
+    var price: Int = 0,
 
-    @Column(name = "is_customizable", nullable = false)
-    val isCustomizable: Boolean = false,
+    @Column(name = "cal", nullable = false)
+    var cal: Int = 0,
 
-    @Column(name = "is_active", nullable = false)
-    var isActive: Boolean = true
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    val createdAt: Timestamp? = null,
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    val updatedAt: Timestamp? = null,
+
+    @Column(name = "note")
+    val note: String? = null,
+
+    @OneToMany(mappedBy = "dish")
+    val orderSteps: MutableList<OrderStep> = mutableListOf()
 )
