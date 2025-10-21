@@ -18,5 +18,11 @@ class OrderController(
         val result = orderService.addDishToCurrentOrder(req)
         return ResponseEntity.ok(ResponseModel.success(result, "Dish added to order"))
     }
-}
 
+    @Operation(summary = "Get or create NEW order by store; clear items if not in today's daily menu")
+    @GetMapping("/current")
+    fun getCurrentOrderByStore(@RequestParam storeId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.getCurrentOrderForStore(storeId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched current order for store"))
+    }
+}

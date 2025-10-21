@@ -3,11 +3,13 @@ package com.ChickenKitchen.app.serviceImpl.order
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
+import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
+import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
@@ -25,6 +27,7 @@ class OrderServiceImpl(
     private val orderStepRepository: OrderStepRepository,
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
+    private val dailyMenuRepository: DailyMenuRepository,
     private val stepRepository: StepRepository,
     private val menuItemRepository: MenuItemRepository,
     private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
@@ -108,4 +111,61 @@ class OrderServiceImpl(
         )
     }
     
+    @Transactional
+    override fun getCurrentOrderForStore(storeId: Long): OrderCurrentResponse {
+        val email = SecurityContextHolder.getContext().authentication.name
+        val user = userRepository.findByEmail(email) ?: throw RuntimeException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+
+        var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
+            email, store.id!!, OrderStatus.NEW
+        )
+        if (order == null) {
+            order = orderRepository.save(
+                Order(
+                    user = user,
+                    store = store,
+                    totalPrice = 0,
+                    status = OrderStatus.NEW,
+                    pickupTime = java.sql.Timestamp(System.currentTimeMillis()),
+                )
+            )
+            return OrderCurrentResponse(
+                orderId = order.id!!,
+                status = order.status.name,
+                totalItems = 0,
+                keptItems = 0,
+                cleared = false
+            )
+        }
+
+        val lines = orderStepRepository.findAllByOrderId(order.id!!)
+        val total = lines.size
+
+        if (total == 0) {
+            return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, false)
+        }
+
+        val today = java.time.LocalDate.now()
+        val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
+        val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+
+        val todayMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
+
+        // If no daily menu at all for today, clear order items
+        if (todayMenu == null) {
+            orderStepRepository.deleteByOrderId(order.id!!)
+            return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
+        }
+
+        val todayItemIds = todayMenu.dailyMenuItems.mapNotNull { it.menuItem.id }.toSet()
+        val kept = lines.count { it.menuItem.id in todayItemIds }
+
+        if (kept == 0) {
+            orderStepRepository.deleteByOrderId(order.id!!)
+            return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
+        }
+
+        return OrderCurrentResponse(order.id!!, order.status.name, total, kept, false)
+    }
 }
