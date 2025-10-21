@@ -1,44 +1,45 @@
 package com.ChickenKitchen.app.mapper
 
-import com.ChickenKitchen.app.model.dto.response.CategoriesItemDailyMenuResponse
-import com.ChickenKitchen.app.model.dto.response.DailyMenuResponse
-import com.ChickenKitchen.app.model.dto.response.ItemDailyMenuResponse
-import com.ChickenKitchen.app.model.dto.response.StoreDailyMenuResponse
-import com.ChickenKitchen.app.model.entity.category.Category
+import com.ChickenKitchen.app.model.dto.response.*
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
-import com.ChickenKitchen.app.model.entity.menu.MenuItem
 
-
-fun Store.toStoreMenuDailyResponse() : StoreDailyMenuResponse =
+fun Store.toStoreMenuDailyResponse(): StoreDailyMenuResponse =
     StoreDailyMenuResponse(
         storeId = this.id!!,
-        storeName = this.name,
+        storeName = this.name
     )
 
-fun Category.toCategoryItemDailyMenuResponse() : CategoriesItemDailyMenuResponse =
-    CategoriesItemDailyMenuResponse(
-    categoryId = this.id!!,
-    name = this.name
-)
-
-fun MenuItem.toItemDailyMenuResponse() : ItemDailyMenuResponse =
-    ItemDailyMenuResponse(
-        menuItemId = this.id!!,
-        name = this.name,
-        category = this.category.toCategoryItemDailyMenuResponse()
-    )
-
-
-fun DailyMenu.toDailyMenuResponse() : DailyMenuResponse =
+fun DailyMenu.toDailyMenuResponse(): DailyMenuResponse =
     DailyMenuResponse(
-    id = this.id!!,
-    menuDate = this.menuDate,
-    createdAt = this.createdAt,
-    storeList = this.stores.map { it.toStoreMenuDailyResponse() },
-    itemList = this.dailyMenuItems.map { it.menuItem.toItemDailyMenuResponse() },
-)
+        id = this.id!!,
+        menuDate = this.menuDate
+    )
 
+fun DailyMenu.toDailyMenuDetailResponse(): DailyMenuDetailResponse {
+    val storeList = this.stores.map { it.toStoreMenuDailyResponse() }
 
-fun List<DailyMenu>.toDailyMenuListResponse() : List<DailyMenuResponse> =
+    val items = this.dailyMenuItems.map { it.menuItem }
+
+    // Nhóm theo category
+    val categoryList = items.groupBy { it.category.id!! }
+        .map { (catId, list) ->
+            DailyMenuCategoryGroupResponse(
+                categoryId = catId,
+                categoryName = list.first().category.name,
+                items = list.map { it.toMenuItemResponse() }
+            )
+        }
+        .sortedBy { it.categoryName }
+
+    return DailyMenuDetailResponse(
+        id = this.id!!,
+        menuDate = this.menuDate,
+        createdAt = this.createdAt,
+        storeList = storeList,
+        categoryList = categoryList
+    )
+}
+
+fun List<DailyMenu>.toDailyMenuListResponse(): List<DailyMenuResponse> =
     this.map { it.toDailyMenuResponse() }

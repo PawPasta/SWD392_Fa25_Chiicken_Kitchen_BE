@@ -3,13 +3,15 @@ package com.ChickenKitchen.app.serviceImpl.menu
 import com.ChickenKitchen.app.handler.DailyMenuAlreadyExistsException
 import com.ChickenKitchen.app.handler.DailyMenuHasStoresException
 import com.ChickenKitchen.app.handler.DailyMenuNotFoundException
+import com.ChickenKitchen.app.handler.StoreNotFoundException
+import com.ChickenKitchen.app.mapper.toDailyMenuDetailResponse
 import com.ChickenKitchen.app.mapper.toDailyMenuListResponse
-import com.ChickenKitchen.app.mapper.toDailyMenuResponse
 import com.ChickenKitchen.app.model.dto.request.CreateDailyMenuRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDailyMenuRequest
 import com.ChickenKitchen.app.model.dto.response.DailyMenuResponse
 import com.ChickenKitchen.app.model.dto.response.DailyMenuByStoreResponse
 import com.ChickenKitchen.app.model.dto.response.DailyMenuCategoryGroupResponse
+import com.ChickenKitchen.app.model.dto.response.DailyMenuDetailResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
 import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
@@ -34,13 +36,13 @@ class DailyMenuServiceImpl(
         return list.toDailyMenuListResponse()
     }
 
-    override fun getById(id: Long): DailyMenuResponse {
+    override fun getById(id: Long): DailyMenuDetailResponse {
         val dailyMenu = dailyMenuRepository.findById(id)
             .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
-        return dailyMenu.toDailyMenuResponse()
+        return dailyMenu.toDailyMenuDetailResponse()
     }
 
-    override fun create(req: CreateDailyMenuRequest): DailyMenuResponse {
+    override fun create(req: CreateDailyMenuRequest): DailyMenuDetailResponse {
         if (dailyMenuRepository.existsByMenuDate(req.menuDate)) {
             throw DailyMenuAlreadyExistsException("Daily menu for date ${req.menuDate} already exists")
         }
@@ -63,13 +65,13 @@ class DailyMenuServiceImpl(
 
         val savedMenu = dailyMenuRepository.save(dailyMenu)
 
-        return savedMenu.toDailyMenuResponse()
+        return savedMenu.toDailyMenuDetailResponse()
     }
 
     override fun update(
         id: Long,
         req: UpdateDailyMenuRequest
-    ): DailyMenuResponse {
+    ): DailyMenuDetailResponse {
         val dailyMenu = dailyMenuRepository.findById(id)
             .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
 
@@ -104,7 +106,7 @@ class DailyMenuServiceImpl(
 
         val updatedMenu = dailyMenuRepository.save(dailyMenu)
 
-        return updatedMenu.toDailyMenuResponse()
+        return updatedMenu.toDailyMenuDetailResponse()
     }
 
     override fun delete(id: Long) {
@@ -130,7 +132,7 @@ class DailyMenuServiceImpl(
             ?: throw DailyMenuNotFoundException("No daily menu for store $storeId on $date")
 
         val store = dailyMenu.stores.firstOrNull { it.id == storeId }
-            ?: throw DailyMenuNotFoundException("Store $storeId not linked to menu ${dailyMenu.id}")
+            ?: throw StoreNotFoundException("Store $storeId not linked to menu ${dailyMenu.id}")
 
         // Group items by category
         val items = dailyMenu.dailyMenuItems.map { dmi ->

@@ -6,9 +6,14 @@ import java.sql.Timestamp
 data class DailyMenuResponse(
     val id: Long,
     val menuDate: Timestamp?,
+)
+
+data class DailyMenuDetailResponse (
+    val id: Long,
+    val menuDate: Timestamp?,
     val createdAt: Timestamp?,
     val storeList: List<StoreDailyMenuResponse>,
-    val itemList: List<ItemDailyMenuResponse>
+    val categoryList: List<DailyMenuCategoryGroupResponse>
 )
 
 data class StoreDailyMenuResponse(
@@ -16,13 +21,15 @@ data class StoreDailyMenuResponse(
     val storeName: String
 )
 
-data class ItemDailyMenuResponse(
-    val menuItemId: Long,
-    val name: String,
-    val category : CategoriesItemDailyMenuResponse
+data class DailyMenuCategoryGroupResponse(
+    val categoryId: Long,
+    val categoryName: String,
+    val items: List<MenuItemResponse>
 )
 
-data class CategoriesItemDailyMenuResponse(
-    val categoryId : Long,
-    val name: String,
+data class DailyMenuByStoreResponse(
+    val storeId: Long,
+    val storeName: String,
+    val menuDate: String,
+    val categories: List<DailyMenuCategoryGroupResponse>
 )
