@@ -2,8 +2,6 @@ package com.ChickenKitchen.app.model.dto.request
 
 data class CreateDishRequest(
     val storeId: Long,
-    val price: Int = 0,
-    val cal: Int = 0,
     val note: String? = null,
     val selections: List<StepSelection>
 )

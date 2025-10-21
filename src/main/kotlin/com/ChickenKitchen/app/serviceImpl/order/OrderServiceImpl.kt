@@ -11,10 +11,10 @@ import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
-import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuItemRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
+import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.order.OrderService
@@ -27,10 +27,10 @@ import java.sql.Timestamp
 class OrderServiceImpl(
     private val orderRepository: OrderRepository,
     private val orderStepRepository: OrderStepRepository,
+    private val orderStepItemRepository: OrderStepItemRepository,
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
     private val stepRepository: StepRepository,
-    private val menuItemRepository: MenuItemRepository,
     private val dailyMenuItemRepository: DailyMenuItemRepository,
     private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
 ) : OrderService {
@@ -63,15 +63,15 @@ class OrderServiceImpl(
             )
         }
 
-        // Create dish entry
-        val dish = Dish(
-            order = order!!,
-            price = req.price,
-            cal = req.cal,
-            note = req.note
+        // Create dish entry with temporary totals = 0
+        val savedDish = dishRepository.save(
+            Dish(
+                order = order!!,
+                price = 0,
+                cal = 0,
+                note = req.note
+            )
         )
-        // Persist dish using DishRepository
-        val savedDish = dishRepository.save(dish)
 
         // Build steps sorted by stepNumber
         val stepMap = stepRepository.findAllById(req.selections.map { it.stepId }).associateBy { it.id!! }
@@ -79,6 +79,8 @@ class OrderServiceImpl(
 
         val created = mutableListOf<CreatedOrderStep>()
         val savedSteps = mutableListOf<OrderStep>()
+        var totalPrice = 0
+        var totalCal = 0
         for (sel in sortedSelections) {
             val step = stepMap[sel.stepId] ?: throw NoSuchElementException("Step with id ${sel.stepId} not found")
             require(sel.items.isNotEmpty()) { "Each step selection must include at least one item" }
@@ -96,6 +98,10 @@ class OrderServiceImpl(
                 require(item.quantity > 0) { "Quantity must be > 0" }
                 val dmi = dailyMenuItemRepository.findById(item.dailyMenuItemId)
                     .orElseThrow { NoSuchElementException("Daily menu item with id ${item.dailyMenuItemId} not found") }
+                // Ensure DMI belongs to the same category as the step
+                if (dmi.menuItem.category.id != step.category.id) {
+                    throw IllegalArgumentException("DailyMenuItem ${dmi.id} does not belong to step ${step.id} category")
+                }
                 val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
                     orderStep = orderStep,
                     dailyMenuItem = dmi,
@@ -105,11 +111,20 @@ class OrderServiceImpl(
                 // Because OrderStep.items is cascade ALL, add to collection is enough if orderStep managed
                 orderStep.items.add(link)
                 createdItems.add(CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity))
+
+                // Accumulate totals from MenuItem base values
+                totalPrice += (dmi.menuItem.price * item.quantity)
+                totalCal += (dmi.menuItem.cal * item.quantity)
             }
             // Save with items
             orderStepRepository.save(orderStep)
             created.add(CreatedOrderStep(id = orderStep.id!!, stepId = step.id!!, items = createdItems))
         }
+
+        // Update dish totals
+        savedDish.price = totalPrice
+        savedDish.cal = totalCal
+        dishRepository.save(savedDish)
 
         return AddDishResponse(
             orderId = order.id!!,
@@ -155,6 +170,7 @@ class OrderServiceImpl(
         val createdAt = order.createdAt?.toLocalDateTime()?.toLocalDate()
         val isToday = createdAt == java.time.LocalDate.now()
         if (!isToday) {
+            orderStepItemRepository.deleteByOrderId(order.id!!)
             orderStepRepository.deleteByDishOrderId(order.id!!)
             dishRepository.deleteByOrderId(order.id!!)
             return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, true)
