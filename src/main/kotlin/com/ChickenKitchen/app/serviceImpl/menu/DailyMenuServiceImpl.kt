@@ -8,6 +8,9 @@ import com.ChickenKitchen.app.mapper.toDailyMenuResponse
 import com.ChickenKitchen.app.model.dto.request.CreateDailyMenuRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDailyMenuRequest
 import com.ChickenKitchen.app.model.dto.response.DailyMenuResponse
+import com.ChickenKitchen.app.model.dto.response.DailyMenuByStoreResponse
+import com.ChickenKitchen.app.model.dto.response.DailyMenuCategoryGroupResponse
+import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
 import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
@@ -116,5 +119,47 @@ class DailyMenuServiceImpl(
         }
 
         dailyMenuRepository.delete(dailyMenu)
+    }
+
+    override fun getByStoreAndDate(storeId: Long, date: String): DailyMenuByStoreResponse {
+        // Expect date as yyyy-MM-dd (local date). Build start/end range in UTC+0; DB side uses Timestamp
+        val start = java.sql.Timestamp.valueOf("${date} 00:00:00")
+        val end = java.sql.Timestamp.valueOf("${date} 23:59:59")
+
+        val dailyMenu = dailyMenuRepository.findByStoreAndDateRange(storeId, start, end)
+            ?: throw DailyMenuNotFoundException("No daily menu for store $storeId on $date")
+
+        val store = dailyMenu.stores.firstOrNull { it.id == storeId }
+            ?: throw DailyMenuNotFoundException("Store $storeId not linked to menu ${dailyMenu.id}")
+
+        // Group items by category
+        val items = dailyMenu.dailyMenuItems.map { dmi ->
+            val mi = dmi.menuItem
+            MenuItemResponse(
+                id = mi.id!!,
+                name = mi.name,
+                categoryId = mi.category.id!!,
+                categoryName = mi.category.name,
+                isActive = mi.isActive,
+                imageUrl = mi.imageUrl,
+                price = mi.price,
+            )
+        }
+        val grouped = items.groupBy { it.categoryId }
+            .map { (catId, list) ->
+                DailyMenuCategoryGroupResponse(
+                    categoryId = catId,
+                    categoryName = list.first().categoryName,
+                    items = list
+                )
+            }
+            .sortedBy { it.categoryName }
+
+        return DailyMenuByStoreResponse(
+            storeId = store.id!!,
+            storeName = store.name,
+            menuDate = date,
+            categories = grouped
+        )
     }
 }

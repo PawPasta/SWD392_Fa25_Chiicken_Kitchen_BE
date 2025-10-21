@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -60,5 +61,15 @@ class DailyMenuController(
     @DeleteMapping("/{id}")
     fun delete (@PathVariable id :Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(dailyMenuService.delete(id), "Delete Menu Item Successfully"))
+    }
+
+    @Operation(summary = "Get daily menu by date for store with grouped categories")
+    @GetMapping("/store/{storeId}")
+    fun getByStoreAndDate(
+        @PathVariable storeId: Long,
+        @RequestParam date: String
+    ): ResponseEntity<ResponseModel> {
+        val result = dailyMenuService.getByStoreAndDate(storeId, date)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched daily menu for store $storeId on $date"))
     }
 }

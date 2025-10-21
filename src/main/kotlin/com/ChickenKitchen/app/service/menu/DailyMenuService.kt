@@ -7,4 +7,5 @@ import com.ChickenKitchen.app.service.BaseService
 
 interface DailyMenuService : BaseService<DailyMenuResponse, DailyMenuResponse, CreateDailyMenuRequest, UpdateDailyMenuRequest, Long> {
 
+    fun getByStoreAndDate(storeId: Long, date: String): com.ChickenKitchen.app.model.dto.response.DailyMenuByStoreResponse
 }
