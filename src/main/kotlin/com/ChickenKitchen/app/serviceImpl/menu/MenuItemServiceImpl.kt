@@ -21,6 +21,8 @@ import com.ChickenKitchen.app.mapper.toMenuItemDetailResponse
 import com.ChickenKitchen.app.mapper.toMenuItemResponse
 import com.ChickenKitchen.app.mapper.toMenuItemResponseList
 import com.ChickenKitchen.app.mapper.toBriefResponses
+import com.ChickenKitchen.app.mapper.toRecipeBriefResponse
+import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
 import org.springframework.stereotype.Service
 
 @Service
@@ -29,6 +31,7 @@ class MenuItemServiceImpl(
     private val menuItemNutrientRepository: MenuItemNutrientRepository,
     private val nutrientRepository: NutrientRepository,
     private val categoryRepository: CategoryRepository,
+    private val recipeRepository: RecipeRepository
 ) : MenuItemService {
 
     override fun getAll(): List<MenuItemResponse>? {
@@ -146,8 +149,15 @@ class MenuItemServiceImpl(
     }
 
     private fun buildDetail(item: MenuItem): MenuItemDetailResponse {
-        val links = menuItemNutrientRepository.findByMenuItemId(item.id!!)
-        val brief = links.toBriefResponses()
-        return item.toMenuItemDetailResponse(brief)
+        val nutrientLinks = menuItemNutrientRepository.findByMenuItemId(item.id!!)
+        val nutrientBriefs = nutrientLinks.toBriefResponses()
+
+        val recipes = recipeRepository.findByMenuItemId(item.id!!)
+        val recipeBriefs = recipes.toRecipeBriefResponse()
+
+        return item.toMenuItemDetailResponse(
+            nutrients = nutrientBriefs,
+            recipes = recipeBriefs
+        )
     }
 }

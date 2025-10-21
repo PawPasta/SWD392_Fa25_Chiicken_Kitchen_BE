@@ -5,6 +5,8 @@ import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemDetailResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemNutrientBriefResponse
+import com.ChickenKitchen.app.model.dto.response.RecipeBriefResponse
+import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 
 fun MenuItem.toMenuItemResponse(): MenuItemResponse =
     MenuItemResponse(
@@ -22,7 +24,7 @@ fun MenuItem.toMenuItemResponse(): MenuItemResponse =
 fun List<MenuItem>.toMenuItemResponseList(): List<MenuItemResponse> =
     this.map { it.toMenuItemResponse() }
 
-fun MenuItem.toMenuItemDetailResponse(nutrients: List<MenuItemNutrientBriefResponse> = emptyList()): MenuItemDetailResponse =
+fun MenuItem.toMenuItemDetailResponse(nutrients: List<MenuItemNutrientBriefResponse> = emptyList(), recipes : List<RecipeBriefResponse>): MenuItemDetailResponse =
     MenuItemDetailResponse(
         id = this.id!!,
         name = this.name,
@@ -32,6 +34,7 @@ fun MenuItem.toMenuItemDetailResponse(nutrients: List<MenuItemNutrientBriefRespo
         imageUrl = this.imageUrl,
         createdAt = this.createdAt.toString(),
         nutrients = nutrients,
+        recipe = recipes,
         price = this.price,
         cal = this.cal,
         description = this.description
@@ -42,6 +45,15 @@ fun List<MenuItemNutrient>.toBriefResponses(): List<MenuItemNutrientBriefRespons
         MenuItemNutrientBriefResponse(
             id = it.nutrient.id!!,
             name = it.nutrient.name,
-            quantity = it.quantity
+            quantity = it.quantity,
+            baseUnit = it.nutrient.baseUnit,
+        )
+    }
+
+fun List<Recipe>.toRecipeBriefResponse() : List<RecipeBriefResponse> =
+    this.map {
+        RecipeBriefResponse(
+            id = it.ingredient.id!!,
+            name = it.ingredient.name
         )
     }

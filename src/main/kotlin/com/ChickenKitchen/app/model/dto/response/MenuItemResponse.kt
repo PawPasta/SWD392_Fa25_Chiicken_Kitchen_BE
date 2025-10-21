@@ -1,4 +1,5 @@
 package com.ChickenKitchen.app.model.dto.response
+import com.ChickenKitchen.app.enums.UnitType
 import java.math.BigDecimal
 
 data class MenuItemResponse(
@@ -17,6 +18,7 @@ data class MenuItemNutrientBriefResponse(
     val id: Long, // nutrient id
     val name: String,
     val quantity: BigDecimal,
+    val baseUnit: UnitType
 )
 
 data class MenuItemDetailResponse(
@@ -31,4 +33,12 @@ data class MenuItemDetailResponse(
     val cal: Int,
     val description: String?,
     val nutrients: List<MenuItemNutrientBriefResponse> = emptyList(),
+    val recipe: List<RecipeBriefResponse> = emptyList(),
+)
+
+
+data class RecipeBriefResponse(
+    val id: Long,
+    val name: String?,
+
 )
