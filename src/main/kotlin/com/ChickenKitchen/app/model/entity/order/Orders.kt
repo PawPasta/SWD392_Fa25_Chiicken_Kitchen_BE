@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.model.entity.promotion.OrderPromotion
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
 import java.sql.Timestamp
 
 
@@ -42,6 +43,7 @@ class Order(
     @Column(name = "pickup_time", nullable = false)
     val pickupTime: Timestamp? = null,
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Timestamp? = null,
 

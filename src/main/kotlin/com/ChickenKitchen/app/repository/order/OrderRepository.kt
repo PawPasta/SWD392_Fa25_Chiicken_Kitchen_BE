@@ -8,4 +8,10 @@ import org.springframework.stereotype.Repository
 @Repository
 interface OrderRepository : JpaRepository<Order, Long>{
     fun findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(email: String, storeId: Long, status: OrderStatus): Order?
+
+    fun findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
+        email: String,
+        storeId: Long,
+        statuses: List<OrderStatus>
+    ): List<Order>
 }

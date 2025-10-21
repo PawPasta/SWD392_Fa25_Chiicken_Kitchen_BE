@@ -4,12 +4,12 @@ import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
-import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
@@ -27,7 +27,6 @@ class OrderServiceImpl(
     private val orderStepRepository: OrderStepRepository,
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
-    private val dailyMenuRepository: DailyMenuRepository,
     private val stepRepository: StepRepository,
     private val menuItemRepository: MenuItemRepository,
     private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
@@ -147,33 +146,41 @@ class OrderServiceImpl(
             )
         }
 
+        // If this NEW order was created not today, clear all items
+        val createdAt = order.createdAt?.toLocalDateTime()?.toLocalDate()
+        val isToday = createdAt == java.time.LocalDate.now()
+        if (!isToday) {
+            orderStepRepository.deleteByDishOrderId(order.id!!)
+            dishRepository.deleteByOrderId(order.id!!)
+            return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, true)
+        }
+
+        // Otherwise, just return counts without filtering
         val lines = orderStepRepository.findAllByDishOrderId(order.id!!)
         val total = lines.size
+        return OrderCurrentResponse(order.id!!, order.status.name, total, total, false)
+    }
 
-        if (total == 0) {
-            return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, false)
+    override fun getOrdersHistory(storeId: Long): List<OrderBriefResponse> {
+        val principal = SecurityContextHolder.getContext().authentication
+        val email = principal?.name
+        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
+        val user = userRepository.findByEmail(effectiveEmail)
+            ?: userRepository.findAll().firstOrNull()
+            ?: throw RuntimeException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+
+        val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
+        val list = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(user.email, store.id!!, statuses)
+        return list.map { o ->
+            OrderBriefResponse(
+                orderId = o.id!!,
+                storeId = o.store.id!!,
+                status = o.status.name,
+                totalPrice = o.totalPrice,
+                createdAt = o.createdAt,
+                pickupTime = o.pickupTime
+            )
         }
-
-        val today = java.time.LocalDate.now()
-        val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
-        val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
-
-        val todayMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-
-        // If no daily menu at all for today, clear order items
-        if (todayMenu == null) {
-            orderStepRepository.deleteByDishOrderId(order.id!!)
-            return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
-        }
-
-        val todayItemIds = todayMenu.dailyMenuItems.mapNotNull { it.menuItem.id }.toSet()
-        val kept = lines.count { it.menuItem.id in todayItemIds }
-
-        if (kept == 0) {
-            orderStepRepository.deleteByDishOrderId(order.id!!)
-            return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
-        }
-
-        return OrderCurrentResponse(order.id!!, order.status.name, total, kept, false)
     }
 }

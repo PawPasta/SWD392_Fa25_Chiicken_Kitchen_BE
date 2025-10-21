@@ -25,4 +25,11 @@ class OrderController(
         val result = orderService.getCurrentOrderForStore(storeId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched current order for store"))
     }
+
+    @Operation(summary = "List user's orders (COMPLETED/CANCELLED/PROCESSING) by store")
+    @GetMapping("/history")
+    fun getOrderHistory(@RequestParam storeId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.getOrdersHistory(storeId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched order history"))
+    }
 }
