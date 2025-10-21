@@ -17,4 +17,9 @@ interface OrderStepRepository : JpaRepository<OrderStep, Long> {
     @Modifying
     @Query("delete from OrderStep os where os.dish.order.id = :orderId")
     fun deleteByDishOrderId(@Param("orderId") orderId: Long): Int
+
+    @Transactional
+    @Modifying
+    @Query("delete from OrderStep os where os.dish.id = :dishId")
+    fun deleteByDishId(@Param("dishId") dishId: Long): Int
 }

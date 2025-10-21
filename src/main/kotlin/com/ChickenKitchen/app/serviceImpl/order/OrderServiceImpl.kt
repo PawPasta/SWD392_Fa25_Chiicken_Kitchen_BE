@@ -214,4 +214,93 @@ class OrderServiceImpl(
             )
         }
     }
+
+    @Transactional
+    override fun updateDish(dishId: Long, req: com.ChickenKitchen.app.model.dto.request.UpdateDishRequest): AddDishResponse {
+        require(req.selections.isNotEmpty()) { "Dish must contain at least one step selection" }
+
+        val dish = dishRepository.findById(dishId).orElseThrow { NoSuchElementException("Dish with id $dishId not found") }
+        val order = dish.order
+        val store = order.store
+
+        // Clear existing items for this dish
+        orderStepItemRepository.deleteByDishId(dishId)
+        orderStepRepository.deleteByDishId(dishId)
+
+        // Optionally update note
+        dish.note = req.note ?: dish.note
+
+        val stepMap = stepRepository.findAllById(req.selections.map { it.stepId }).associateBy { it.id!! }
+        val sortedSelections = req.selections.sortedBy { stepMap[it.stepId]?.stepNumber ?: Int.MAX_VALUE }
+
+        var totalPrice = 0
+        var totalCal = 0
+        val created = mutableListOf<CreatedOrderStep>()
+        for (sel in sortedSelections) {
+            val step = stepMap[sel.stepId] ?: throw NoSuchElementException("Step with id ${sel.stepId} not found")
+            require(sel.items.isNotEmpty()) { "Each step selection must include at least one item" }
+
+            val orderStep = orderStepRepository.save(
+                OrderStep(
+                    dish = dish,
+                    step = step
+                )
+            )
+
+            val createdItems = mutableListOf<CreatedStepItem>()
+            sel.items.forEach { item ->
+                require(item.quantity > 0) { "Quantity must be > 0" }
+                val menuItem = menuItemRepository.findById(item.menuItemId)
+                    .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
+                if (menuItem.category.id != step.category.id) {
+                    throw IllegalArgumentException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
+                }
+
+                val today = java.time.LocalDate.now()
+                val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
+                val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+                val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
+                    ?: throw NoSuchElementException("No daily menu for store ${store.id} today; cannot resolve menu item ${item.menuItemId}")
+                val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
+                    ?: throw NoSuchElementException("Menu item ${item.menuItemId} not in today's daily menu for store ${store.id}")
+
+                val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
+                    orderStep = orderStep,
+                    dailyMenuItem = dmi,
+                    quantity = item.quantity
+                )
+                orderStep.items.add(link)
+                createdItems.add(CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity))
+
+                totalPrice += (menuItem.price * item.quantity)
+                totalCal += (menuItem.cal * item.quantity)
+            }
+            orderStepRepository.save(orderStep)
+            created.add(CreatedOrderStep(id = orderStep.id!!, stepId = step.id!!, items = createdItems))
+        }
+
+        // Update dish note/price/cal
+        dish.price = totalPrice
+        dish.cal = totalCal
+        // can't reassign val note; in entity Dish 'note' is val; need to update entity to var
+        // Workaround: persist via copy not available; adjust entity to mutable note
+        dishRepository.save(dish)
+
+        return AddDishResponse(
+            orderId = order.id!!,
+            dishId = dish.id!!,
+            status = order.status.name,
+            createdSteps = created
+        )
+    }
+
+    @Transactional
+    override fun deleteDish(dishId: Long): Long {
+        val dish = dishRepository.findById(dishId).orElseThrow { NoSuchElementException("Dish with id $dishId not found") }
+        val orderId = dish.order.id!!
+        orderStepItemRepository.deleteByDishId(dishId)
+        orderStepRepository.deleteByDishId(dishId)
+        dishRepository.delete(dish)
+        return orderId
+    }
 }

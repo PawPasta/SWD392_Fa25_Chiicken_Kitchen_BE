@@ -6,6 +6,11 @@ data class CreateDishRequest(
     val selections: List<StepSelection>
 )
 
+data class UpdateDishRequest(
+    val note: String? = null,
+    val selections: List<StepSelection>
+)
+
 data class StepSelection(
     val stepId: Long,
     val items: List<SelectionItem>
