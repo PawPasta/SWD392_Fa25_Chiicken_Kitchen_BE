@@ -52,7 +52,9 @@ class MenuItemServiceImpl(
             category = category,
             isActive = req.isActive,
             imageUrl = req.imageUrl,
-            price = req.price
+            price = req.price,
+            cal = req.cal,
+            description = req.description
         )
         val saved = menuItemRepository.save(entity)
 
@@ -82,7 +84,9 @@ class MenuItemServiceImpl(
         // Update simple fields
         req.isActive?.let { item.isActive = it }
         req.imageUrl?.let { item.imageUrl = it }
-        req.price?.let {item.price = it}
+        req.price?.let { item.price = it }
+        req.cal?.let { item.cal = it }
+        req.description?.let { item.description = it }
 
         // Update category if provided
         if (req.categoryId != null && req.categoryId != item.category.id) {

@@ -163,7 +163,11 @@ CREATE TABLE menu_items (
                             name NVARCHAR(255) NOT NULL,
                             category ENUM('CARB', 'PROTEIN', 'VEGETABLE', 'SAUCE', 'DAIRY', 'FRUIT') NOT NULL,
                             is_active BOOLEAN DEFAULT TRUE,
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            price INT NOT NULL DEFAULT 0,
+                            cal INT NOT NULL DEFAULT 0,
+                            description NVARCHAR(255),
+                            image_url NVARCHAR(255)
 );
 
 -- STEP ITEMS

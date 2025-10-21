@@ -35,6 +35,12 @@ data class MenuItem(
     @Column(name = "price", nullable = false)
     var price : Int =0,
 
+    @Column(name = "cal", nullable = false)
+    var cal: Int = 0,
+
+    @Column(name = "description")
+    var description: String? = null,
+
     @OneToMany(mappedBy = "menuItem")
     val orderSteps: MutableList<OrderStep> = mutableListOf(),
 

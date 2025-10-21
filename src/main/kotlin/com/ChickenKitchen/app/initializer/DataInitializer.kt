@@ -40,6 +40,7 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 import kotlin.random.Random
+import kotlin.math.absoluteValue
 
 @Configuration
 class DataInitializer {
@@ -520,6 +521,16 @@ class DataInitializer {
                 MenuItemSeed("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg", 35000)
             )
 
+            fun baseCalFor(categoryName: String): Int = when (categoryName) {
+                "Carbohydrates" -> 220
+                "Proteins" -> 250
+                "Vegetables" -> 50
+                "Sauces" -> 90
+                "Dairy" -> 160
+                "Fruits" -> 95
+                else -> 120
+            }
+
             val entities = items.map { item ->
                 val categoryName = when (item.category) {
                     is String -> item.category
@@ -535,11 +546,15 @@ class DataInitializer {
                 }
                 val cat = categoryRepository.findByName(categoryName)
                     ?: throw IllegalStateException("Category not found for seeding: $categoryName")
+                val cal = baseCalFor(categoryName) + (item.name.hashCode().absoluteValue % 60 - 30)
+                val desc = "Delicious ${item.name} from ${categoryName.lowercase()} category"
                 MenuItem(
                     name = item.name,
                     category = cat,
                     imageUrl = item.imageUrl,
                     price = item.price,
+                    cal = cal,
+                    description = desc,
                     isActive = true
                 )
             }
