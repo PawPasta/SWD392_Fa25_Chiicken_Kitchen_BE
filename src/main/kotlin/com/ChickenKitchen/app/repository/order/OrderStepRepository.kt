@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 interface OrderStepRepository : JpaRepository<OrderStep, Long> {
 
     fun findAllByDishOrderId(orderId: Long): List<OrderStep>
+    fun findAllByDishId(dishId: Long): List<OrderStep>
 
     @Transactional
     @Modifying

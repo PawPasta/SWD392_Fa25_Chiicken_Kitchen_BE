@@ -1,10 +1,34 @@
 package com.ChickenKitchen.app.model.dto.response
 
+import java.sql.Timestamp
+
+data class CurrentStepItemResponse(
+    val dailyMenuItemId: Long,
+    val menuItemId: Long,
+    val menuItemName: String,
+    val quantity: Int,
+    val price: Int,
+    val cal: Int
+)
+
+data class CurrentStepResponse(
+    val stepId: Long,
+    val stepName: String,
+    val items: List<CurrentStepItemResponse>
+)
+
+data class CurrentDishResponse(
+    val dishId: Long,
+    val note: String?,
+    val price: Int,
+    val cal: Int,
+    val updatedAt: Timestamp?,
+    val steps: List<CurrentStepResponse>
+)
+
 data class OrderCurrentResponse(
     val orderId: Long,
     val status: String,
-    val totalItems: Int,
-    val keptItems: Int,
-    val cleared: Boolean
+    val cleared: Boolean,
+    val dishes: List<CurrentDishResponse>
 )
-

@@ -11,4 +11,6 @@ interface DishRepository : JpaRepository<Dish, Long> {
 
     @Transactional
     fun deleteByOrderId(orderId: Long): Long
+
+    fun findAllByOrderIdAndUpdatedAtBetween(orderId: Long, start: java.sql.Timestamp, end: java.sql.Timestamp): List<Dish>
 }

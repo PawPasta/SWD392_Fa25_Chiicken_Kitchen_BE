@@ -4,6 +4,9 @@ import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.CurrentDishResponse
+import com.ChickenKitchen.app.model.dto.response.CurrentStepResponse
+import com.ChickenKitchen.app.model.dto.response.CurrentStepItemResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.CreatedOrderStep
 import com.ChickenKitchen.app.model.dto.response.CreatedStepItem
@@ -170,9 +173,8 @@ class OrderServiceImpl(
             return OrderCurrentResponse(
                 orderId = order.id!!,
                 status = order.status.name,
-                totalItems = 0,
-                keptItems = 0,
-                cleared = false
+                cleared = false,
+                dishes = emptyList()
             )
         }
 
@@ -183,13 +185,46 @@ class OrderServiceImpl(
             orderStepItemRepository.deleteByOrderId(order.id!!)
             orderStepRepository.deleteByDishOrderId(order.id!!)
             dishRepository.deleteByOrderId(order.id!!)
-            return OrderCurrentResponse(order.id!!, order.status.name, 0, 0, true)
+            return OrderCurrentResponse(order.id!!, order.status.name, true, emptyList())
         }
 
-        // Otherwise, just return counts without filtering
-        val lines = orderStepRepository.findAllByDishOrderId(order.id!!)
-        val total = lines.size
-        return OrderCurrentResponse(order.id!!, order.status.name, total, total, false)
+        // Only include dishes updated today
+        val today = java.time.LocalDate.now()
+        val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
+        val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+        val dishesToday = dishRepository.findAllByOrderIdAndUpdatedAtBetween(order.id!!, start, end)
+
+        val dishResponses = dishesToday.map { d ->
+            val steps = orderStepRepository.findAllByDishId(d.id!!)
+            val stepResponses = steps.map { st ->
+                val itemResponses = st.items.map { link ->
+                    val mi = link.dailyMenuItem.menuItem
+                    CurrentStepItemResponse(
+                        dailyMenuItemId = link.dailyMenuItem.id!!,
+                        menuItemId = mi.id!!,
+                        menuItemName = mi.name,
+                        quantity = link.quantity,
+                        price = mi.price,
+                        cal = mi.cal
+                    )
+                }
+                CurrentStepResponse(
+                    stepId = st.step.id!!,
+                    stepName = st.step.name,
+                    items = itemResponses
+                )
+            }
+            CurrentDishResponse(
+                dishId = d.id!!,
+                note = d.note,
+                price = d.price,
+                cal = d.cal,
+                updatedAt = d.updatedAt,
+                steps = stepResponses
+            )
+        }
+
+        return OrderCurrentResponse(order.id!!, order.status.name, false, dishResponses)
     }
 
     override fun getOrdersHistory(storeId: Long): List<OrderBriefResponse> {
