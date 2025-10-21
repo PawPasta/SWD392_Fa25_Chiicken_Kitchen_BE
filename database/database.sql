@@ -140,9 +140,11 @@ CREATE TABLE categories (
 CREATE TABLE dishes (
                         id BIGINT PRIMARY KEY AUTO_INCREMENT,
                         order_id BIGINT NOT NULL,
-                        name NVARCHAR(255),
-                        is_customizable BOOLEAN DEFAULT FALSE,
-                        is_active BOOLEAN DEFAULT TRUE,
+                        price INT NOT NULL DEFAULT 0,
+                        cal INT NOT NULL DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        note TEXT,
                         FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
@@ -229,4 +231,16 @@ CREATE TABLE recipes (
                          menu_item_id BIGINT NOT NULL,
                          FOREIGN KEY (menu_item_id) REFERENCES menu_items(id),
                          FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
+);
+
+-- ORDER STEPS (Dish -> Step -> MenuItem)
+CREATE TABLE order_steps (
+                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                             dish_id BIGINT NOT NULL,
+                             step_id BIGINT NOT NULL,
+                             menu_item_id BIGINT NOT NULL,
+                             quantity INT NOT NULL,
+                             FOREIGN KEY (dish_id) REFERENCES dishes(id),
+                             FOREIGN KEY (step_id) REFERENCES steps(id),
+                             FOREIGN KEY (menu_item_id) REFERENCES menu_items(id)
 );

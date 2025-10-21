@@ -64,9 +64,9 @@ class OrderServiceImpl(
         // Create dish entry
         val dish = Dish(
             order = order!!,
-            name = req.name,
-            isCustomizable = req.isCustomizable,
-            isActive = true
+            price = req.price,
+            cal = req.cal,
+            note = req.note
         )
         // Persist dish using DishRepository
         val savedDish = dishRepository.save(dish)
@@ -86,7 +86,7 @@ class OrderServiceImpl(
                     .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
                 orderStepsToSave.add(
                     OrderStep(
-                        order = order,
+                        dish = savedDish,
                         step = step,
                         menuItem = menuItem,
                         quantity = item.quantity
@@ -147,7 +147,7 @@ class OrderServiceImpl(
             )
         }
 
-        val lines = orderStepRepository.findAllByOrderId(order.id!!)
+        val lines = orderStepRepository.findAllByDishOrderId(order.id!!)
         val total = lines.size
 
         if (total == 0) {
@@ -162,7 +162,7 @@ class OrderServiceImpl(
 
         // If no daily menu at all for today, clear order items
         if (todayMenu == null) {
-            orderStepRepository.deleteByOrderId(order.id!!)
+            orderStepRepository.deleteByDishOrderId(order.id!!)
             return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
         }
 
@@ -170,7 +170,7 @@ class OrderServiceImpl(
         val kept = lines.count { it.menuItem.id in todayItemIds }
 
         if (kept == 0) {
-            orderStepRepository.deleteByOrderId(order.id!!)
+            orderStepRepository.deleteByDishOrderId(order.id!!)
             return OrderCurrentResponse(order.id!!, order.status.name, total, 0, true)
         }
 

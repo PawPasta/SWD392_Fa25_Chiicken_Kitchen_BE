@@ -2,7 +2,7 @@ package com.ChickenKitchen.app.model.entity.order
 
 import com.ChickenKitchen.app.model.entity.step.Step
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
-import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.step.Dish
 import jakarta.persistence.*
 
 @Entity
@@ -14,8 +14,8 @@ class OrderStep(
     val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    val order: Order,
+    @JoinColumn(name = "dish_id", nullable = false)
+    val dish: Dish,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "step_id", nullable = false)

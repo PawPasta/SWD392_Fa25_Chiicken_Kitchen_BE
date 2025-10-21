@@ -54,6 +54,6 @@ class Order(
     @OneToMany(mappedBy = "order")
     val payments: MutableList<Payment> = mutableListOf(),
 
-    @OneToMany(mappedBy = "order")
-    val orderSteps: MutableList<OrderStep> = mutableListOf()
+    // Order steps now link via Dish -> OrderStep (dish_id),
+    // so we remove direct Order -> OrderStep mapping.
 )

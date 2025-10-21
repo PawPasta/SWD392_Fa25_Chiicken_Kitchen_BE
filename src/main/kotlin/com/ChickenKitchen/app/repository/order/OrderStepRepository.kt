@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface OrderStepRepository : JpaRepository<OrderStep, Long> {
 
-    fun findAllByOrderId(orderId: Long): List<OrderStep>
+    fun findAllByDishOrderId(orderId: Long): List<OrderStep>
 
     @Transactional
     @Modifying
-    @Query("delete from OrderStep os where os.order.id = :orderId")
-    fun deleteByOrderId(@Param("orderId") orderId: Long): Int
+    @Query("delete from OrderStep os where os.dish.order.id = :orderId")
+    fun deleteByDishOrderId(@Param("orderId") orderId: Long): Int
 }
