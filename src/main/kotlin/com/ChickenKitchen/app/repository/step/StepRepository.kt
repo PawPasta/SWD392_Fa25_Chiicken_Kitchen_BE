@@ -7,4 +7,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface StepRepository : JpaRepository<Step, Long> {
+
+    fun findByCategoryIdAndNameIgnoreCase(categoryId: Long, name: String): Step?
+    fun findByCategoryIdAndStepNumber(categoryId: Long, stepNumber: Int): Step?
+//    fun findByCategoryId(categoryId: Long): List<Step>
 }

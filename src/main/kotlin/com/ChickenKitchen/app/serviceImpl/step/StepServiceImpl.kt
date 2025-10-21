@@ -1,5 +1,10 @@
 package com.ChickenKitchen.app.serviceImpl.step
 
+import com.ChickenKitchen.app.handler.CategoryNotFoundException
+import com.ChickenKitchen.app.handler.StepHasOrderStepsException
+import com.ChickenKitchen.app.handler.StepNameExistInCategoryException
+import com.ChickenKitchen.app.handler.StepNotFoundException
+import com.ChickenKitchen.app.handler.StepNumberConflictException
 import com.ChickenKitchen.app.mapper.toStepDetailResponse
 import com.ChickenKitchen.app.mapper.toStepResponse
 import com.ChickenKitchen.app.mapper.toStepResponseList
@@ -28,13 +33,27 @@ class StepServiceImpl(
     }
 
     override fun getById(id: Long): StepDetailResponse {
-        val step = stepRepository.findById(id).orElseThrow { NoSuchElementException("Step with id $id not found") }
+        val step = stepRepository.findById(id)
+            .orElseThrow { StepNotFoundException("Step with id $id not found") }
         return step.toStepDetailResponse()
     }
 
     override fun create(req: CreateStepRequest): StepDetailResponse {
         val category = categoryRepository.findById(req.categoryId)
-            .orElseThrow { NoSuchElementException("Category with id ${req.categoryId} not found") }
+            .orElseThrow { CategoryNotFoundException("Category with id ${req.categoryId} not found") }
+
+        // Kiểm tra trùng tên Step trong cùng Category
+        val existingByName = stepRepository.findByCategoryIdAndNameIgnoreCase(req.categoryId, req.name)
+        if (existingByName != null) {
+            throw StepNameExistInCategoryException("Step name '${req.name}' already exists in this category")
+        }
+
+        // Kiểm tra trùng stepNumber trong cùng Category
+        val existingByNumber = stepRepository.findByCategoryIdAndStepNumber(req.categoryId, req.stepNumber)
+        if (existingByNumber != null) {
+            throw StepNumberConflictException("Step number ${req.stepNumber} already exists in this category")
+        }
+
         val entity = Step(
             category = category,
             name = req.name,
@@ -47,9 +66,28 @@ class StepServiceImpl(
     }
 
     override fun update(id: Long, req: UpdateStepRequest): StepDetailResponse {
-        val current = stepRepository.findById(id).orElseThrow { NoSuchElementException("Step with id $id not found") }
-        val category = if (req.categoryId != null) categoryRepository.findById(req.categoryId)
-            .orElseThrow { NoSuchElementException("Category with id ${req.categoryId} not found") } else current.category
+        val current = stepRepository.findById(id)
+            .orElseThrow { StepNotFoundException("Step with id $id not found") }
+
+        val category = if (req.categoryId != null) {
+            categoryRepository.findById(req.categoryId)
+                .orElseThrow { CategoryNotFoundException("Category with id ${req.categoryId} not found") }
+        } else current.category
+
+        req.name?.let {
+            val exist = stepRepository.findByCategoryIdAndNameIgnoreCase(category.id!!, it)
+            if (exist != null && exist.id != current.id) {
+                throw StepNameExistInCategoryException("Step name '$it' already exists in this category")
+            }
+        }
+
+        // Nếu đổi stepNumber, kiểm tra trùng
+        req.stepNumber?.let {
+            val existNum = stepRepository.findByCategoryIdAndStepNumber(category.id!!, it)
+            if (existNum != null && existNum.id != current.id) {
+                throw StepNumberConflictException("Step number $it already exists in this category")
+            }
+        }
 
         val updated = Step(
             id = current.id,
@@ -60,18 +98,26 @@ class StepServiceImpl(
             stepNumber = req.stepNumber ?: current.stepNumber,
             orderSteps = current.orderSteps,
         )
+
         val saved = stepRepository.save(updated)
         return saved.toStepDetailResponse()
     }
 
     override fun delete(id: Long) {
-        val step = stepRepository.findById(id).orElseThrow { NoSuchElementException("Step with id $id not found") }
+        val step = stepRepository.findById(id)
+            .orElseThrow { StepNotFoundException("Step with id $id not found") }
+
+        if (step.orderSteps.isNotEmpty()) {
+            throw StepHasOrderStepsException("Cannot delete step because it is used in order steps")
+        }
+
         stepRepository.delete(step)
     }
 
     @Transactional
     override fun changeOrder(id: Long, req: StepOrderRequest): StepResponse {
-        val step = stepRepository.findById(id).orElseThrow { NoSuchElementException("Step with id $id not found") }
+        val step = stepRepository.findById(id)
+            .orElseThrow { StepNotFoundException("Step with id $id not found") }
         val oldPos = step.stepNumber
         val newPos = req.stepNumber
         if (newPos == oldPos) return step.toStepResponse()

@@ -153,6 +153,27 @@ class GlobalExceptionHandler {
     fun handleNotFound(e: TransactionNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Transaction not found")
 
+    //STEP
+    @ExceptionHandler(StepNotFoundException::class)
+    fun handleStepNotFound(e: StepNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Step not found")
+
+    @ExceptionHandler(StepHasOrderStepsException::class)
+    fun handleStepHasOrders(e: StepHasOrderStepsException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Step has associated order steps, cannot delete")
+
+    @ExceptionHandler(StepCategoryInactiveException::class)
+    fun handleCategoryInactive(e: StepCategoryInactiveException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Step's category is inactive, operation not allowed")
+
+    @ExceptionHandler(StepNumberConflictException::class)
+    fun handleStepNumberConflict(e: StepNumberConflictException) =
+        buildError(HttpStatus.CONFLICT, e.message ?: "Step number already exists in this category")
+
+    @ExceptionHandler(StepNameExistInCategoryException::class)
+    fun handleStepNameExist(e: StepNameExistInCategoryException) =
+        buildError(HttpStatus.CONFLICT, e.message ?: "Step name already exists in this category")
+
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {
         return ResponseEntity(

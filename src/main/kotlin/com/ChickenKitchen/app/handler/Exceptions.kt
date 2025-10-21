@@ -56,3 +56,10 @@ class PaymentMethodNotFoundException(message: String) : RuntimeException(message
 class PaymentMethodHasTransactionsException(message: String) : RuntimeException(message)
 class PaymentMethodNameExistException(message: String) : RuntimeException(message)
 class TransactionNotFoundException(message: String) : RuntimeException(message)
+
+//STEP
+class StepNotFoundException(message: String) : RuntimeException(message)
+class StepHasOrderStepsException(message: String) : RuntimeException(message)
+class StepCategoryInactiveException(message: String) : RuntimeException(message)
+class StepNumberConflictException(message: String) : RuntimeException(message)
+class StepNameExistInCategoryException(message: String) : RuntimeException(message)
