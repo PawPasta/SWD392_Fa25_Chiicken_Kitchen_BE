@@ -521,14 +521,28 @@ class DataInitializer {
                 MenuItemSeed("Avocado", MenuCategory.FRUIT, "https://example.com/images/avocado.jpg", 35000)
             )
 
-            fun baseCalFor(categoryName: String): Int = when (categoryName) {
-                "Carbohydrates" -> 220
-                "Proteins" -> 250
-                "Vegetables" -> 50
-                "Sauces" -> 90
-                "Dairy" -> 160
-                "Fruits" -> 95
-                else -> 120
+            fun calFor(categoryName: String, price: Int, name: String): Int {
+                val base = when (categoryName) {
+                    "Carbohydrates" -> 180
+                    "Proteins" -> 220
+                    "Vegetables" -> 40
+                    "Sauces" -> 60
+                    "Dairy" -> 140
+                    "Fruits" -> 80
+                    else -> 120
+                }
+                val scale = when (categoryName) {
+                    "Carbohydrates" -> 5
+                    "Proteins" -> 4
+                    "Vegetables" -> 2
+                    "Sauces" -> 3
+                    "Dairy" -> 4
+                    "Fruits" -> 2
+                    else -> 3
+                }
+                val byPrice = (price / 1000) * scale
+                val jitter = (name.hashCode().absoluteValue % 21) - 10 // -10..+10
+                return (base + byPrice + jitter).coerceAtLeast(10)
             }
 
             val entities = items.map { item ->
@@ -546,7 +560,7 @@ class DataInitializer {
                 }
                 val cat = categoryRepository.findByName(categoryName)
                     ?: throw IllegalStateException("Category not found for seeding: $categoryName")
-                val cal = baseCalFor(categoryName) + (item.name.hashCode().absoluteValue % 60 - 30)
+                val cal = calFor(categoryName, item.price, item.name)
                 val desc = "Delicious ${item.name} from ${categoryName.lowercase()} category"
                 MenuItem(
                     name = item.name,
