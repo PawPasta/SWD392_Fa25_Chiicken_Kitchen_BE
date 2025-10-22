@@ -49,6 +49,7 @@ class NutrientNameExistException(message: String) : RuntimeException(message)
 
 
 //PROMOTIONS
+class PromotionNotValidThisTime(message: String) : RuntimeException(message)
 class PromotionNotFoundException(message: String) : RuntimeException(message)
 class PromotionHasOrdersException(message: String) : RuntimeException(message)
 
@@ -56,6 +57,7 @@ class PromotionHasOrdersException(message: String) : RuntimeException(message)
 class PaymentMethodNotFoundException(message: String) : RuntimeException(message)
 class PaymentMethodHasTransactionsException(message: String) : RuntimeException(message)
 class PaymentMethodNameExistException(message: String) : RuntimeException(message)
+class PaymentMethodNameNotAvailable(message: String) : RuntimeException(message)
 class TransactionNotFoundException(message: String) : RuntimeException(message)
 
 //STEP
@@ -79,3 +81,6 @@ class UpdateDishFailedException(message: String) : RuntimeException(message)
 class DeleteDishFailedException(message: String) : RuntimeException(message)
 class CurrentOrderNotFoundException(message: String) : RuntimeException(message)
 class DailyMenuUnavailableException(message: String) : RuntimeException(message)
+
+// WALLET
+class WalletNotEnoughBalance(message: String) : RuntimeException(message)
