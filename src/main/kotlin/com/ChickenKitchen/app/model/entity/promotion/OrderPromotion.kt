@@ -3,7 +3,7 @@ package com.ChickenKitchen.app.model.entity.promotion
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
-import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "order_promotions")
@@ -25,5 +25,5 @@ class OrderPromotion(
     val user: User,
 
     @Column(name = "used_date", nullable = false)
-    val usedDate: Timestamp? = null,
+    val usedDate: LocalDateTime? = null,
 )

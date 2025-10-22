@@ -23,38 +23,38 @@ import java.sql.Timestamp
 class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    val user: User,
+    var user: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
-    val store: Store,
+    var store: Store,
 
     @Column(name = "total_price", nullable = false)
-    val totalPrice: Long,
+    var totalPrice: Int,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: OrderStatus,
 
     @Column(name = "pickup_time", nullable = false)
-    val pickupTime: Timestamp? = null,
+    var pickupTime: Timestamp? = null,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Timestamp? = null,
+    var createdAt: Timestamp? = null,
 
     @OneToMany(mappedBy = "order")
-    val dishes: MutableList<Dish> = mutableListOf(),
+    var dishes: MutableList<Dish> = mutableListOf(),
 
     @OneToMany(mappedBy = "order")
-    val orderPromotions: MutableList<OrderPromotion> = mutableListOf(),
+    var orderPromotions: MutableList<OrderPromotion> = mutableListOf(),
 
-    @OneToMany(mappedBy = "order")
-    val payments: MutableList<Payment> = mutableListOf(),
+    @OneToOne(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val payment: Payment? = null
 
     // Order steps now link via Dish -> OrderStep (dish_id),
     // so we remove direct Order -> OrderStep mapping.

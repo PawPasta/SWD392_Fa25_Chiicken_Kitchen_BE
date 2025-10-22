@@ -6,7 +6,7 @@ data class OrderBriefResponse(
     val orderId: Long,
     val storeId: Long,
     val status: String,
-    val totalPrice: Long,
+    val totalPrice: Int,
     val createdAt: Timestamp?,
     val pickupTime: Timestamp?
 )
