@@ -3,8 +3,8 @@ package com.ChickenKitchen.app.controller
 import com.ChickenKitchen.app.model.dto.request.CreatePaymentMethodRequest
 import com.ChickenKitchen.app.model.dto.request.UpdatePaymentMethodRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
-import com.ChickenKitchen.app.service.transaction.PaymentMethodService
-import com.ChickenKitchen.app.service.transaction.TransactionService
+import com.ChickenKitchen.app.service.payment.PaymentMethodService
+import com.ChickenKitchen.app.service.payment.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -70,7 +70,7 @@ class TransactionController (
 
     @Operation(summary = "Get Transaction By Id (manager only)")
     @GetMapping("/{id}")
-    fun getTranacstionById (@PathVariable id : Long) : ResponseEntity<ResponseModel> {
+    fun getTransactionById (@PathVariable id : Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(transactionService.getById(id), "Get Transaction by $id successfully"))
     }
 
