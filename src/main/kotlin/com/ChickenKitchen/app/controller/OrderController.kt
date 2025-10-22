@@ -1,7 +1,9 @@
 package com.ChickenKitchen.app.controller
 
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
+import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
+import com.ChickenKitchen.app.model.dto.response.DishDeleteResponse
 import com.ChickenKitchen.app.service.order.OrderService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
@@ -31,5 +33,22 @@ class OrderController(
     fun getOrderHistory(@RequestParam storeId: Long): ResponseEntity<ResponseModel> {
         val result = orderService.getOrdersHistory(storeId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched order history"))
+    }
+
+    @Operation(summary = "Update a dish selections and note")
+    @PutMapping("/dishes/{dishId}")
+    fun updateDish(
+        @PathVariable dishId: Long,
+        @RequestBody req: UpdateDishRequest
+    ): ResponseEntity<ResponseModel> {
+        val result = orderService.updateDish(dishId, req)
+        return ResponseEntity.ok(ResponseModel.success(result, "Dish updated"))
+    }
+
+    @Operation(summary = "Delete a dish from order")
+    @DeleteMapping("/dishes/{dishId}")
+    fun deleteDish(@PathVariable dishId: Long): ResponseEntity<ResponseModel> {
+        val orderId = orderService.deleteDish(dishId)
+        return ResponseEntity.ok(ResponseModel.success(DishDeleteResponse(orderId, dishId), "Dish deleted"))
     }
 }

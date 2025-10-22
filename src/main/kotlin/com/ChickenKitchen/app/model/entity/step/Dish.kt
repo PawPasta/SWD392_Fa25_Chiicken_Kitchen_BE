@@ -33,7 +33,7 @@ class Dish(
     val updatedAt: Timestamp? = null,
 
     @Column(name = "note")
-    val note: String? = null,
+    var note: String? = null,
 
     @OneToMany(mappedBy = "dish")
     val orderSteps: MutableList<OrderStep> = mutableListOf()

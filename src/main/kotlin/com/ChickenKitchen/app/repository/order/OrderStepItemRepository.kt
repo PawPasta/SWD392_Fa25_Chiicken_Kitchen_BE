@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.repository.order
 
-import com.ChickenKitchen.app.model.entity.order.OrderStep
+import com.ChickenKitchen.app.model.entity.order.OrderStepItem
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -9,18 +9,16 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-interface OrderStepRepository : JpaRepository<OrderStep, Long> {
-
-    fun findAllByDishOrderId(orderId: Long): List<OrderStep>
-    fun findAllByDishId(dishId: Long): List<OrderStep>
+interface OrderStepItemRepository : JpaRepository<OrderStepItem, Long> {
+    fun countByDailyMenuItemMenuItemId(menuItemId: Long): Long
 
     @Transactional
     @Modifying
-    @Query("delete from OrderStep os where os.dish.order.id = :orderId")
-    fun deleteByDishOrderId(@Param("orderId") orderId: Long): Int
+    @Query("delete from OrderStepItem osi where osi.orderStep.dish.order.id = :orderId")
+    fun deleteByOrderId(@Param("orderId") orderId: Long): Int
 
     @Transactional
     @Modifying
-    @Query("delete from OrderStep os where os.dish.id = :dishId")
+    @Query("delete from OrderStepItem osi where osi.orderStep.dish.id = :dishId")
     fun deleteByDishId(@Param("dishId") dishId: Long): Int
 }

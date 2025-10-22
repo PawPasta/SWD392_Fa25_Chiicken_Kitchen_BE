@@ -1,10 +1,14 @@
 package com.ChickenKitchen.app.model.dto.response
 
+data class CreatedStepItem(
+    val dailyMenuItemId: Long,
+    val quantity: Int,
+)
+
 data class CreatedOrderStep(
     val id: Long,
     val stepId: Long,
-    val menuItemId: Long,
-    val quantity: Int,
+    val items: List<CreatedStepItem>
 )
 
 data class AddDishResponse(
@@ -13,4 +17,3 @@ data class AddDishResponse(
     val status: String,
     val createdSteps: List<CreatedOrderStep> 
 )
-

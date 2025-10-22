@@ -13,6 +13,7 @@ import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
+import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemNutrientRepository
 import com.ChickenKitchen.app.repository.menu.NutrientRepository
 import com.ChickenKitchen.app.repository.category.CategoryRepository
@@ -31,6 +32,7 @@ class MenuItemServiceImpl(
     private val menuItemNutrientRepository: MenuItemNutrientRepository,
     private val nutrientRepository: NutrientRepository,
     private val categoryRepository: CategoryRepository,
+    private val orderStepItemRepository: OrderStepItemRepository,
     private val recipeRepository: RecipeRepository
 ) : MenuItemService {
 
@@ -121,9 +123,8 @@ class MenuItemServiceImpl(
         val item = menuItemRepository.findById(id)
             .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
 
-        if (item.orderSteps.isNotEmpty()) {
-            throw MenuItemHasOrdersException("Cannot delete MenuItem with id $id: it has ${item.orderSteps.size} orders")
-        }
+        val orderCount = orderStepItemRepository.countByDailyMenuItemMenuItemId(id)
+        if (orderCount > 0) throw MenuItemHasOrdersException("Cannot delete MenuItem with id $id: it has $orderCount orders")
 
         if (item.dailyMenuItems.isNotEmpty()) {
             throw MenuItemUsedInDailyMenuException("Cannot delete MenuItem with id $id: it is used in ${item.dailyMenuItems.size} daily menus")

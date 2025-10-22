@@ -41,8 +41,7 @@ data class MenuItem(
     @Column(name = "description")
     var description: String? = null,
 
-    @OneToMany(mappedBy = "menuItem")
-    val orderSteps: MutableList<OrderStep> = mutableListOf(),
+    // Order steps relationship now goes via DailyMenuItem -> OrderStepItem
 
     @OneToMany(mappedBy = "menuItem")
     val dailyMenuItems: MutableList<DailyMenuItem> = mutableListOf(),

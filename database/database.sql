@@ -277,14 +277,21 @@ CREATE TABLE recipes (
                          FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
 );
 
--- ORDER STEPS (Dish -> Step -> MenuItem)
+-- ORDER STEPS (Dish -> Step)
 CREATE TABLE order_steps (
                              id BIGINT PRIMARY KEY AUTO_INCREMENT,
                              dish_id BIGINT NOT NULL,
                              step_id BIGINT NOT NULL,
-                             menu_item_id BIGINT NOT NULL,
-                             quantity INT NOT NULL,
                              FOREIGN KEY (dish_id) REFERENCES dishes(id),
-                             FOREIGN KEY (step_id) REFERENCES steps(id),
-                             FOREIGN KEY (menu_item_id) REFERENCES menu_items(id)
+                             FOREIGN KEY (step_id) REFERENCES steps(id)
+);
+
+-- ORDER STEP ITEMS (OrderStep <-> DailyMenuItem with quantity)
+CREATE TABLE order_step_items (
+                                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                                 order_step_id BIGINT NOT NULL,
+                                 daily_menu_item_id BIGINT NOT NULL,
+                                 quantity INT NOT NULL,
+                                 FOREIGN KEY (order_step_id) REFERENCES order_steps(id),
+                                 FOREIGN KEY (daily_menu_item_id) REFERENCES daily_menu_items(id)
 );

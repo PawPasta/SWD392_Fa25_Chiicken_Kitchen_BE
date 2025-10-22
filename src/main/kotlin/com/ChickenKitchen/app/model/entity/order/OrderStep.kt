@@ -1,7 +1,6 @@
 package com.ChickenKitchen.app.model.entity.order
 
 import com.ChickenKitchen.app.model.entity.step.Step
-import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.step.Dish
 import jakarta.persistence.*
 
@@ -21,10 +20,6 @@ class OrderStep(
     @JoinColumn(name = "step_id", nullable = false)
     val step: Step,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_item_id", nullable = false)
-    val menuItem: MenuItem,
-
-    @Column(nullable = false)
-    val quantity: Int
+    @OneToMany(mappedBy = "orderStep", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val items: MutableList<OrderStepItem> = mutableListOf()
 )
