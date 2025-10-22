@@ -35,6 +35,7 @@ class DailyMenuNotFoundException(message: String) : RuntimeException(message)
 class DailyMenuHasStoresException(message: String) : RuntimeException(message)
 class DailyMenuAlreadyExistsException(message: String) : RuntimeException(message)
 
+
 //MENU ITEMS
 class MenuItemNotFoundException(message: String) : RuntimeException(message)
 class MenuItemHasOrdersException(message: String) : RuntimeException(message)
@@ -63,3 +64,18 @@ class StepHasOrderStepsException(message: String) : RuntimeException(message)
 class StepCategoryInactiveException(message: String) : RuntimeException(message)
 class StepNumberConflictException(message: String) : RuntimeException(message)
 class StepNameExistInCategoryException(message: String) : RuntimeException(message)
+
+// ORDER
+
+class OrderNotFoundException(message: String) : RuntimeException(message)
+class InvalidOrderStatusException(message: String) : RuntimeException(message)
+class EmptyOrderException(message: String) : RuntimeException(message)
+class OrderAlreadyCompletedException(message: String) : RuntimeException(message)
+class OrderAlreadyCancelledException(message: String) : RuntimeException(message)
+class AddDishFailedException(message: String) : RuntimeException(message)
+class InvalidOrderStepException(message: String) : RuntimeException(message)
+class DishNotFoundException(message: String) : RuntimeException(message)
+class UpdateDishFailedException(message: String) : RuntimeException(message)
+class DeleteDishFailedException(message: String) : RuntimeException(message)
+class CurrentOrderNotFoundException(message: String) : RuntimeException(message)
+class DailyMenuUnavailableException(message: String) : RuntimeException(message)

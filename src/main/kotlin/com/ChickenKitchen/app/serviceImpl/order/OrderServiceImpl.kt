@@ -1,6 +1,15 @@
 package com.ChickenKitchen.app.serviceImpl.order
 
 import com.ChickenKitchen.app.enums.OrderStatus
+import com.ChickenKitchen.app.handler.DailyMenuUnavailableException
+import com.ChickenKitchen.app.handler.DeleteDishFailedException
+import com.ChickenKitchen.app.handler.DishNotFoundException
+import com.ChickenKitchen.app.handler.InvalidOrderStatusException
+import com.ChickenKitchen.app.handler.InvalidOrderStepException
+import com.ChickenKitchen.app.handler.MenuItemNotFoundException
+import com.ChickenKitchen.app.handler.StepNotFoundException
+import com.ChickenKitchen.app.handler.StoreNotFoundException
+import com.ChickenKitchen.app.handler.UserNotFoundException
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
@@ -44,15 +53,15 @@ class OrderServiceImpl(
 
     @Transactional
     override fun addDishToCurrentOrder(req: CreateDishRequest): AddDishResponse {
-        require(req.selections.isNotEmpty()) { "Dish must contain at least one step selection" }
+        if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
 
         val principal = SecurityContextHolder.getContext().authentication
         val email = principal?.name
         val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
         val user = userRepository.findByEmail(effectiveEmail)
             ?: userRepository.findAll().firstOrNull()
-            ?: throw RuntimeException("User not found")
-        val store = storeRepository.findById(req.storeId).orElseThrow { NoSuchElementException("Store with id ${req.storeId} not found") }
+            ?: throw UserNotFoundException("User not found")
+        val store = storeRepository.findById(req.storeId).orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
 
         // Find current NEW order or create one
         var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
@@ -89,8 +98,8 @@ class OrderServiceImpl(
         var totalPrice = 0
         var totalCal = 0
         for (sel in sortedSelections) {
-            val step = stepMap[sel.stepId] ?: throw NoSuchElementException("Step with id ${sel.stepId} not found")
-            require(sel.items.isNotEmpty()) { "Each step selection must include at least one item" }
+            val step = stepMap[sel.stepId] ?: throw StepNotFoundException("Step with id ${sel.stepId} not found")
+            if (sel.items.isEmpty()) throw InvalidOrderStepException("Step ${step.id} must include at least one item")
 
             val orderStep = orderStepRepository.save(
                 OrderStep(
@@ -102,20 +111,24 @@ class OrderServiceImpl(
 
             val createdItems = mutableListOf<CreatedStepItem>()
             sel.items.forEach { item ->
-                require(item.quantity > 0) { "Quantity must be > 0" }
+                if (item.quantity <= 0) throw InvalidOrderStepException("Quantity must be greater than 0")
                 // FE sends MenuItem ID
                 val menuItem = menuItemRepository.findById(item.menuItemId)
-                    .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
-                if (menuItem.category.id != step.category.id) {
-                    throw IllegalArgumentException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
-                }
+                    .orElseThrow { MenuItemNotFoundException("Menu item with id ${item.menuItemId} not found") }
+
+                if (menuItem.category.id != step.category.id)
+                    throw InvalidOrderStepException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
+
                 val today = java.time.LocalDate.now()
                 val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
                 val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+
                 val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-                    ?: throw NoSuchElementException("No daily menu for store ${store.id} today; cannot resolve menu item ${item.menuItemId}")
+                    ?: throw DailyMenuUnavailableException("No daily menu available for store ${store.id} today")
+
                 val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
-                    ?: throw NoSuchElementException("Menu item ${item.menuItemId} not in today's daily menu for store ${store.id}")
+                    ?: throw DailyMenuUnavailableException("Menu item ${item.menuItemId} not in today's daily menu")
+
 
                 val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
                     orderStep = orderStep,
@@ -154,8 +167,8 @@ class OrderServiceImpl(
         val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
         val user = userRepository.findByEmail(effectiveEmail)
             ?: userRepository.findAll().firstOrNull()
-            ?: throw RuntimeException("User not found")
-        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+            ?: throw UserNotFoundException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
         var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
             user.email, store.id!!, OrderStatus.NEW
@@ -233,8 +246,8 @@ class OrderServiceImpl(
         val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
         val user = userRepository.findByEmail(effectiveEmail)
             ?: userRepository.findAll().firstOrNull()
-            ?: throw RuntimeException("User not found")
-        val store = storeRepository.findById(storeId).orElseThrow { NoSuchElementException("Store with id $storeId not found") }
+            ?: throw UserNotFoundException("User not found")
+        val store = storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
         val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
         val list = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(user.email, store.id!!, statuses)
@@ -252,10 +265,14 @@ class OrderServiceImpl(
 
     @Transactional
     override fun updateDish(dishId: Long, req: com.ChickenKitchen.app.model.dto.request.UpdateDishRequest): AddDishResponse {
-        require(req.selections.isNotEmpty()) { "Dish must contain at least one step selection" }
+        if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
 
-        val dish = dishRepository.findById(dishId).orElseThrow { NoSuchElementException("Dish with id $dishId not found") }
+        val dish = dishRepository.findById(dishId).orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
         val order = dish.order
+
+        if (order.status != OrderStatus.NEW)
+            throw InvalidOrderStatusException("Cannot update dish when order is ${order.status}")
+
         val store = order.store
 
         // Clear existing items for this dish
@@ -272,8 +289,8 @@ class OrderServiceImpl(
         var totalCal = 0
         val created = mutableListOf<CreatedOrderStep>()
         for (sel in sortedSelections) {
-            val step = stepMap[sel.stepId] ?: throw NoSuchElementException("Step with id ${sel.stepId} not found")
-            require(sel.items.isNotEmpty()) { "Each step selection must include at least one item" }
+            val step = stepMap[sel.stepId] ?: throw StepNotFoundException("Step with id ${sel.stepId} not found")
+            if (sel.items.isEmpty()) throw InvalidOrderStepException("Step ${step.id} must include at least one item")
 
             val orderStep = orderStepRepository.save(
                 OrderStep(
@@ -284,20 +301,22 @@ class OrderServiceImpl(
 
             val createdItems = mutableListOf<CreatedStepItem>()
             sel.items.forEach { item ->
-                require(item.quantity > 0) { "Quantity must be > 0" }
+                if (item.quantity <= 0) throw InvalidOrderStepException("Quantity must be greater than 0")
+
                 val menuItem = menuItemRepository.findById(item.menuItemId)
-                    .orElseThrow { NoSuchElementException("Menu item with id ${item.menuItemId} not found") }
-                if (menuItem.category.id != step.category.id) {
-                    throw IllegalArgumentException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
-                }
+                    .orElseThrow { MenuItemNotFoundException("Menu item with id ${item.menuItemId} not found") }
+
+                if (menuItem.category.id != step.category.id)
+                    throw InvalidOrderStepException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
 
                 val today = java.time.LocalDate.now()
                 val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
                 val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
                 val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-                    ?: throw NoSuchElementException("No daily menu for store ${store.id} today; cannot resolve menu item ${item.menuItemId}")
+                    ?: throw DailyMenuUnavailableException("No daily menu for store ${store.id} today")
+
                 val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
-                    ?: throw NoSuchElementException("Menu item ${item.menuItemId} not in today's daily menu for store ${store.id}")
+                    ?: throw DailyMenuUnavailableException("Menu item ${item.menuItemId} not in today's daily menu")
 
                 val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
                     orderStep = orderStep,
@@ -331,11 +350,17 @@ class OrderServiceImpl(
 
     @Transactional
     override fun deleteDish(dishId: Long): Long {
-        val dish = dishRepository.findById(dishId).orElseThrow { NoSuchElementException("Dish with id $dishId not found") }
+        val dish = dishRepository.findById(dishId)
+            .orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
+
         val orderId = dish.order.id!!
-        orderStepItemRepository.deleteByDishId(dishId)
-        orderStepRepository.deleteByDishId(dishId)
-        dishRepository.delete(dish)
+        try {
+            orderStepItemRepository.deleteByDishId(dishId)
+            orderStepRepository.deleteByDishId(dishId)
+            dishRepository.delete(dish)
+        } catch (ex: Exception) {
+            throw DeleteDishFailedException("Failed to delete dish with id $dishId: ${ex.message}")
+        }
         return orderId
     }
 }

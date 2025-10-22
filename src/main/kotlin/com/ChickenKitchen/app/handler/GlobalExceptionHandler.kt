@@ -174,6 +174,55 @@ class GlobalExceptionHandler {
     fun handleStepNameExist(e: StepNameExistInCategoryException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Step name already exists in this category")
 
+    // ORDER
+    @ExceptionHandler(OrderNotFoundException::class)
+    fun handleOrderNotFound(e: OrderNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Order not found")
+
+    @ExceptionHandler(InvalidOrderStatusException::class)
+    fun handleInvalidStatus(e: InvalidOrderStatusException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Invalid order status for this operation")
+
+    @ExceptionHandler(EmptyOrderException::class)
+    fun handleEmptyOrder(e: EmptyOrderException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Order cannot be empty")
+
+    @ExceptionHandler(OrderAlreadyCompletedException::class)
+    fun handleCompletedOrder(e: OrderAlreadyCompletedException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Order already completed")
+
+    @ExceptionHandler(OrderAlreadyCancelledException::class)
+    fun handleCancelledOrder(e: OrderAlreadyCancelledException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Order already cancelled")
+
+    @ExceptionHandler(AddDishFailedException::class)
+    fun handleAddDishFailed(e: AddDishFailedException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Failed to add dish to order")
+
+    @ExceptionHandler(InvalidOrderStepException::class)
+    fun handleInvalidStep(e: InvalidOrderStepException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Invalid step in order process")
+
+    @ExceptionHandler(DishNotFoundException::class)
+    fun handleDishNotFound(e: DishNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Dish not found")
+
+    @ExceptionHandler(UpdateDishFailedException::class)
+    fun handleUpdateDishFailed(e: UpdateDishFailedException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Failed to update dish")
+
+    @ExceptionHandler(DeleteDishFailedException::class)
+    fun handleDeleteDishFailed(e: DeleteDishFailedException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Failed to delete dish")
+
+    @ExceptionHandler(CurrentOrderNotFoundException::class)
+    fun handleCurrentOrderNotFound(e: CurrentOrderNotFoundException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "No current order found")
+
+    @ExceptionHandler(DailyMenuUnavailableException::class)
+    fun handleDailyMenuUnavailable(e: DailyMenuUnavailableException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Daily menu unavailable for this store")
+
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {
         return ResponseEntity(
