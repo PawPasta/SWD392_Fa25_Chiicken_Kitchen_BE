@@ -18,6 +18,7 @@ import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
 import com.ChickenKitchen.app.model.entity.user.User
+import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
@@ -31,6 +32,7 @@ import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
+import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -60,7 +62,8 @@ class DataInitializer {
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
         dailyMenuRepository: DailyMenuRepository,
-        storeIngredientBatchRepository: StoreIngredientBatchRepository
+        storeIngredientBatchRepository: StoreIngredientBatchRepository,
+        employeeDetailRepository: EmployeeDetailRepository
     ) = CommandLineRunner {
 
         // ==================== USERS ====================
@@ -184,6 +187,27 @@ class DataInitializer {
             println("✓ Stores seeded: ${storesData.size}")
         } else {
             println("⏭ Stores table not empty, skipping")
+        }
+
+        // ==================== EMPLOYEE DETAILS (link EMPLOYEE users to a store) ====================
+        run {
+            val anyStore = storeRepository.findAll().firstOrNull()
+            if (anyStore == null) {
+                println("⚠️ No store available, cannot seed EmployeeDetails")
+            } else {
+                val employees = userRepository.findAll().filter { it.role == Role.EMPLOYEE }
+                var created = 0
+                employees.forEach { u ->
+                    if (u.employeeDetail == null) {
+                        employeeDetailRepository.save(
+                            EmployeeDetail(user = u, store = anyStore, position = "Staff", isActive = true, note = null)
+                        )
+                        created++
+                    }
+                }
+                if (created > 0) println("✓ EmployeeDetails seeded: $created (assigned to store '${anyStore.name}')")
+                else println("⏭ EmployeeDetails already present for EMPLOYEE users")
+            }
         }
 
         // ==================== PAYMENT METHODS ====================
