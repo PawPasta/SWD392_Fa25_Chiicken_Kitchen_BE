@@ -174,6 +174,14 @@ CREATE TABLE orders (
                         FOREIGN KEY (store_id) REFERENCES stores(id)
 );
 
+-- Enforce at most one NEW order per (user, store)
+-- MySQL UNIQUE index + generated column: NULLs are allowed multiple times, so only 'NEW' rows are constrained
+ALTER TABLE orders
+    ADD COLUMN status_new TINYINT(1) 
+        GENERATED ALWAYS AS (CASE WHEN status = 'NEW' THEN 1 ELSE NULL END) STORED;
+CREATE UNIQUE INDEX ux_orders_one_new_per_user_store
+    ON orders (user_id, store_id, status_new);
+
 CREATE TABLE dishes (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         order_id BIGINT NOT NULL,

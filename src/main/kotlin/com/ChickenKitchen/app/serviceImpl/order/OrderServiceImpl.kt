@@ -11,6 +11,7 @@ import com.ChickenKitchen.app.handler.StepNotFoundException
 import com.ChickenKitchen.app.handler.StoreNotFoundException
 import com.ChickenKitchen.app.handler.UserNotFoundException
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
+import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
 import com.ChickenKitchen.app.model.dto.response.CurrentDishResponse
@@ -30,6 +31,7 @@ import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
+import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.order.OrderService
 import org.springframework.security.core.context.SecurityContextHolder
@@ -48,7 +50,7 @@ class OrderServiceImpl(
     private val menuItemRepository: MenuItemRepository,
     private val dailyMenuItemRepository: DailyMenuItemRepository,
     private val dailyMenuRepository: DailyMenuRepository,
-    private val dishRepository: com.ChickenKitchen.app.repository.step.DishRepository,
+    private val dishRepository: DishRepository,
 ) : OrderService {
 
     @Transactional
@@ -63,12 +65,12 @@ class OrderServiceImpl(
             ?: throw UserNotFoundException("User not found")
         val store = storeRepository.findById(req.storeId).orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
 
-        // Find current NEW order or create one
-        var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
-            user.email, store.id!!, OrderStatus.NEW
+        // Enforce single NEW order per user+store: keep latest, remove the rest
+        val newOrders = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
+            user.email, store.id!!, listOf(OrderStatus.NEW)
         )
-        if (order == null) {
-            order = orderRepository.save(
+        val order = if (newOrders.isEmpty()) {
+            orderRepository.save(
                 Order(
                     user = user,
                     store = store,
@@ -77,6 +79,18 @@ class OrderServiceImpl(
                     pickupTime = Timestamp(System.currentTimeMillis()),
                 )
             )
+        } else {
+            val keeper = newOrders.first()
+            if (newOrders.size > 1) {
+                newOrders.drop(1).forEach { dup ->
+                    // Cleanup duplicate NEW orders fully then delete the order
+                    orderStepItemRepository.deleteByOrderId(dup.id!!)
+                    orderStepRepository.deleteByDishOrderId(dup.id!!)
+                    dishRepository.deleteByOrderId(dup.id!!)
+                    orderRepository.delete(dup)
+                }
+            }
+            keeper
         }
 
         // Create dish entry with temporary totals = 0
@@ -170,11 +184,12 @@ class OrderServiceImpl(
             ?: throw UserNotFoundException("User not found")
         val store = storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
-        var order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
-            user.email, store.id!!, OrderStatus.NEW
+        // Enforce single NEW order per user+store: keep latest, remove the rest
+        val newOrders = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
+            user.email, store.id!!, listOf(OrderStatus.NEW)
         )
-        if (order == null) {
-            order = orderRepository.save(
+        val order = if (newOrders.isEmpty()) {
+            orderRepository.save(
                 Order(
                     user = user,
                     store = store,
@@ -182,32 +197,47 @@ class OrderServiceImpl(
                     status = OrderStatus.NEW,
                     pickupTime = java.sql.Timestamp(System.currentTimeMillis()),
                 )
-            )
-            return OrderCurrentResponse(
-                orderId = order.id!!,
-                status = order.status.name,
-                cleared = false,
-                dishes = emptyList()
-            )
+            ).also { created ->
+                return OrderCurrentResponse(
+                    orderId = created.id!!,
+                    status = created.status.name,
+                    cleared = false,
+                    dishes = emptyList()
+                )
+            }
+        } else {
+            val keeper = newOrders.first()
+            if (newOrders.size > 1) {
+                newOrders.drop(1).forEach { dup ->
+                    orderStepItemRepository.deleteByOrderId(dup.id!!)
+                    orderStepRepository.deleteByDishOrderId(dup.id!!)
+                    dishRepository.deleteByOrderId(dup.id!!)
+                    orderRepository.delete(dup)
+                }
+            }
+            keeper
         }
 
-        // If this NEW order was created not today, clear all items
-        val createdAt = order.createdAt?.toLocalDateTime()?.toLocalDate()
-        val isToday = createdAt == java.time.LocalDate.now()
-        if (!isToday) {
-            orderStepItemRepository.deleteByOrderId(order.id!!)
-            orderStepRepository.deleteByDishOrderId(order.id!!)
-            dishRepository.deleteByOrderId(order.id!!)
-            return OrderCurrentResponse(order.id!!, order.status.name, true, emptyList())
-        }
-
-        // Only include dishes updated today
+        // Check dishes' updatedAt: if any dish is not updated today -> clear all dishes; else return all
         val today = java.time.LocalDate.now()
         val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
         val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
-        val dishesToday = dishRepository.findAllByOrderIdAndUpdatedAtBetween(order.id!!, start, end)
 
-        val dishResponses = dishesToday.map { d ->
+        val allDishes = dishRepository.findAllByOrderId(order.id!!)
+        if (allDishes.isNotEmpty()) {
+            val allUpdatedToday = allDishes.all { d ->
+                val u = d.updatedAt
+                u != null && !u.before(start) && !u.after(end)
+            }
+            if (!allUpdatedToday) {
+                orderStepItemRepository.deleteByOrderId(order.id!!)
+                orderStepRepository.deleteByDishOrderId(order.id!!)
+                dishRepository.deleteByOrderId(order.id!!)
+                return OrderCurrentResponse(order.id!!, order.status.name, true, emptyList())
+            }
+        }
+
+        val dishResponses = allDishes.map { d ->
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
                 val itemResponses = st.items.map { link ->
@@ -264,7 +294,7 @@ class OrderServiceImpl(
     }
 
     @Transactional
-    override fun updateDish(dishId: Long, req: com.ChickenKitchen.app.model.dto.request.UpdateDishRequest): AddDishResponse {
+    override fun updateDish(dishId: Long, req: UpdateDishRequest): AddDishResponse {
         if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
 
         val dish = dishRepository.findById(dishId).orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
