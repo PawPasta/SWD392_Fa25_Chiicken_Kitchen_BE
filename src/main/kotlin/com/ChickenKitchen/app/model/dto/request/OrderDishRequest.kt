@@ -25,5 +25,5 @@ data class SelectionItem(
 data class OrderConfirmRequest(
     val orderId: Long,
     val paymentMethodId : Long,
-    val promotionId : Long,
+    val promotionId : Long? = null,
 )

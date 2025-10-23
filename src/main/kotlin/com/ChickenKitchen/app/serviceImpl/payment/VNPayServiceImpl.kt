@@ -85,24 +85,16 @@ class VNPayServiceImpl (
         val vnpTransactionNo = params["vnp_TransactionNo"]
         val vnpPayDate = params["vnp_PayDate"]
 
-        val principal = SecurityContextHolder.getContext().authentication
-        val email = principal?.name
-        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
-
-
-        val user = userRepository.findByEmail(effectiveEmail)
-            ?: userRepository.findAll().firstOrNull()
-            ?: throw UserNotFoundException("User not found")
-
-        val wallet = walletRepository.findByUser(user)
-            ?: throw OrderNotFoundException("Wallet not found for user ${user.id}")
-
-
+        // Resolve order and use its owner as the authoritative user for callback
         val order = orderRepository.findById(orderId.toLong())
             .orElseThrow { OrderNotFoundException("Order not found with id $orderId") }
 
         val payment = order.payment
             ?: throw OrderNotFoundException("Payment not found for order $orderId")
+
+        val user = order.user
+        val wallet = walletRepository.findByUser(user)
+            ?: throw OrderNotFoundException("Wallet not found for user ${user.id}")
 
         val paymentMethod = paymentMethodRepository.findByName("VNPay")
 

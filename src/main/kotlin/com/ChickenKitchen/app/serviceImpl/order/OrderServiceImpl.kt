@@ -46,15 +46,16 @@ import com.ChickenKitchen.app.repository.promotion.OrderPromotionRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
-import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.order.OrderService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import java.time.LocalDate
 
 @Service
 class OrderServiceImpl(
@@ -75,16 +76,43 @@ class OrderServiceImpl(
     private val vnPayService: VNPayService
 ) : OrderService {
 
+    private fun recalcAndPersistOrderTotal(order: Order) {
+        val sum = dishRepository.findAllByOrderId(order.id!!).sumOf { it.price }
+        order.totalPrice = sum
+        orderRepository.save(order)
+    }
+
+    private fun syncPendingPaymentAmounts(order: Order) {
+        val existing = paymentRepository.findByOrderId(order.id!!)
+        if (existing != null && existing.status == PaymentStatus.PENDING) {
+            val discount = existing.discountAmount
+            val amount = order.totalPrice
+            val final = (amount - discount).coerceAtLeast(0)
+            existing.amount = amount
+            existing.finalAmount = final
+            paymentRepository.save(existing)
+        }
+    }
+
+    private fun currentUser() : com.ChickenKitchen.app.model.entity.user.User {
+        val auth = SecurityContextHolder.getContext().authentication
+        val email = when (val principal = auth?.principal) {
+            is UserDetails -> principal.username
+            is String -> if (principal.contains("@")) principal else auth.name
+            else -> auth?.name
+        }
+        if (email.isNullOrBlank() || !email.contains("@")) {
+            throw UserNotFoundException("Authenticated email not found in security context")
+        }
+        return userRepository.findByEmail(email)
+            ?: throw UserNotFoundException("User not found with email: $email")
+    }
+
     @Transactional
     override fun addDishToCurrentOrder(req: CreateDishRequest): AddDishResponse {
         if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
 
-        val principal = SecurityContextHolder.getContext().authentication
-        val email = principal?.name
-        val effectiveEmail = if (email?.contains("@") == true) email else "chickenkitchen785@gmail.com"
-        val user = userRepository.findByEmail(effectiveEmail)
-            ?: userRepository.findAll().firstOrNull()
-            ?: throw UserNotFoundException("User not found")
+        val user = currentUser()
 
         val store = storeRepository.findById(req.storeId)
             .orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
@@ -164,10 +192,11 @@ class OrderServiceImpl(
         dish.cal = totalCal
         dishRepository.save(dish)
 
-        // Gán tổng giá của dish vào order và lưu
-        order.totalPrice += totalPrice
-        orderRepository.save(order)
-
+        // Recalculate and persist order total to avoid drift
+        recalcAndPersistOrderTotal(order)
+        // If there is a pending payment, sync its amount to new order total
+        syncPendingPaymentAmounts(order)
+        
         return AddDishResponse(
             orderId = order.id!!,
             dishId = dish.id!!,
@@ -178,12 +207,7 @@ class OrderServiceImpl(
 
     @Transactional
     override fun getCurrentOrderForStore(storeId: Long): OrderCurrentResponse {
-        val principal = SecurityContextHolder.getContext().authentication
-        val email = principal?.name
-        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
-        val user = userRepository.findByEmail(effectiveEmail)
-            ?: userRepository.findAll().firstOrNull()
-            ?: throw UserNotFoundException("User not found")
+        val user = currentUser()
         val store =
             storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
@@ -222,9 +246,9 @@ class OrderServiceImpl(
         }
 
         // Check dishes' updatedAt: if any dish is not updated today -> clear all dishes; else return all
-        val today = java.time.LocalDate.now()
-        val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
-        val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+        val today = LocalDate.now()
+        val start = Timestamp.valueOf(today.atStartOfDay())
+        val end = Timestamp.valueOf(today.atTime(23, 59, 59))
 
         val allDishes = dishRepository.findAllByOrderId(order.id!!)
         if (allDishes.isNotEmpty()) {
@@ -236,6 +260,9 @@ class OrderServiceImpl(
                 orderStepItemRepository.deleteByOrderId(order.id!!)
                 orderStepRepository.deleteByDishOrderId(order.id!!)
                 dishRepository.deleteByOrderId(order.id!!)
+                // Reset order total when clearing dishes
+                order.totalPrice = 0
+                orderRepository.save(order)
                 return OrderCurrentResponse(order.id!!, order.status.name, true, emptyList())
             }
         }
@@ -274,12 +301,7 @@ class OrderServiceImpl(
     }
 
     override fun getOrdersHistory(storeId: Long): List<OrderBriefResponse> {
-        val principal = SecurityContextHolder.getContext().authentication
-        val email = principal?.name
-        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
-        val user = userRepository.findByEmail(effectiveEmail)
-            ?: userRepository.findAll().firstOrNull()
-            ?: throw UserNotFoundException("User not found")
+        val user = currentUser()
         val store =
             storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
@@ -379,6 +401,11 @@ class OrderServiceImpl(
         // Workaround: persist via copy not available; adjust entity to mutable note
         dishRepository.save(dish)
 
+        // Recalculate and persist order total since dish changed
+        recalcAndPersistOrderTotal(order)
+        // If there is a pending payment, sync its amount to new order total
+        syncPendingPaymentAmounts(order)
+
         return AddDishResponse(
             orderId = order.id!!,
             dishId = dish.id!!,
@@ -400,6 +427,9 @@ class OrderServiceImpl(
         } catch (ex: Exception) {
             throw DeleteDishFailedException("Failed to delete dish with id $dishId: ${ex.message}")
         }
+        // Recalculate order total after deletion
+        val order = orderRepository.findById(orderId).orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+        recalcAndPersistOrderTotal(order)
         return orderId
     }
 
@@ -420,70 +450,86 @@ class OrderServiceImpl(
             throw PaymentMethodNameNotAvailable("Payment method ${paymentMethod.name} is not available")
         }
 
-        val authentication = SecurityContextHolder.getContext().authentication
-        val email = authentication?.name
-        val effectiveEmail = if (email != null && email.contains("@")) email else "chickenkitchen785@gmail.com"
-
-        val user = userRepository.findByEmail(effectiveEmail)
-            ?: throw UserNotFoundException("User not found with email: $effectiveEmail")
+        val user = currentUser()
 
 
-        var discountAmount = 0
-        var finalAmount = order.totalPrice
-        req.promotionId?.let { promotionId ->
-            val promo = promotionRepository.findById(promotionId)
-                .orElseThrow { PromotionNotFoundException("Promotion with id $promotionId not found") }
-
-            val now = LocalDateTime.now()
-            if (now.isBefore(promo.startDate) || now.isAfter(promo.endDate)) {
-                throw PromotionNotValidThisTime("Promotion is not valid at this time")
-            }
-
-            if (promo.quantity <= 0) {
-                throw PromotionNotValidThisTime("Promotion is out of quantity")
-            }
-
-            discountAmount = if (promo.discountType == DiscountType.PERCENT) {
-                (order.totalPrice * promo.discountValue) / 100
-            } else {
-                promo.discountValue
-            }
-
-            finalAmount = order.totalPrice - discountAmount
-
-            // Lưu OrderPromotion và giảm quantity
-            orderPromotionRepository.save(
-                OrderPromotion(order = order, promotion = promo, user = user, usedDate = now)
-            )
-            promo.quantity -= 1
-            promotionRepository.save(promo)
-        }
-
+        // Always ensure order total is up-to-date before confirming
+        recalcAndPersistOrderTotal(order)
 
         val existingPayment = paymentRepository.findByOrderId(order.id!!)
 
-        val payment = if (existingPayment != null) {
-            if (order.status == OrderStatus.FAILED) {
-                // Cập nhật lại payment từ FAILED thành PENDING để retry
+        var discountAmount: Int
+        var finalAmount: Int
+
+        if (existingPayment != null && existingPayment.status == PaymentStatus.PENDING) {
+            // Reconfirm: keep existing discount, update amounts to reflect current order total
+            discountAmount = existingPayment.discountAmount
+            finalAmount = (order.totalPrice - discountAmount).coerceAtLeast(0)
+            existingPayment.amount = order.totalPrice
+            existingPayment.finalAmount = finalAmount
+            paymentRepository.save(existingPayment)
+        } else {
+            // Fresh confirm or retry after FAILED: apply optional promotion
+            var computedDiscount = 0
+            req.promotionId?.let { promotionId ->
+                val promo = promotionRepository.findById(promotionId)
+                    .orElseThrow { PromotionNotFoundException("Promotion with id $promotionId not found") }
+
+                val now = LocalDateTime.now()
+                if (now.isBefore(promo.startDate) || now.isAfter(promo.endDate)) {
+                    throw PromotionNotValidThisTime("Promotion is not valid at this time")
+                }
+
+                if (promo.quantity <= 0) {
+                    throw PromotionNotValidThisTime("Promotion is out of quantity")
+                }
+
+                computedDiscount = if (promo.discountType == DiscountType.PERCENT) {
+                    (order.totalPrice * promo.discountValue) / 100
+                } else {
+                    promo.discountValue
+                }
+
+                // Lưu OrderPromotion và giảm quantity
+                orderPromotionRepository.save(
+                    OrderPromotion(order = order, promotion = promo, user = user, usedDate = now)
+                )
+                promo.quantity -= 1
+                promotionRepository.save(promo)
+            }
+
+            discountAmount = computedDiscount
+            finalAmount = (order.totalPrice - discountAmount).coerceAtLeast(0)
+
+            if (existingPayment != null && order.status == OrderStatus.FAILED) {
+                // Retry after FAILED
+                existingPayment.amount = order.totalPrice
+                existingPayment.discountAmount = discountAmount
+                existingPayment.finalAmount = finalAmount
                 existingPayment.status = PaymentStatus.PENDING
                 paymentRepository.save(existingPayment)
-                existingPayment
+            } else if (existingPayment == null) {
+                // Tạo payment mới nếu chưa có
+                Payment(
+                    user = user,
+                    order = order,
+                    amount = order.totalPrice,
+                    discountAmount = discountAmount,
+                    finalAmount = finalAmount,
+                    status = PaymentStatus.PENDING
+                ).also { paymentRepository.save(it) }
             } else {
+                // existing payment but not FAILED/PENDING -> cannot confirm again
                 throw InvalidOrderStepException("This order already has a payment and cannot be confirmed again.")
             }
-        } else {
-            // Tạo payment mới nếu chưa có
-            Payment(
-                user = user,
-                order = order,
-                amount = order.totalPrice,
-                discountAmount = discountAmount,
-                finalAmount = finalAmount,
-                status = PaymentStatus.PENDING
-            ).also { paymentRepository.save(it) }
         }
 
-        // 6️⃣ Xử lý theo loại PaymentMethod
+        // Guard invalid VNPay amount range (VND, VNPay expects amount*100 in request)
+        if (finalAmount < 5000 || finalAmount >= 1_000_000_000) {
+            throw InvalidOrderStepException("Invalid payment amount: $finalAmount VND. Must be between 5,000 and < 1,000,000,000")
+        }
+
+        // Xử lý theo loại PaymentMethod
         return when (paymentMethod.name.uppercase()) {
             "VNPAY" -> vnPayService.createVnPayURL(order.id!!)
             else -> throw PaymentMethodNameNotAvailable("Payment method ${paymentMethod.name} is not supported yet")

@@ -30,13 +30,13 @@ class Payment(
     var order: Order,
 
     @Column(nullable = false)
-    val discountAmount: Int,
+    var discountAmount: Int,
 
     @Column(nullable = false)
-    val amount: Int,
+    var amount: Int,
 
     @Column(nullable = false)
-    val finalAmount: Int,
+    var finalAmount: Int,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

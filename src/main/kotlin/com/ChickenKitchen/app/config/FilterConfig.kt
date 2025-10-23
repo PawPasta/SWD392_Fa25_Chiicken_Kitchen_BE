@@ -88,9 +88,7 @@ class FilterConfig(
                }
            }
 
-            // Tạo authentication tạm thời (Optional, để Spring Security coi request là authenticated)
-            SecurityContextHolder.getContext().authentication =
-                UsernamePasswordAuthenticationToken("testUser", null, emptyList())
+            // Do not override existing authentication; keep the validated user context
 
             filterChain.doFilter(request, response)
         } catch (ex: Exception) {
