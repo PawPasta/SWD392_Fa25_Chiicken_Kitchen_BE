@@ -222,7 +222,7 @@ class OrderServiceImpl(
                     store = store,
                     totalPrice = 0,
                     status = OrderStatus.NEW,
-                    pickupTime = java.sql.Timestamp(System.currentTimeMillis()),
+                    pickupTime = Timestamp(System.currentTimeMillis()),
                 )
             ).also { created ->
                 return OrderCurrentResponse(
@@ -305,7 +305,7 @@ class OrderServiceImpl(
         val store =
             storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
-        val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
+        val statuses = listOf(OrderStatus.CONFIRMED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
         val list = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
             user.email,
             store.id!!,
@@ -371,8 +371,8 @@ class OrderServiceImpl(
                     throw InvalidOrderStepException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
 
                 val today = java.time.LocalDate.now()
-                val start = java.sql.Timestamp.valueOf(today.atStartOfDay())
-                val end = java.sql.Timestamp.valueOf(today.atTime(23, 59, 59))
+                val start = Timestamp.valueOf(today.atStartOfDay())
+                val end = Timestamp.valueOf(today.atTime(23, 59, 59))
                 val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
                     ?: throw DailyMenuUnavailableException("No daily menu for store ${store.id} today")
 
