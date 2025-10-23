@@ -4,6 +4,7 @@ import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -70,6 +71,9 @@ class User(
 
     @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     var wallet: Wallet? = null,
+
+    @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var employeeDetail: EmployeeDetail? = null,
 
     @OneToMany(mappedBy = "user")
     var orders: MutableList<Order> = mutableListOf(),

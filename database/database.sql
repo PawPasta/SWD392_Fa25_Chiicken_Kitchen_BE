@@ -174,6 +174,24 @@ CREATE TABLE orders (
                         FOREIGN KEY (store_id) REFERENCES stores(id)
 );
 
+-- =============================
+-- 👷 EMPLOYEE DETAILS
+-- =============================
+
+CREATE TABLE employee_details (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    store_id BIGINT NOT NULL,
+    position VARCHAR(100),
+    is_active BIT NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6),
+    note TEXT,
+    INDEX idx_employee_store_id (store_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (store_id) REFERENCES stores(id)
+);
+
 -- Enforce at most one NEW order per (user, store)
 -- MySQL UNIQUE index + generated column: NULLs are allowed multiple times, so only 'NEW' rows are constrained
 ALTER TABLE orders
