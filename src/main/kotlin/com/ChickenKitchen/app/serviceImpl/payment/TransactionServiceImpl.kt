@@ -1,11 +1,11 @@
-package com.ChickenKitchen.app.serviceImpl.transaction
+package com.ChickenKitchen.app.serviceImpl.payment
 
 import com.ChickenKitchen.app.handler.TransactionNotFoundException
 import com.ChickenKitchen.app.mapper.toListTransactionResponse
 import com.ChickenKitchen.app.mapper.toTransactionResponse
 import com.ChickenKitchen.app.model.dto.response.TransactionResponse
 import com.ChickenKitchen.app.repository.payment.TransactionRepository
-import com.ChickenKitchen.app.service.transaction.TransactionService
+import com.ChickenKitchen.app.service.payment.TransactionService
 import org.springframework.stereotype.Service
 
 

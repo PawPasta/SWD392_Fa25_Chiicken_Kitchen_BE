@@ -25,12 +25,18 @@ class Payment(
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    val order: Order,
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    var order: Order,
+
+    @Column(nullable = false)
+    val discountAmount: Int,
 
     @Column(nullable = false)
     val amount: Int,
+
+    @Column(nullable = false)
+    val finalAmount: Int,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

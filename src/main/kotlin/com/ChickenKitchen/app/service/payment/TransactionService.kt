@@ -1,4 +1,4 @@
-package com.ChickenKitchen.app.service.transaction
+package com.ChickenKitchen.app.service.payment
 
 import com.ChickenKitchen.app.model.dto.response.TransactionResponse
 

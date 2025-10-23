@@ -27,7 +27,7 @@ fun Transaction.toTransactionResponse() : TransactionResponse =
         createAt = this.createdAt,
         note = this.note,
         paymentId = this.payment.id,
-        paymentMethodId = this.paymentMethod.id,
+        paymentMethodId = this.paymentMethod?.id,
         transactionType = this.transactionType,
     )
 

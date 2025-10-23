@@ -1,10 +1,12 @@
 package com.ChickenKitchen.app.controller
 
 import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
+import com.ChickenKitchen.app.model.dto.request.OrderConfirmRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.model.dto.response.DishDeleteResponse
 import com.ChickenKitchen.app.service.order.OrderService
+import com.ChickenKitchen.app.service.payment.VNPayService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +14,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/orders")
 class OrderController(
-    private val orderService: OrderService
+    private val orderService: OrderService,
+    private val vnPayService: VNPayService
 ) {
     @Operation(summary = "Add a dish to current NEW order (auto-create if none)")
     @PostMapping("/current/dishes")
@@ -51,4 +54,18 @@ class OrderController(
         val orderId = orderService.deleteDish(dishId)
         return ResponseEntity.ok(ResponseModel.success(DishDeleteResponse(orderId, dishId), "Dish deleted"))
     }
+
+    @Operation(summary = "Confirm order (change to Confirmed), add promotion and paymentMethod")
+    @PostMapping("/confirm")
+    fun confirmOrder(@RequestBody req: OrderConfirmRequest ): ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(orderService.confirmedOrder(req), "Confirmed on going"))
+    }
+
+    @Operation(summary = "vnpay-callback")
+    @PostMapping("/vnpay-callback")
+    fun vnpayCallback(@RequestBody params: Map<String, String>): ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(vnPayService.callbackURL(params),"Nice"))
+
+    }
+
 }

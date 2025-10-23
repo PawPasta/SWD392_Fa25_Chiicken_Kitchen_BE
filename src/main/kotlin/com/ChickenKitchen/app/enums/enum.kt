@@ -9,11 +9,11 @@ enum class DiscountType {
 }
 
 enum class OrderStatus {
-    NEW, CONFIRMED, PROCESSING, COMPLETED, CANCELLED
+    NEW, FAILED, CONFIRMED,  PROCESSING, COMPLETED, CANCELLED
 }
 
 enum class TransactionStatus {
-    PENDING, SUCCESS, REFUND, FAILED
+    CREDIT , DEBIT
 }
 
 enum class PaymentStatus {

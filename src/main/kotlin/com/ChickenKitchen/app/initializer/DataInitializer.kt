@@ -191,7 +191,7 @@ class DataInitializer {
             println("Seeding payment methods...")
 
             val paymentMethods = listOf(
-                Triple("Cash", "Pay with cash on pickup", true),
+                Triple("Wallet", "Pay with wallet", true),
                 Triple("MoMo", "Pay with MoMo e-wallet", true),
                 Triple("VNPay", "Pay with VNPay", true),
             )
