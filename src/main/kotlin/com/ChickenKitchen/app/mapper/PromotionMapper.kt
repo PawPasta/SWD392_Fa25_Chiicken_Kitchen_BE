@@ -9,6 +9,9 @@ import com.ChickenKitchen.app.model.entity.promotion.Promotion
 fun Promotion.toPromotionResponse () : PromotionResponse =
     PromotionResponse (
         id = this.id!!,
+        name = this.name,
+        description = this.description,
+        code = this.code,
         discountType = this.discountType,
         discountValue = this.discountValue,
         endDate = this.endDate,
@@ -28,6 +31,9 @@ fun OrderPromotion.toOrderPromotionResponse() : OrderPromotionResponse =
 fun Promotion.toPromotionDetailResponse() : PromotionDetailResponse =
     PromotionDetailResponse (
         id = this.id!!,
+        name = this.name,
+        description = this.description,
+        code = this.code,
         discountType = this.discountType,
         discountValue = this.discountValue,
         endDate = this.endDate,

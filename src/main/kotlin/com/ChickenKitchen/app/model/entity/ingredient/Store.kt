@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.ingredient
 
 import com.ChickenKitchen.app.model.entity.menu.DailyMenu
+import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import com.ChickenKitchen.app.model.entity.order.Order
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
@@ -36,5 +37,8 @@ class Store(
     val dailyMenus: MutableSet<DailyMenu> = mutableSetOf(),
 
     @OneToMany(mappedBy = "store")
-    val ingredientBatches: MutableList<StoreIngredientBatch> = mutableListOf()
+    val ingredientBatches: MutableList<StoreIngredientBatch> = mutableListOf(),
+
+    @OneToMany(mappedBy = "store")
+    val employees: MutableList<EmployeeDetail> = mutableListOf()
 )

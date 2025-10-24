@@ -24,6 +24,7 @@ class SecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
+            .cors { }
             .authorizeHttpRequests {
                 // Public docs
                 it.requestMatchers(
@@ -47,6 +48,8 @@ class SecurityConfig(
                     "/api/transaction/**",
                     "/api/users/**",
                 ).permitAll()
+
+                it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // .anyRequest().authenticated() // Temporarily disabled to make everything public
                 .anyRequest().permitAll()

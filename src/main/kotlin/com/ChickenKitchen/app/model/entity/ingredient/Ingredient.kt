@@ -16,6 +16,9 @@ class Ingredient(
     @Column(name = "name", nullable = false, unique = true)
     var name: String? = null,
 
+    @Column(name = "description", nullable = false)
+    var description: String? = null,
+
     @Enumerated(EnumType.STRING)
     @Column(name = "base_unit")
     var baseUnit: UnitType? = null,

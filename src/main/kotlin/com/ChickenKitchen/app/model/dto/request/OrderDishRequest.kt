@@ -20,3 +20,10 @@ data class SelectionItem(
     val menuItemId: Long,
     val quantity: Int
 )
+
+
+data class OrderConfirmRequest(
+    val orderId: Long,
+    val paymentMethodId : Long,
+    val promotionId : Long? = null,
+)

@@ -32,6 +32,10 @@ class GlobalExceptionHandler {
     fun handleCannotDelete(e: UserCannotDeleteException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Cannot delete user")
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(e: IllegalArgumentException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Invalid request")
+
 
 
     // ========== Business Exceptions ==========
@@ -128,7 +132,7 @@ class GlobalExceptionHandler {
     fun handleNameExist(e: NutrientNameExistException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Nutrient name already exists")
 
-    //Promotions
+    //PROMOTIONS
     @ExceptionHandler(PromotionNotFoundException::class)
     fun handleNotFound(e: PromotionNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Promotion not found")
@@ -136,6 +140,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(PromotionHasOrdersException::class)
     fun handleHasOrders(e: PromotionHasOrdersException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Promotion has associated orders, cannot delete")
+
+    @ExceptionHandler(PromotionNotValidThisTime::class)
+    fun handleHasOrders(e: PromotionNotValidThisTime) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Promotion has not valid this time")
 
     //TRANSACTION
     @ExceptionHandler(PaymentMethodNotFoundException::class)
@@ -149,9 +157,17 @@ class GlobalExceptionHandler {
     fun handleNameExist(e: PaymentMethodNameExistException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Payment Method name already exists")
 
+    @ExceptionHandler(PaymentMethodNameNotAvailable::class)
+    fun handleNotFound(e: PaymentMethodNameNotAvailable) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Payment Method is not available now")
+
     @ExceptionHandler(TransactionNotFoundException::class)
     fun handleNotFound(e: TransactionNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Transaction not found")
+
+    @ExceptionHandler(TransactionCannotCreateException::class)
+    fun handleNotFound(e: TransactionCannotCreateException) =
+        buildError(HttpStatus.NOT_FOUND, e.message ?: "Transaction cannot create")
 
     //STEP
     @ExceptionHandler(StepNotFoundException::class)
@@ -222,6 +238,16 @@ class GlobalExceptionHandler {
     @ExceptionHandler(DailyMenuUnavailableException::class)
     fun handleDailyMenuUnavailable(e: DailyMenuUnavailableException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "Daily menu unavailable for this store")
+
+
+    //WALLET
+    @ExceptionHandler(WalletNotEnoughBalance::class)
+    fun handleWalletBalance(e: WalletNotEnoughBalance) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Wallet Balance is not enough")
+
+    @ExceptionHandler(WalletNotFoundException::class)
+    fun handleWalletBalance(e: WalletNotFoundException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Wallet cannot Found")
 
     // ========== Helper ==========
     private fun buildError(status: HttpStatus, message: String): ResponseEntity<ResponseModel> {

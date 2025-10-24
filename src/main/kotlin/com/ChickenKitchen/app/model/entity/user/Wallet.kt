@@ -1,4 +1,5 @@
 package com.ChickenKitchen.app.model.entity.user
+import com.ChickenKitchen.app.model.entity.payment.Transaction
 import org.hibernate.annotations.CreationTimestamp
 
 
@@ -14,16 +15,19 @@ class Wallet(
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    val user: User,
+    var user: User,
 
     @Column(nullable = false)
     var balance: Int = 0,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Timestamp? = null,
+    var createdAt: Timestamp? = null,
 
     @Column(name = "updated_at")
     var updatedAt: Timestamp? = null,
+
+    @OneToMany(mappedBy = "wallet", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var transactions: MutableList<Transaction> = mutableListOf()
 )
 

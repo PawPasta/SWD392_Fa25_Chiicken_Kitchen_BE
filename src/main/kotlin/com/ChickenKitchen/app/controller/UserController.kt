@@ -3,8 +3,10 @@ package com.ChickenKitchen.app.controller
 import com.ChickenKitchen.app.model.dto.request.CreateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserRequest
+import com.ChickenKitchen.app.model.dto.request.GrantRoleRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.user.UserService
+import com.ChickenKitchen.app.enums.Role
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -87,5 +89,21 @@ class UserController(
     fun updateProfile(@RequestBody req: UpdateUserProfileRequest): ResponseEntity<ResponseModel> {
         val profile = userService.updateProfile(req)
         return ResponseEntity.ok(ResponseModel.success(profile, "Profile updated successfully"))
+    }
+
+    @Operation(summary = "Grant role to email (ADMIN)")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
+    @PostMapping("/grant-role")
+    fun grantRoleToEmail(@RequestBody req: GrantRoleRequest): ResponseEntity<ResponseModel> {
+        val result = userService.grantRoleByEmail(req)
+        return ResponseEntity.ok(ResponseModel.success(result, "Role granted/updated successfully"))
+    }
+
+    @Operation(summary = "Get all roles")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
+    @GetMapping("/roles")
+    fun getAllRoles(): ResponseEntity<ResponseModel> {
+        val roles: List<Role> = userService.getAllRoles()
+        return ResponseEntity.ok(ResponseModel.success(roles, "Fetched roles successfully"))
     }
 }

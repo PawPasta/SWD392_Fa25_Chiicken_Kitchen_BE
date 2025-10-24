@@ -7,6 +7,7 @@ import java.sql.Timestamp
 data class IngredientResponse (
     val id: Long,
     val name: String?,
+    val description: String?,
     val baseUnit: UnitType? = UnitType.G,
     val imageUrl: String?,
 )
@@ -14,6 +15,7 @@ data class IngredientResponse (
 data class IngredientDetailResponse (
     val id: Long,
     val name: String?,
+    val description: String?,
     val baseUnit: UnitType? = UnitType.G,
     val batchNumber: String,
     val imageUrl: String?,

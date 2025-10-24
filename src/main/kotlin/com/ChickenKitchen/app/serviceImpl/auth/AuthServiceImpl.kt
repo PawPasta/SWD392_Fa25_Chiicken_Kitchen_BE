@@ -12,6 +12,8 @@ import com.ChickenKitchen.app.service.auth.AuthService
 import com.ChickenKitchen.app.handler.TokenException
 // Removed internal email/password login
 import com.ChickenKitchen.app.model.entity.user.User
+import com.ChickenKitchen.app.model.entity.user.Wallet
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
@@ -22,6 +24,7 @@ class AuthServiceImpl(
     private val userRepository: UserRepository,
     private val userSessionRepository: UserSessionRepository,
     private val jwtService: JwtServiceImpl,
+    private val walletRepository: WalletRepository,
 ) : AuthService {
 
     // Chưa viết phần kiểm tra idToken có hêt hạn chưa sau khi decode để test cho nhanh
@@ -65,6 +68,15 @@ class AuthServiceImpl(
                 lastActivity = Timestamp(System.currentTimeMillis())
             )
         )
+
+        var wallet = walletRepository.findByUser(user)
+        if (wallet == null) {
+            wallet = Wallet(
+                user = user,
+                balance = 0
+            )
+            walletRepository.save(wallet)
+        }
 
         return TokenResponse(accessToken = accessToken, refreshToken = refreshToken)
     }

@@ -1,4 +1,4 @@
-package com.ChickenKitchen.app.serviceImpl.transaction
+package com.ChickenKitchen.app.serviceImpl.payment
 
 import com.ChickenKitchen.app.handler.PaymentMethodHasTransactionsException
 import com.ChickenKitchen.app.handler.PaymentMethodNameExistException
@@ -10,7 +10,7 @@ import com.ChickenKitchen.app.model.dto.request.UpdatePaymentMethodRequest
 import com.ChickenKitchen.app.model.dto.response.PaymentMethodResponse
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
-import com.ChickenKitchen.app.service.transaction.PaymentMethodService
+import com.ChickenKitchen.app.service.payment.PaymentMethodService
 import org.springframework.stereotype.Service
 
 

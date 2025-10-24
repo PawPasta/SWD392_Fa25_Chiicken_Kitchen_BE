@@ -55,6 +55,10 @@ class FilterConfig(
         filterChain: FilterChain
     ) {
         try {
+            if (request.method.equals("OPTIONS", ignoreCase = true)) {
+                filterChain.doFilter(request, response)
+                return
+            }
             val requestUri = request.requestURI
 
             // Public thì cho qua luôn
@@ -88,9 +92,7 @@ class FilterConfig(
                }
            }
 
-            // Tạo authentication tạm thời (Optional, để Spring Security coi request là authenticated)
-            SecurityContextHolder.getContext().authentication =
-                UsernamePasswordAuthenticationToken("testUser", null, emptyList())
+            // Do not override existing authentication; keep the validated user context
 
             filterChain.doFilter(request, response)
         } catch (ex: Exception) {

@@ -1,6 +1,7 @@
 package com.ChickenKitchen.app.model.entity.payment
 
 import com.ChickenKitchen.app.enums.TransactionStatus
+import com.ChickenKitchen.app.model.entity.user.Wallet
 import jakarta.persistence.*
 import java.sql.Timestamp
 import org.hibernate.annotations.CreationTimestamp
@@ -23,8 +24,12 @@ class Transaction(
     val payment: Payment,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    val wallet: Wallet,
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id", nullable = false)
-    val paymentMethod: PaymentMethod,
+    val paymentMethod: PaymentMethod?,
 
     // Align with ERD: store "transaction_type" while reusing existing enum
     @Enumerated(EnumType.STRING)

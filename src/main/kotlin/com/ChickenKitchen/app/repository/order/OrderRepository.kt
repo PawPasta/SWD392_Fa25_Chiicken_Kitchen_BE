@@ -14,4 +14,9 @@ interface OrderRepository : JpaRepository<Order, Long>{
         storeId: Long,
         statuses: List<OrderStatus>
     ): List<Order>
+
+    fun findAllByStoreIdAndStatusOrderByCreatedAtDesc(
+        storeId: Long,
+        status: OrderStatus
+    ): List<Order>
 }

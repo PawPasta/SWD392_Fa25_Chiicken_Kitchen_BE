@@ -8,6 +8,5 @@ import com.ChickenKitchen.app.service.BaseService
 
 interface PromotionService : BaseService<PromotionResponse, PromotionDetailResponse, CreatePromotionRequest, UpdatePromotionRequest, Long>{
 
-    fun getAllByActive () : List<PromotionResponse>?
     fun changeStatus (id : Long) : PromotionResponse
 }

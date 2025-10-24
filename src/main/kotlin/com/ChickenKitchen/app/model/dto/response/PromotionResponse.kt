@@ -1,12 +1,14 @@
 package com.ChickenKitchen.app.model.dto.response
 
 import com.ChickenKitchen.app.enums.DiscountType
-import java.sql.Timestamp
 import java.time.LocalDateTime
 
 
 data class PromotionResponse (
     val id : Long,
+    val name: String,
+    val description: String?,
+    val code : String?,
     val discountType: DiscountType,
     val discountValue: Int,
     val startDate : LocalDateTime,
@@ -16,6 +18,9 @@ data class PromotionResponse (
 
 data class PromotionDetailResponse (
     val id : Long,
+    val name: String,
+    val description: String?,
+    val code : String?,
     val discountType: DiscountType,
     val discountValue: Int,
     val startDate : LocalDateTime,
@@ -27,5 +32,5 @@ data class PromotionDetailResponse (
 
 data class OrderPromotionResponse (
     val id : Long,
-    val usedDate: Timestamp?
+    val usedDate: LocalDateTime?
 )

@@ -2,12 +2,14 @@ package com.ChickenKitchen.app.model.dto.response
 
 import java.sql.Timestamp
 
-data class OrderBriefResponse(
+data class FeedbackResponse(
+    val id: Long,
     val orderId: Long,
     val storeId: Long,
-    val status: String,
-    val totalPrice: Int,
+    val rating: Int,
+    val message: String?,
+    val reply: String?,
     val createdAt: Timestamp?,
-    val pickupTime: Timestamp?
+    val updatedAt: Timestamp?
 )
 

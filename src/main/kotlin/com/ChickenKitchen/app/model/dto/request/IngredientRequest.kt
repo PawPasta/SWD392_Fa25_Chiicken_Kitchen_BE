@@ -1,12 +1,14 @@
 package com.ChickenKitchen.app.model.dto.request
 
 import com.ChickenKitchen.app.enums.UnitType
+import org.springframework.context.annotation.Description
 
 import java.sql.Timestamp
 
 
 data class CreateIngredientRequest(
     val name: String,
+    val description: String?,
     val baseUnit: UnitType,
     val createAt: Timestamp,
     val imageUrl: String,
@@ -19,6 +21,7 @@ data class CreateIngredientRequest(
 data class UpdateIngredientRequest (
     val name: String?,
     val imageUrl: String?,
+    val description: String?,
     val baseUnit: UnitType,
     val isActive: Boolean,
     val batchNumber: String?,
