@@ -181,4 +181,8 @@ class UserServiceImpl (
         return saved.toUserDetailResponse()
     }
 
+    override fun getAllRoles(): List<Role> {
+        return Role.values().toList()
+    }
+
 }
