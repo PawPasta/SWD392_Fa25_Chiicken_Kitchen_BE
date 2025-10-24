@@ -240,54 +240,70 @@ class DataInitializer {
             val promotions = listOf(
                 // Active promotions
                 Promotion(
+                    name = "Summer Sale",
+                    description = "Hot summer discounts for all customers",
                     discountType = DiscountType.PERCENT,
                     discountValue = 20,
                     startDate = LocalDateTime.now().minusDays(5),
                     endDate = LocalDateTime.now().plusDays(25),
                     isActive = true,
-                    quantity = 100
+                    quantity = 100,
+                    code = "SUMMER20",
                 ),
                 Promotion(
+                    name = "Mega Discount",
+                    description = "Instant 50,000 VND off your order",
                     discountType = DiscountType.AMOUNT,
                     discountValue = 50000,
                     startDate = LocalDateTime.now().minusDays(3),
                     endDate = LocalDateTime.now().plusDays(10),
                     isActive = true,
-                    quantity = 50
+                    quantity = 50,
+                    code = "SAVE50K",
                 ),
                 Promotion(
+                    name = "October Deal",
+                    description = "Get 15% off on all purchases this month",
                     discountType = DiscountType.PERCENT,
                     discountValue = 15,
                     startDate = LocalDateTime.now().minusDays(1),
                     endDate = LocalDateTime.now().plusDays(30),
                     isActive = true,
-                    quantity = 200
+                    quantity = 200,
+                    code = "OCT15",
                 ),
                 Promotion(
+                    name = "Weekly Special",
+                    description = "Enjoy an instant 30,000 VND discount this week",
                     discountType = DiscountType.AMOUNT,
                     discountValue = 30000,
                     startDate = LocalDateTime.now(),
                     endDate = LocalDateTime.now().plusDays(7),
                     isActive = true,
-                    quantity = 75
+                    quantity = 75,
+                    code = "WEEK30K",
                 ),
-                // Expired promotion
                 Promotion(
+                    name = "Old Event",
+                    description = "Expired promotion - no longer available",
                     discountType = DiscountType.PERCENT,
                     discountValue = 25,
                     startDate = LocalDateTime.now().minusDays(30),
                     endDate = LocalDateTime.now().minusDays(1),
                     isActive = false,
-                    quantity = 0
+                    quantity = 0,
+                    code = "EXPIRED25",
                 ),
-                // Future promotion
                 Promotion(
+                    name = "Future Bonus",
+                    description = "Upcoming 30% discount event",
                     discountType = DiscountType.PERCENT,
                     discountValue = 30,
                     startDate = LocalDateTime.now().plusDays(5),
                     endDate = LocalDateTime.now().plusDays(15),
                     isActive = true,
-                    quantity = 150
+                    quantity = 150,
+                    code = "FUTURE30",
                 )
             )
 
@@ -1104,6 +1120,7 @@ class DataInitializer {
             ingredientsData.forEachIndexed { idx, (name, unit, prefix) ->
                 ingredientRepository.save(Ingredient(
                     name = name,
+                    description = "Raw Materials for service Menu Items",
                     baseUnit = unit,
                     imageUrl = "https://example.com/${name.lowercase().replace(" ", "-")}.jpg",
                     isActive = true,
