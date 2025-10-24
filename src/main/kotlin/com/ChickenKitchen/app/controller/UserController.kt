@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.controller
 import com.ChickenKitchen.app.model.dto.request.CreateUserRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserProfileRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateUserRequest
+import com.ChickenKitchen.app.model.dto.request.GrantRoleRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.user.UserService
 import io.swagger.v3.oas.annotations.Operation
@@ -87,5 +88,13 @@ class UserController(
     fun updateProfile(@RequestBody req: UpdateUserProfileRequest): ResponseEntity<ResponseModel> {
         val profile = userService.updateProfile(req)
         return ResponseEntity.ok(ResponseModel.success(profile, "Profile updated successfully"))
+    }
+
+    @Operation(summary = "Grant role to email (ADMIN)")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
+    @PostMapping("/grant-role")
+    fun grantRoleToEmail(@RequestBody req: GrantRoleRequest): ResponseEntity<ResponseModel> {
+        val result = userService.grantRoleByEmail(req)
+        return ResponseEntity.ok(ResponseModel.success(result, "Role granted/updated successfully"))
     }
 }

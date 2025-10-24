@@ -14,17 +14,24 @@ import com.ChickenKitchen.app.model.dto.response.UserProfileResponse
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.auth.UserSessionRepository
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import com.ChickenKitchen.app.mapper.toUserResponseList
 import com.ChickenKitchen.app.mapper.toUserResponse
 import com.ChickenKitchen.app.mapper.toUserDetailResponse
 import com.ChickenKitchen.app.mapper.toUserProfileResponse
 import com.ChickenKitchen.app.handler.UserNotFoundException
+import com.ChickenKitchen.app.model.dto.request.GrantRoleRequest
+import com.ChickenKitchen.app.enums.Role
+import com.ChickenKitchen.app.model.entity.user.Wallet
+import com.ChickenKitchen.app.util.EmailUtil
 import java.sql.Timestamp
 
 @Service
 class UserServiceImpl (
     private val userRepository: UserRepository,
-    private val userSessionRepository: UserSessionRepository
+    private val userSessionRepository: UserSessionRepository,
+    private val walletRepository: WalletRepository,
+    private val emailUtil: EmailUtil,
 ): UserService {
 
     override fun getAll() : List<UserResponse>? {
@@ -119,6 +126,59 @@ class UserServiceImpl (
         userSessionRepository.saveAll(userSessions)
 
         return updatedUser.toUserProfileResponse()
+    }
+
+    override fun grantRoleByEmail(req: GrantRoleRequest): UserDetailResponse {
+        if (req.email.isBlank()) throw UserEmailRequiredException("Email is required")
+        if (req.role == Role.ADMIN) throw IllegalArgumentException("Cannot grant ADMIN role")
+
+        val existing = userRepository.findByEmail(req.email)
+        val isNew = existing == null
+
+        val user = existing ?: userRepository.save(
+            User(
+                fullName = req.fullName ?: req.email.substringBefore('@'),
+                email = req.email,
+                role = req.role,
+                isActive = true,
+                isVerified = true,
+                imageURL = null,
+                provider = "admin-grant"
+            )
+        )
+
+        if (!isNew) {
+            user.role = req.role
+        }
+        val saved = userRepository.save(user)
+
+        var wallet = walletRepository.findByUser(saved)
+        if (wallet == null) {
+            wallet = Wallet(user = saved, balance = 0)
+            walletRepository.save(wallet)
+        }
+
+        try {
+            if (isNew) {
+                emailUtil.send(
+                    to = saved.email,
+                    subject = "Chicken Kitchen: Tài khoản được cấp quyền",
+                    content = "Xin chào ${saved.fullName},\n\nTài khoản của bạn đã được cấp quyền ${req.role}. Hãy đăng nhập để sử dụng.\n\nCảm ơn!",
+                    isHtml = false
+                )
+            } else {
+                emailUtil.send(
+                    to = saved.email,
+                    subject = "Chicken Kitchen: Quyền tài khoản được cập nhật",
+                    content = "Xin chào ${saved.fullName},\n\nQuyền truy cập của bạn đã được cập nhật thành ${req.role}.\n\nCảm ơn!",
+                    isHtml = false
+                )
+            }
+        } catch (_: Exception) {
+            // Do not fail the operation if email dispatch fails
+        }
+
+        return saved.toUserDetailResponse()
     }
 
 }

@@ -32,6 +32,10 @@ class GlobalExceptionHandler {
     fun handleCannotDelete(e: UserCannotDeleteException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Cannot delete user")
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(e: IllegalArgumentException) =
+        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Invalid request")
+
 
 
     // ========== Business Exceptions ==========
