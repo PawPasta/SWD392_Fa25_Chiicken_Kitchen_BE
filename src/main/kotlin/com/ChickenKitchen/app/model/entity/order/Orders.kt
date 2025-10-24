@@ -54,7 +54,10 @@ class Order(
     var orderPromotions: MutableList<OrderPromotion> = mutableListOf(),
 
     @OneToOne(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val payment: Payment? = null
+    val payment: Payment? = null,
+
+    @OneToOne(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    var feedback: Feedback? = null
 
     // Order steps now link via Dish -> OrderStep (dish_id),
     // so we remove direct Order -> OrderStep mapping.

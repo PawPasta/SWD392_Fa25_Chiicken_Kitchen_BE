@@ -4,6 +4,9 @@ import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
 import com.ChickenKitchen.app.model.dto.request.OrderConfirmRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
+import com.ChickenKitchen.app.enums.OrderStatus
+import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
+import com.ChickenKitchen.app.model.dto.response.FeedbackResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 
@@ -23,4 +26,9 @@ interface OrderService {
     fun employeeAcceptOrder(orderId: Long): OrderBriefResponse
     fun employeeMarkReadyOrder(orderId: Long): OrderBriefResponse
     fun employeeCompleteOrder(orderId: Long): OrderBriefResponse
+
+    fun getAllOrderStatuses(): List<OrderStatus>
+
+    fun createFeedback(orderId: Long, req: CreateFeedbackRequest): FeedbackResponse
+    fun getFeedbackByOrder(orderId: Long): FeedbackResponse
 }

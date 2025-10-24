@@ -38,6 +38,7 @@ import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
+import com.ChickenKitchen.app.repository.order.FeedbackRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
@@ -57,10 +58,14 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.time.LocalDate
+import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
+import com.ChickenKitchen.app.model.dto.response.FeedbackResponse
+import com.ChickenKitchen.app.model.entity.order.Feedback
 
 @Service
 class OrderServiceImpl(
     private val orderRepository: OrderRepository,
+    private val feedbackRepository: FeedbackRepository,
     private val orderStepRepository: OrderStepRepository,
     private val orderStepItemRepository: OrderStepItemRepository,
     private val userRepository: UserRepository,
@@ -204,6 +209,73 @@ class OrderServiceImpl(
             dishId = dish.id!!,
             status = order.status.name,
             createdSteps = createdSteps
+        )
+    }
+
+    override fun getAllOrderStatuses(): List<OrderStatus> {
+        return OrderStatus.values().toList()
+    }
+
+    @Transactional
+    override fun createFeedback(orderId: Long, req: CreateFeedbackRequest): FeedbackResponse {
+        val user = currentUser()
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.user.id != user.id) {
+            throw IllegalArgumentException("You can only feedback your own order")
+        }
+        if (order.status != OrderStatus.COMPLETED) {
+            throw InvalidOrderStatusException("Only COMPLETED orders can be feedbacked")
+        }
+        if (req.rating !in 1..5) {
+            throw IllegalArgumentException("Rating must be between 1 and 5")
+        }
+        val existing = feedbackRepository.findByOrderId(orderId)
+        if (existing != null) {
+            throw IllegalArgumentException("Feedback already exists for this order")
+        }
+
+        val feedback = feedbackRepository.save(
+            Feedback(
+                order = order,
+                store = order.store,
+                rating = req.rating,
+                message = req.message,
+                reply = null
+            )
+        )
+
+        order.feedback = feedback
+        orderRepository.save(order)
+
+        return FeedbackResponse(
+            id = feedback.id!!,
+            orderId = order.id!!,
+            storeId = order.store.id!!,
+            rating = feedback.rating,
+            message = feedback.message,
+            reply = feedback.reply,
+            createdAt = feedback.createdAt,
+            updatedAt = feedback.updatedAt
+        )
+    }
+
+    override fun getFeedbackByOrder(orderId: Long): FeedbackResponse {
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+        val fb = feedbackRepository.findByOrderId(orderId)
+            ?: throw IllegalArgumentException("Feedback not found for this order")
+
+        return FeedbackResponse(
+            id = fb.id!!,
+            orderId = order.id!!,
+            storeId = order.store.id!!,
+            rating = fb.rating,
+            message = fb.message,
+            reply = fb.reply,
+            createdAt = fb.createdAt,
+            updatedAt = fb.updatedAt
         )
     }
 

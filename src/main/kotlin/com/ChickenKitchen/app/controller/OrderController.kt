@@ -10,6 +10,8 @@ import com.ChickenKitchen.app.service.payment.VNPayService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import com.ChickenKitchen.app.enums.OrderStatus
+import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
 
 @RestController
 @RequestMapping("/api/orders")
@@ -66,6 +68,30 @@ class OrderController(
     fun vnpayCallback(@RequestBody params: Map<String, String>): ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(vnPayService.callbackURL(params),"Nice"))
 
+    }
+
+    @Operation(summary = "List all order statuses")
+    @GetMapping("/statuses")
+    fun getAllOrderStatuses(): ResponseEntity<ResponseModel> {
+        val statuses: List<OrderStatus> = orderService.getAllOrderStatuses()
+        return ResponseEntity.ok(ResponseModel.success(statuses, "Fetched order statuses"))
+    }
+
+    @Operation(summary = "Create feedback for a COMPLETED order (owner only)")
+    @PostMapping("/{orderId}/feedback")
+    fun createFeedback(
+        @PathVariable orderId: Long,
+        @RequestBody req: CreateFeedbackRequest
+    ): ResponseEntity<ResponseModel> {
+        val result = orderService.createFeedback(orderId, req)
+        return ResponseEntity.ok(ResponseModel.success(result, "Feedback created"))
+    }
+
+    @Operation(summary = "Get feedback by order id")
+    @GetMapping("/{orderId}/feedback")
+    fun getFeedbackByOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.getFeedbackByOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched feedback"))
     }
 
     @Operation(summary = "Employee: list CONFIRMED orders in employee's store")
