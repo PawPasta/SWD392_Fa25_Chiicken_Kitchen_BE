@@ -55,6 +55,10 @@ class FilterConfig(
         filterChain: FilterChain
     ) {
         try {
+            if (request.method.equals("OPTIONS", ignoreCase = true)) {
+                filterChain.doFilter(request, response)
+                return
+            }
             val requestUri = request.requestURI
 
             // Public thì cho qua luôn
