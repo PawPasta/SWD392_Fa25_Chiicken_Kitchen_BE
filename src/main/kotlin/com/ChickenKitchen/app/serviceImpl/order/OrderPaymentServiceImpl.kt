@@ -14,7 +14,9 @@ import com.ChickenKitchen.app.handler.UserNotFoundException
 import com.ChickenKitchen.app.model.dto.request.OrderConfirmRequest
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.payment.Payment
+import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.OrderPromotion
+import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
@@ -23,7 +25,9 @@ import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.service.order.OrderPaymentService
+import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
+import com.ChickenKitchen.app.service.user.WalletService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
@@ -39,10 +43,14 @@ class OrderPaymentServiceImpl(
     private val paymentRepository: PaymentRepository,
     private val userRepository: UserRepository,
     private val dishRepository: DishRepository,
+
     private val vnPayService: VNPayService,
+    private val walletService: WalletService,
+    private val transactionService: TransactionService
+
 ) : OrderPaymentService {
 
-    private fun currentUser() : com.ChickenKitchen.app.model.entity.user.User {
+    private fun currentUser() : User {
         val auth = SecurityContextHolder.getContext().authentication
         val email = when (val principal = auth?.principal) {
             is UserDetails -> principal.username
@@ -144,20 +152,46 @@ class OrderPaymentServiceImpl(
                     status = PaymentStatus.PENDING
                 ).also { paymentRepository.save(it) }
             } else {
-                // existing payment but not FAILED/PENDING -> cannot confirm again
+
                 throw InvalidOrderStepException("This order already has a payment and cannot be confirmed again.")
             }
         }
 
         // Guard invalid VNPay amount range (VND, VNPay expects amount*100 in request)
-        if (finalAmount < 5000 || finalAmount >= 1_000_000_000) {
+        if (finalAmount !in 5000..<1_000_000_000) {
             throw InvalidOrderStepException("Invalid payment amount: $finalAmount VND. Must be between 5,000 and < 1,000,000,000")
         }
 
-        // Handle by PaymentMethod
+        return processPayment(order, paymentMethod, finalAmount)
+    }
+
+    override fun processPayment(
+        order: Order,
+        paymentMethod: PaymentMethod,
+        amount: Int
+    ): String {
+        val payment = paymentRepository.findByOrderId(order.id!!)
+            ?: throw InvalidOrderStepException("Payment not found for order ${order.id}")
+
         return when (paymentMethod.name.uppercase()) {
-            "VNPAY" -> vnPayService.createVnPayURL(order.id!!)
-            else -> throw PaymentMethodNameNotAvailable("Payment method ${paymentMethod.name} is not supported yet")
+            "VNPAY" -> {
+                vnPayService.createVnPayURL(order)
+            }
+            "WALLET" -> {
+                walletService.deductFromWallet(order.user, amount)
+                transactionService.createPaymentTransaction(payment,order,paymentMethod)
+                "Payment via wallet successful"
+            }
+
+            "MOMO" -> {
+                throw PaymentMethodNameNotAvailable("MoMo payment method not yet supported")
+            }
+
+            else -> throw PaymentMethodNameNotAvailable(
+                "Payment method ${paymentMethod.name} is not supported yet"
+            )
         }
     }
+
+
 }

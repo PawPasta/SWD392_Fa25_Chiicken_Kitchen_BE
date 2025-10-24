@@ -59,6 +59,7 @@ class PaymentMethodHasTransactionsException(message: String) : RuntimeException(
 class PaymentMethodNameExistException(message: String) : RuntimeException(message)
 class PaymentMethodNameNotAvailable(message: String) : RuntimeException(message)
 class TransactionNotFoundException(message: String) : RuntimeException(message)
+class TransactionCannotCreateException(message: String) : RuntimeException(message)
 
 //STEP
 class StepNotFoundException(message: String) : RuntimeException(message)
@@ -84,3 +85,4 @@ class DailyMenuUnavailableException(message: String) : RuntimeException(message)
 
 // WALLET
 class WalletNotEnoughBalance(message: String) : RuntimeException(message)
+class WalletNotFoundException(message: String) : RuntimeException(message)

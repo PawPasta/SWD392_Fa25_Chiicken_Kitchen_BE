@@ -3,19 +3,15 @@ package com.ChickenKitchen.app.serviceImpl.payment
 import com.ChickenKitchen.app.config.VNPayConfig
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
-import com.ChickenKitchen.app.enums.TransactionStatus
 import com.ChickenKitchen.app.handler.OrderNotFoundException
-import com.ChickenKitchen.app.handler.UserNotFoundException
-import com.ChickenKitchen.app.model.entity.payment.Transaction
+import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
-import com.ChickenKitchen.app.repository.payment.TransactionRepository
-import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.user.WalletRepository
+import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import jakarta.transaction.Transactional
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -27,18 +23,19 @@ import java.util.TimeZone
 @Service
 class VNPayServiceImpl (
     private val vnPayConfig: VNPayConfig,
-    private val transactionRepository: TransactionRepository,
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
-    private val userRepository: UserRepository,
     private val walletRepository: WalletRepository,
-    private val paymentMethodRepository: PaymentMethodRepository
+    private val paymentMethodRepository: PaymentMethodRepository,
+
+    private val transactionService: TransactionService
 ) : VNPayService {
 
     @Transactional
-    override fun createVnPayURL (orderId: Long): String {
-        val payment = paymentRepository.findByOrderId(orderId)
-        val orderInfo = "Payment for order $orderId ${payment?.user?.id}"
+    override fun createVnPayURL (order: Order): String {
+        val payment = paymentRepository.findByOrderId(order.id
+        ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
+        val orderInfo = "Payment for order $order.id ${payment?.user?.id}"
         val vnpTxnRef = VNPayConfig.getRandomNumber(8)
 
         val vnpParams = mutableMapOf(
@@ -52,7 +49,7 @@ class VNPayServiceImpl (
             "vnp_OrderInfo" to orderInfo,
             "vnp_OrderType" to vnPayConfig.vnpOrderType,
             "vnp_Locale" to "vn",
-            "vnp_ReturnUrl" to "${vnPayConfig.vnpReturnUrl}?orderId=${orderId}",
+            "vnp_ReturnUrl" to "${vnPayConfig.vnpReturnUrl}?orderId=${order.id}",
             "vnp_IpAddr" to vnPayConfig.vnpIpAddr
         )
 
@@ -74,7 +71,6 @@ class VNPayServiceImpl (
 
     override fun callbackURL(params: Map<String, String>): String {
 
-
         val responseCode = params["vnp_ResponseCode"] ?: return "Missing response code"
         val orderId = params["orderId"]?.toLongOrNull() ?: return "Invalid order ID"
         val transactionStatus = params["vnp_TransactionStatus"]
@@ -85,47 +81,23 @@ class VNPayServiceImpl (
         val vnpTransactionNo = params["vnp_TransactionNo"]
         val vnpPayDate = params["vnp_PayDate"]
 
-        // Resolve order and use its owner as the authoritative user for callback
         val order = orderRepository.findById(orderId.toLong())
             .orElseThrow { OrderNotFoundException("Order not found with id $orderId") }
 
         val payment = order.payment
             ?: throw OrderNotFoundException("Payment not found for order $orderId")
 
-        val user = order.user
-        val wallet = walletRepository.findByUser(user)
-            ?: throw OrderNotFoundException("Wallet not found for user ${user.id}")
-
         val paymentMethod = paymentMethodRepository.findByName("VNPay")
+            ?: throw OrderNotFoundException("Payment method VNPaY not found")
 
         return when (responseCode) {
             "00" -> {
-                // 1. Cập nhật trạng thái payment và order
                 payment.status = PaymentStatus.FINISHED
                 order.status = OrderStatus.CONFIRMED
                 orderRepository.save(order)
+                paymentRepository.save(payment)
 
-                // 2. Tạo transaction nạp tiền vào ví
-                val depositTransaction = Transaction(
-                    payment = payment,
-                    wallet = wallet,
-                    paymentMethod = paymentMethod,
-                    transactionType = TransactionStatus.DEBIT,
-                    amount = payment.finalAmount,
-                    note = "Deposit via VNPAY"
-                )
-                transactionRepository.save(depositTransaction)
-
-                // 3. Tạo transaction thanh toán đơn hàng từ ví
-                val paymentTransaction = Transaction(
-                    payment = payment,
-                    wallet = wallet,
-                    paymentMethod = paymentMethod,
-                    transactionType = TransactionStatus.CREDIT,
-                    amount = payment.finalAmount,
-                    note = "Payment for order ${order.id} via wallet"
-                )
-                transactionRepository.save(paymentTransaction)
+                transactionService.createPaymentTransaction(payment,order,paymentMethod)
 
                 return "Payment success and transactions created"
             }
@@ -134,6 +106,7 @@ class VNPayServiceImpl (
                 order.status = OrderStatus.FAILED
                 orderRepository.save(order)
                 paymentRepository.save(payment)
+
                 "Payment Failed"
             }
             else ->{
