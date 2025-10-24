@@ -23,14 +23,8 @@ class PromotionController (
     private val promotionService: PromotionService
 ) {
 
-    @Operation(summary = "Get List Promotions for Customer")
-    @GetMapping("/external")
-    fun getAllWithActive(): ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(promotionService.getAllByActive(), "Get Promotion Successfully"))
-    }
-
-    @Operation(summary = "Get List promotions (Manager only)")
-    @GetMapping("/internal")
+    @Operation(summary = "Get List promotions (all actor)")
+    @GetMapping
     fun getAll() : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(promotionService.getAll(), "Get Promotion Successfully"))
     }

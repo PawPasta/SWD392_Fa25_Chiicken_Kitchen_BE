@@ -5,6 +5,9 @@ import java.time.LocalDateTime
 
 
 data class CreatePromotionRequest (
+    val name: String,
+    val description: String?,
+    val code : String?,
     val discountType: DiscountType,
     val discountValue: Int,
     val startDate : LocalDateTime,
@@ -15,6 +18,9 @@ data class CreatePromotionRequest (
 
 
 data class UpdatePromotionRequest (
+    val name: String?,
+    val description: String?,
+    val code : String?,
     val discountValue: Int?,
     val endDate: LocalDateTime?,
     val isActive: Boolean?,

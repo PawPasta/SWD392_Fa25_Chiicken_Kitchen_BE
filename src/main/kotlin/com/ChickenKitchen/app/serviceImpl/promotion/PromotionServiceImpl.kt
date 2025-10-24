@@ -20,13 +20,6 @@ class PromotionServiceImpl (
     private val promotionRepository: PromotionRepository
 ): PromotionService{
 
-    // cái này cho người dùng nè
-    override fun getAllByActive(): List<PromotionResponse>? {
-        val list = promotionRepository.findAllByIsActive(true)
-        if(list.isEmpty()) return null
-        return  list.toPromotionList()
-    }
-
     override fun changeStatus(id: Long): PromotionResponse {
         val promotion = promotionRepository.findById(id)
             .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
@@ -50,6 +43,9 @@ class PromotionServiceImpl (
     override fun create(req: CreatePromotionRequest): PromotionDetailResponse {
 
        val promotion = Promotion(
+           name = req.name,
+           description = req.description,
+           code = req.code,
            discountType = req.discountType,
            discountValue = req.discountValue,
            startDate = req.startDate,
@@ -65,6 +61,9 @@ class PromotionServiceImpl (
         val promotion = promotionRepository.findById(id)
             .orElseThrow { PromotionNotFoundException("Cannot find promotion with id $id") }
 
+        promotion.name = req.name ?: promotion.name
+        promotion.description = req.description ?: promotion.description
+        promotion.code = req.code ?: promotion.code
         promotion.discountValue = req.discountValue ?: promotion.discountValue
         promotion.endDate = req.endDate ?: promotion.endDate
         promotion.isActive = req.isActive ?: promotion.isActive

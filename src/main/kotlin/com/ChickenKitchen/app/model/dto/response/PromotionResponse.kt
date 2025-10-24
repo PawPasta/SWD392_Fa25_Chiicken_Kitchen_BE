@@ -6,6 +6,9 @@ import java.time.LocalDateTime
 
 data class PromotionResponse (
     val id : Long,
+    val name: String,
+    val description: String?,
+    val code : String?,
     val discountType: DiscountType,
     val discountValue: Int,
     val startDate : LocalDateTime,
@@ -15,6 +18,9 @@ data class PromotionResponse (
 
 data class PromotionDetailResponse (
     val id : Long,
+    val name: String,
+    val description: String?,
+    val code : String?,
     val discountType: DiscountType,
     val discountValue: Int,
     val startDate : LocalDateTime,
