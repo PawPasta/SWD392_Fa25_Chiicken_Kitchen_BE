@@ -9,7 +9,7 @@ enum class DiscountType {
 }
 
 enum class OrderStatus {
-    NEW, FAILED, CONFIRMED,  PROCESSING, COMPLETED, CANCELLED
+    NEW, FAILED, CONFIRMED, PROCESSING, READY, COMPLETED, CANCELLED
 }
 
 enum class TransactionStatus {

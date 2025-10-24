@@ -68,4 +68,46 @@ class OrderController(
 
     }
 
+    @Operation(summary = "Employee: list CONFIRMED orders in employee's store")
+    // @PreAuthorize("hasRole('EMPLOYEE')") // Temporarily public
+    @GetMapping("/employee/confirmed")
+    fun getConfirmedOrdersForEmployeeStore(): ResponseEntity<ResponseModel> {
+        val result = orderService.getConfirmedOrdersForEmployeeStore()
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched confirmed orders for employee store"))
+    }
+
+    @Operation(summary = "Employee: get CONFIRMED order detail by id")
+    // @PreAuthorize("hasRole('EMPLOYEE')") // Temporarily public
+    @GetMapping("/employee/confirmed/{orderId}")
+    fun getConfirmedOrderDetailForEmployee(
+        @PathVariable orderId: Long
+    ): ResponseEntity<ResponseModel> {
+        val result = orderService.getConfirmedOrderDetailForEmployee(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched confirmed order detail"))
+    }
+
+    @Operation(summary = "Employee: accept a CONFIRMED order -> PROCESSING")
+    // @PreAuthorize("hasRole('EMPLOYEE')") // Temporarily public
+    @PostMapping("/employee/accept/{orderId}")
+    fun employeeAcceptOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.employeeAcceptOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Order moved to PROCESSING"))
+    }
+
+    @Operation(summary = "Employee: mark a PROCESSING order -> READY")
+    // @PreAuthorize("hasRole('EMPLOYEE')") // Temporarily public
+    @PostMapping("/employee/ready/{orderId}")
+    fun employeeMarkReadyOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.employeeMarkReadyOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Order moved to READY"))
+    }
+
+    @Operation(summary = "Employee: complete a READY order -> COMPLETED")
+    // @PreAuthorize("hasRole('EMPLOYEE')") // Temporarily public
+    @PostMapping("/employee/complete/{orderId}")
+    fun employeeCompleteOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = orderService.employeeCompleteOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Order moved to COMPLETED"))
+    }
+
 }

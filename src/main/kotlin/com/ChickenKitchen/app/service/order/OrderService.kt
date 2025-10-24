@@ -15,4 +15,12 @@ interface OrderService {
     fun deleteDish(dishId: Long): Long
 
     fun confirmedOrder(req: OrderConfirmRequest) : String
+
+    fun getConfirmedOrdersForEmployeeStore(): List<OrderBriefResponse>
+
+    fun getConfirmedOrderDetailForEmployee(orderId: Long): OrderCurrentResponse
+
+    fun employeeAcceptOrder(orderId: Long): OrderBriefResponse
+    fun employeeMarkReadyOrder(orderId: Long): OrderBriefResponse
+    fun employeeCompleteOrder(orderId: Long): OrderBriefResponse
 }
