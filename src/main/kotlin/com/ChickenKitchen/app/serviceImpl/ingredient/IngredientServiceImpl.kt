@@ -27,7 +27,7 @@ class IngredientServiceImpl (
 
     override fun changeStatus(id: Long): IngredientDetailResponse {
         val ingredient = ingredientRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Cannot find Ingredient with id $id") }
+            .orElseThrow { IngredientNotFoundException("Cannot find Ingredient with id $id") }
 
         ingredient.isActive = !ingredient.isActive
         ingredientRepository.save(ingredient)
@@ -60,6 +60,7 @@ class IngredientServiceImpl (
 
         val ingredient = Ingredient(
             name = req.name,
+            description = req.description,
             baseUnit = req.baseUnit,
             batchNumber = req.batchNumber,
             isActive = req.isActive,
@@ -91,6 +92,7 @@ class IngredientServiceImpl (
             .orElseThrow { IngredientNotFoundException("Ingredient with id $id not found") }
 
         req.name?.let { ingredient.name = it }
+        req.description?.let { ingredient.description = it }
         req.imageUrl?.let { ingredient.imageUrl = it }
         req.baseUnit.let { ingredient.baseUnit = it }
         req.batchNumber?.let { ingredient.batchNumber = it }

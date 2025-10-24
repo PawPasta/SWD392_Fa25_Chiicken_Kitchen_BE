@@ -23,7 +23,8 @@ fun Ingredient.toIngredientResponse() : IngredientResponse =
     IngredientResponse (
         id = this.id!!,
         name = this.name,
-        imageUrl = this.imageUrl
+        imageUrl = this.imageUrl,
+        description = this.description
     )
 
 fun Ingredient.toIngredientDetailResponse(): IngredientDetailResponse {
@@ -40,6 +41,7 @@ fun Ingredient.toIngredientDetailResponse(): IngredientDetailResponse {
         imageUrl = this.imageUrl,
         isActive = this.isActive,
         createdAt = this.createdAt,
+        description = this.description
 //        storeBatches = batchResponses,
     )
 }
