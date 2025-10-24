@@ -17,7 +17,8 @@ class CorsConfig {
             "http://localhost:3000",
             "http://localhost:5173",
             "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173"
+            "http://127.0.0.1:5173",
+            "https://kitchen-chicken.vercel.app/"
         )
         config.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         config.allowedHeaders = listOf("Authorization", "Cache-Control", "Content-Type", "X-Requested-With")
