@@ -12,6 +12,8 @@ import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.service.payment.PaymentMethodService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
@@ -22,6 +24,15 @@ class PaymentMethodServiceImpl (
         val list = paymentMethodRepository.findAll()
         if(list.isEmpty()) return null
         return list.toListPaymentMethodResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<PaymentMethodResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = paymentMethodRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toListPaymentMethodResponse()
     }
 
     override fun getById(id: Long): PaymentMethodResponse {
@@ -84,6 +95,5 @@ class PaymentMethodServiceImpl (
 
         return save.toPaymentMethodResponse()
     }
-
-
+    override fun count(): Long = paymentMethodRepository.count()
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -28,8 +29,11 @@ class TransactionController (
 
     @Operation(summary = "Get all payment Method (all actor)")
     @GetMapping("/payment-method")
-    fun getAllPaymentMethod() : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(paymentMethodService.getAll(), "Get all payment method successfully"))
+    fun getAllPaymentMethod(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ) : ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(paymentMethodService.getAll(pageNumber, size), "Get all payment method successfully"))
     }
 
     @Operation(summary = "Get Payment Method By Id (all actor)")
@@ -62,10 +66,18 @@ class TransactionController (
         return ResponseEntity.ok(ResponseModel.success(paymentMethodService.delete(id), "Delete payment method Successfully"))
     }
 
+    @Operation(summary = "Get total payment methods")
+    @GetMapping("/payment-method/counts")
+    fun getPaymentMethodCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to paymentMethodService.count()), "Fetched payment method count"))
+
     @Operation(summary = "Get All Transaction (manager only)")
     @GetMapping
-    fun getAllTransaction() : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(transactionService.getAll(), "Get All Transaction Successfully"))
+    fun getAllTransaction(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ) : ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(transactionService.getAll(pageNumber, size), "Get All Transaction Successfully"))
     }
 
     @Operation(summary = "Get Transaction By Id (manager only)")
@@ -73,6 +85,11 @@ class TransactionController (
     fun getTransactionById (@PathVariable id : Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(transactionService.getById(id), "Get Transaction by $id successfully"))
     }
+
+    @Operation(summary = "Get total transactions (manager only)")
+    @GetMapping("/counts")
+    fun getTransactionCounts() : ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to transactionService.count()), "Fetched transaction count"))
 
 
 
