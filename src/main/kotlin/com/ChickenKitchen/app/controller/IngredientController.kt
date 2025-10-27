@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -26,10 +27,13 @@ class IngredientController (
 
     @Operation(summary = "Get All Ingredients")
     @GetMapping
-    fun getAllIngredients(): ResponseEntity<ResponseModel> {
+    fun getAllIngredients(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(
             ResponseModel.success(
-                ingredientService.getAll(),
+                ingredientService.getAll(pageNumber, size),
                 "Get All Ingredients successfully"
             )
         )
@@ -87,6 +91,11 @@ class IngredientController (
     fun deleteIngredient(@PathVariable id: Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(ingredientService.delete(id), "Delete Ingredient Successfully"))
     }
+
+    @Operation(summary = "Get total Ingredients")
+    @GetMapping("/counts")
+    fun getIngredientCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to ingredientService.count()), "Fetched ingredient count"))
 
 
 }
