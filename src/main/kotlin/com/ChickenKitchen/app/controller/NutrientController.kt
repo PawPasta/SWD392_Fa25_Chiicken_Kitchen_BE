@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.service.menu.NutrientService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 @RequestMapping("/api/nutrients")
@@ -16,8 +17,11 @@ class NutrientController(
 
     @Operation(summary = "Get all nutrients (all actor)")
     @GetMapping
-    fun getAll(): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(nutrientService.getAll(), "Fetched nutrients"))
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(nutrientService.getAll(pageNumber, size), "Fetched nutrients"))
 
     @Operation(summary = "Get nutrient by id (all actor)")
     @GetMapping("/{id}")
@@ -40,5 +44,9 @@ class NutrientController(
         nutrientService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "Nutrient deleted"))
     }
-}
 
+    @Operation(summary = "Get total nutrients (manager only)")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to nutrientService.count()), "Fetched nutrient count"))
+}
