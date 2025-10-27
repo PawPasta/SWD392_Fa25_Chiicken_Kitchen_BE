@@ -25,6 +25,8 @@ import com.ChickenKitchen.app.mapper.toBriefResponses
 import com.ChickenKitchen.app.mapper.toRecipeBriefResponse
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 @Service
 class MenuItemServiceImpl(
@@ -40,6 +42,15 @@ class MenuItemServiceImpl(
         val items = menuItemRepository.findAll()
         if (items.isEmpty()) return null
         return items.toMenuItemResponseList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<MenuItemResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = menuItemRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toMenuItemResponseList()
     }
 
     override fun getById(id: Long): MenuItemDetailResponse {
@@ -148,6 +159,8 @@ class MenuItemServiceImpl(
         val saved = menuItemRepository.save(item)
         return saved.toMenuItemResponse()
     }
+
+    override fun count(): Long = menuItemRepository.count()
 
     private fun buildDetail(item: MenuItem): MenuItemDetailResponse {
         val nutrientLinks = menuItemNutrientRepository.findByMenuItemId(item.id!!)
