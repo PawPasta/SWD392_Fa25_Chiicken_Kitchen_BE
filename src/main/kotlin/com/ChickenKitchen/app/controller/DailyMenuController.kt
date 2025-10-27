@@ -25,8 +25,11 @@ class DailyMenuController(
 
     @Operation(summary = "Get All Daily Menu")
     @GetMapping
-    fun getAll(): ResponseEntity<ResponseModel> {
-        val list = dailyMenuService.getAll()
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val list = dailyMenuService.getAll(pageNumber, size)
         return ResponseEntity.ok(
             ResponseModel.success(list, "Get All Daily Menu Successfully")
         )
@@ -72,4 +75,9 @@ class DailyMenuController(
         val result = dailyMenuService.getByStoreAndDate(storeId, date)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched daily menu for store $storeId on $date"))
     }
+
+    @Operation(summary = "Get total daily menus")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to dailyMenuService.count()), "Fetched daily menu count"))
 }
