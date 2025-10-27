@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.service.category.CategoryService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 @RequestMapping("/api/categories")
@@ -15,8 +16,11 @@ class CategoryController(
 ) {
     @Operation(summary = "Get all categories (all actor)")
     @GetMapping
-    fun getAll(): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(categoryService.getAll(), "Fetched categories"))
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(categoryService.getAll(pageNumber, size), "Fetched categories"))
 
     @Operation(summary = "Get category by id (all actor)")
     @GetMapping("/{id}")
@@ -39,5 +43,9 @@ class CategoryController(
         categoryService.delete(id)
         return ResponseEntity.ok(ResponseModel.success(null, "Category deleted"))
     }
-}
 
+    @Operation(summary = "Get total categories (manager only)")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to categoryService.count()), "Fetched category count"))
+}

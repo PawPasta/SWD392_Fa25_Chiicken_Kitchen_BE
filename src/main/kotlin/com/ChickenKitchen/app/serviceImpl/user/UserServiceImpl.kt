@@ -25,6 +25,9 @@ import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.model.entity.user.Wallet
 import com.ChickenKitchen.app.util.EmailUtil
 import java.sql.Timestamp
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
+import com.ChickenKitchen.app.model.dto.response.UserCountsResponse
 
 @Service
 class UserServiceImpl (
@@ -38,6 +41,15 @@ class UserServiceImpl (
         val users = userRepository.findAll()
         if (users.isEmpty()) return null
         return users.toUserResponseList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<UserResponse>? {
+        val safeSize = max(size, 1)
+        val safePageNumber = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePageNumber - 1, safeSize)
+        val page = userRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toUserResponseList()
     }
 
     override fun getById(id: Long) : UserDetailResponse {
@@ -183,6 +195,12 @@ class UserServiceImpl (
 
     override fun getAllRoles(): List<Role> {
         return Role.values().toList()
+    }
+
+    override fun getCounts(): UserCountsResponse {
+        val total = userRepository.count()
+        val byRole = Role.values().associateWith { role -> userRepository.countByRole(role) }
+        return UserCountsResponse(total = total, byRole = byRole)
     }
 
 }

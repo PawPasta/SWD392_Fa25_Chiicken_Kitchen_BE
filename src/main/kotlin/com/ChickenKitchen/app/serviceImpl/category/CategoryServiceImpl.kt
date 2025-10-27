@@ -14,6 +14,8 @@ import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.service.category.CategoryService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 @Service
 class CategoryServiceImpl(
@@ -24,6 +26,15 @@ class CategoryServiceImpl(
         val list = categoryRepository.findAll()
         if (list.isEmpty()) return null
         return list.toCategoryResponseList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<CategoryResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = categoryRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toCategoryResponseList()
     }
 
     override fun getById(id: Long): CategoryDetailResponse {
@@ -68,5 +79,6 @@ class CategoryServiceImpl(
 
         categoryRepository.delete(entity)
     }
-}
 
+    override fun count(): Long = categoryRepository.count()
+}
