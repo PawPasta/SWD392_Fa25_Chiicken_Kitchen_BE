@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.model.dto.response.PromotionResponse
 import com.ChickenKitchen.app.service.BaseService
 
 interface PromotionService : BaseService<PromotionResponse, PromotionDetailResponse, CreatePromotionRequest, UpdatePromotionRequest, Long>{
-
     fun changeStatus (id : Long) : PromotionResponse
+    fun getAll(pageNumber: Int, size: Int): List<PromotionResponse>?
+    fun count(): Long
 }
