@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 @RequestMapping("/api/steps")
@@ -19,8 +20,11 @@ class StepController(
     // Logged users can view
     @Operation(summary = "Get all steps (LOGGED)")
     @GetMapping
-    fun getAll(): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(stepService.getAll(), "Fetched steps"))
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(stepService.getAll(pageNumber, size), "Fetched steps"))
 
     @Operation(summary = "Get step by id (LOGGED)")
     @GetMapping("/{id}")
@@ -53,4 +57,9 @@ class StepController(
     @PatchMapping("/{id}/order")
     fun changeOrder(@PathVariable id: Long, @RequestBody req: StepOrderRequest): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(stepService.changeOrder(id, req), "Step order updated"))
+
+    @Operation(summary = "Get total steps (MANAGER)")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to stepService.count()), "Fetched step count"))
 }

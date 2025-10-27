@@ -9,5 +9,6 @@ import com.ChickenKitchen.app.service.BaseService
 
 interface StepService : BaseService<StepResponse, StepDetailResponse, CreateStepRequest, UpdateStepRequest, Long> {
     fun changeOrder(id: Long, req: StepOrderRequest): StepResponse
+    fun getAll(pageNumber: Int, size: Int): List<StepResponse>?
+    fun count(): Long
 }
-
