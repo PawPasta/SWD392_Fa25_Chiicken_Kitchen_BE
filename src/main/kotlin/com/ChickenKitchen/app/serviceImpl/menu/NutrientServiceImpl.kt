@@ -13,6 +13,9 @@ import com.ChickenKitchen.app.service.menu.NutrientService
 import com.ChickenKitchen.app.mapper.toNutrientDetailResponse
 import com.ChickenKitchen.app.mapper.toNutrientResponse
 import com.ChickenKitchen.app.mapper.toNutrientResponseList
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,6 +23,7 @@ class NutrientServiceImpl(
     private val nutrientRepository: NutrientRepository
 ) : NutrientService {
 
+    @Cacheable(cacheNames = ["nutrientsAll"], unless = "#result == null")
     override fun getAll(): List<NutrientResponse>? {
         val list = nutrientRepository.findAll()
         if (list.isEmpty()) return null
@@ -32,6 +36,9 @@ class NutrientServiceImpl(
         return entity.toNutrientDetailResponse()
     }
 
+    @Caching(
+        evict = [CacheEvict(cacheNames = ["nutrientsAll"], allEntries = true)]
+    )
     override fun create(req: CreateNutrientRequest): NutrientDetailResponse {
         val existedByName = nutrientRepository.findByName(req.name)
         if(existedByName != null){
@@ -45,6 +52,9 @@ class NutrientServiceImpl(
         return saved.toNutrientDetailResponse()
     }
 
+    @Caching(
+        evict = [CacheEvict(cacheNames = ["nutrientsAll"], allEntries = true)]
+    )
     override fun update(id: Long, req: UpdateNutrientRequest): NutrientDetailResponse {
         val current = nutrientRepository.findById(id)
             .orElseThrow { NutrientNotFoundException("Nutrient with id $id not found") }
@@ -58,6 +68,9 @@ class NutrientServiceImpl(
         return saved.toNutrientDetailResponse()
     }
 
+    @Caching(
+        evict = [CacheEvict(cacheNames = ["nutrientsAll"], allEntries = true)]
+    )
     override fun delete(id: Long) {
         val current = nutrientRepository.findById(id)
             .orElseThrow { NutrientNotFoundException("Nutrient with id $id not found") }
@@ -70,4 +83,3 @@ class NutrientServiceImpl(
         nutrientRepository.delete(current)
     }
 }
-

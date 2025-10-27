@@ -24,6 +24,9 @@ import com.ChickenKitchen.app.mapper.toMenuItemResponseList
 import com.ChickenKitchen.app.mapper.toBriefResponses
 import com.ChickenKitchen.app.mapper.toRecipeBriefResponse
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 
 @Service
@@ -36,6 +39,7 @@ class MenuItemServiceImpl(
     private val recipeRepository: RecipeRepository
 ) : MenuItemService {
 
+    @Cacheable(cacheNames = ["menuItemsAll"], unless = "#result == null")
     override fun getAll(): List<MenuItemResponse>? {
         val items = menuItemRepository.findAll()
         if (items.isEmpty()) return null
@@ -48,6 +52,15 @@ class MenuItemServiceImpl(
         return buildDetail(item)
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["menuItemsAll"], allEntries = true),
+            // Daily menu responses may include menu item fields; keep them in sync
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun create(req: CreateMenuItemRequest): MenuItemDetailResponse {
         val category = categoryRepository.findById(req.categoryId)
             .orElseThrow { CategoryNotFoundException("Category with id ${req.categoryId} not found") }
@@ -82,6 +95,14 @@ class MenuItemServiceImpl(
         return buildDetail(saved)
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["menuItemsAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun update(id: Long, req: UpdateMenuItemRequest): MenuItemDetailResponse {
         val item = menuItemRepository.findById(id)
             .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
@@ -119,6 +140,14 @@ class MenuItemServiceImpl(
         return buildDetail(item)
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["menuItemsAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun delete(id: Long) {
         val item = menuItemRepository.findById(id)
             .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
@@ -141,6 +170,14 @@ class MenuItemServiceImpl(
         menuItemRepository.delete(item)
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["menuItemsAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun changeStatus(id: Long): MenuItemResponse {
         val item = menuItemRepository.findById(id)
             .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }

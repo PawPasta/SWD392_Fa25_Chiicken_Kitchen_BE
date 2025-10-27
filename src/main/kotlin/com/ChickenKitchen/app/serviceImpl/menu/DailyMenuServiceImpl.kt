@@ -19,6 +19,9 @@ import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.service.menu.DailyMenuService
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 
 
@@ -30,18 +33,27 @@ class DailyMenuServiceImpl(
     private val menuItemRepository: MenuItemRepository
 
 ) : DailyMenuService{
+    @Cacheable(cacheNames = ["dailyMenuAll"], unless = "#result == null")
     override fun getAll(): List<DailyMenuResponse>? {
         val list = dailyMenuRepository.findAll()
         if (list.isEmpty()) return null
         return list.toDailyMenuListResponse()
     }
 
+    @Cacheable(cacheNames = ["dailyMenuById"], key = "#id")
     override fun getById(id: Long): DailyMenuDetailResponse {
         val dailyMenu = dailyMenuRepository.findById(id)
             .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
         return dailyMenu.toDailyMenuDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+        ]
+    )
     override fun create(req: CreateDailyMenuRequest): DailyMenuDetailResponse {
         if (dailyMenuRepository.existsByMenuDate(req.menuDate)) {
             throw DailyMenuAlreadyExistsException("Daily menu for date ${req.menuDate} already exists")
@@ -68,6 +80,13 @@ class DailyMenuServiceImpl(
         return savedMenu.toDailyMenuDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+        ]
+    )
     override fun update(
         id: Long,
         req: UpdateDailyMenuRequest
@@ -109,6 +128,13 @@ class DailyMenuServiceImpl(
         return updatedMenu.toDailyMenuDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+        ]
+    )
     override fun delete(id: Long) {
         val dailyMenu = dailyMenuRepository.findById(id)
             .orElseThrow { DailyMenuNotFoundException("Cannot find daily menu with id $id") }
@@ -123,6 +149,7 @@ class DailyMenuServiceImpl(
         dailyMenuRepository.delete(dailyMenu)
     }
 
+    @Cacheable(cacheNames = ["dailyMenuByStoreDate"], key = "#storeId + ':' + #date")
     override fun getByStoreAndDate(storeId: Long, date: String): DailyMenuByStoreResponse {
         // Expect date as yyyy-MM-dd (local date). Build start/end range in UTC+0; DB side uses Timestamp
         val start = java.sql.Timestamp.valueOf("${date} 00:00:00")

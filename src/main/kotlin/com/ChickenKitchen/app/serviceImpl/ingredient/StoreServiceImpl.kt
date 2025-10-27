@@ -14,6 +14,9 @@ import com.ChickenKitchen.app.model.dto.response.StoreResponse
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.service.ingredient.StoreService
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 
 
@@ -22,6 +25,12 @@ class StoreServiceImpl (
     private val storeRepository: StoreRepository
 ): StoreService{
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["storesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["storeById"], allEntries = true)
+        ]
+    )
     override fun changeStatus(id: Long): StoreResponse {
         val store = storeRepository.findById(id)
             .orElseThrow { StoreNotFoundException("Cannot find Store with id $id") }
@@ -30,18 +39,26 @@ class StoreServiceImpl (
         return saved.toStoreResponse()
     }
 
+    @Cacheable(cacheNames = ["storesAll"], unless = "#result == null")
     override fun getAll(): List<StoreResponse>? {
         val list = storeRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListStoreResponse()
     }
 
+    @Cacheable(cacheNames = ["storeById"], key = "#id")
     override fun getById(id: Long): StoreResponse {
         val store = storeRepository.findById(id)
             .orElseThrow { StoreNotFoundException("Cannot find Store with id $id") }
         return store.toStoreResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["storesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["storeById"], allEntries = true)
+        ]
+    )
     override fun create(req: CreateStoreRequest): StoreResponse {
 
         val existingByName = storeRepository.findByName(req.name)
@@ -64,6 +81,12 @@ class StoreServiceImpl (
         return saved.toStoreResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["storesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["storeById"], allEntries = true)
+        ]
+    )
     override fun update(
         id: Long,
         req: UpdateStoreRequest
@@ -81,6 +104,12 @@ class StoreServiceImpl (
         return saved.toStoreResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["storesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["storeById"], allEntries = true)
+        ]
+    )
     override fun delete(id: Long) {
         val store = storeRepository.findById(id)
             .orElseThrow { StoreNotFoundException("Cannot find Store with id $id") }

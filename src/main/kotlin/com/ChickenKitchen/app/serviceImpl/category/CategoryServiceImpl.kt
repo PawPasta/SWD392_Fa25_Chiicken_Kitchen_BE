@@ -13,6 +13,9 @@ import com.ChickenKitchen.app.model.dto.response.CategoryResponse
 import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.service.category.CategoryService
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,17 +23,28 @@ class CategoryServiceImpl(
     private val categoryRepository: CategoryRepository
 ) : CategoryService {
 
+    @Cacheable(cacheNames = ["categoriesAll"], unless = "#result == null")
     override fun getAll(): List<CategoryResponse>? {
         val list = categoryRepository.findAll()
         if (list.isEmpty()) return null
         return list.toCategoryResponseList()
     }
 
+    @Cacheable(cacheNames = ["categoryById"], key = "#id")
     override fun getById(id: Long): CategoryDetailResponse {
         val entity = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
         return entity.toCategoryDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["categoriesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["categoryById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun create(req: CreateCategoryRequest): CategoryDetailResponse {
 
         val current = categoryRepository.findByName(req.name)
@@ -47,6 +61,15 @@ class CategoryServiceImpl(
         return saved.toCategoryDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["categoriesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["categoryById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun update(id: Long, req: UpdateCategoryRequest): CategoryDetailResponse {
         val current = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
         val updated = Category(
@@ -59,6 +82,15 @@ class CategoryServiceImpl(
         return saved.toCategoryDetailResponse()
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["categoriesAll"], allEntries = true),
+            CacheEvict(cacheNames = ["categoryById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuByStoreDate"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuById"], allEntries = true),
+            CacheEvict(cacheNames = ["dailyMenuAll"], allEntries = true),
+        ]
+    )
     override fun delete(id: Long) {
         val entity = categoryRepository.findById(id).orElseThrow { CategoryNotFoundException("Category with id $id not found") }
 
@@ -69,4 +101,3 @@ class CategoryServiceImpl(
         categoryRepository.delete(entity)
     }
 }
-
