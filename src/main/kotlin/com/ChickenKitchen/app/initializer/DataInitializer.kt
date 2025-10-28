@@ -80,7 +80,7 @@ class DataInitializer {
                 isActive = true,
                 fullName = "Admin Con Ga",
                 provider = "Local",
-                imageURL = null
+                imageURL = null,
             ))
 
             userRepository.save(User(
@@ -93,6 +93,18 @@ class DataInitializer {
                 fullName = "Admin Nguyen Van A",
                 provider = "Google",
                 imageURL = "https://example.com/admin2.jpg"
+            ))
+
+            userRepository.save(User(
+                role = Role.ADMIN,
+                uid = "admin-uid-007",
+                email = "PhoenixZ3004@gmail.com",
+                isVerified = true,
+                phone = "0901234560",
+                isActive = true,
+                fullName = "Admin Thuan Lua Chua",
+                provider = "Local",
+                imageURL = null,
             ))
 
             // Manager users
@@ -120,10 +132,22 @@ class DataInitializer {
                 imageURL = "https://example.com/manager2.jpg"
             ))
 
+            userRepository.save(User(
+                role = Role.MANAGER,
+                uid = "manager-uid-008",
+                email = "PhoenixZ3303@gmail.com",
+                isVerified = true,
+                phone = "0901234591",
+                isActive = true,
+                fullName = "Manager Thuan Sieu To",
+                provider = "Local",
+                imageURL = "https://example.com/manager2.jpg"
+            ))
+
             // Employee users
             val employeeData = listOf(
                 Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
-                Triple("employee-uid-002", "employee2@chickenkitchen.com", "Employee Pham"),
+                Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
                 Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
                 Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
                 Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
