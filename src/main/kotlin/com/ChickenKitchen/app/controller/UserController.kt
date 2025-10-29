@@ -82,6 +82,7 @@ class UserController(
 
     // ===================== USER: Profile =====================
     @Operation(summary = "Get current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     fun getProfile(): ResponseEntity<ResponseModel> {
         val profile = userService.getProfile()
@@ -89,6 +90,7 @@ class UserController(
     }
 
     @Operation(summary = "Update current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/me")
     fun updateProfile(@RequestBody req: UpdateUserProfileRequest): ResponseEntity<ResponseModel> {
         val profile = userService.updateProfile(req)

@@ -61,9 +61,10 @@ class FilterConfig(
             }
             val requestUri = request.requestURI
 
-            // Public thì cho qua luôn
-            if (publicApis.any { requestUri.startsWith(it) }) {
-                filterChain.doFilter(request, response) 
+            // Allow public APIs except profile endpoint which must be authenticated
+            val isProfileEndpoint = requestUri.startsWith("/api/users/me")
+            if (!isProfileEndpoint && publicApis.any { requestUri.startsWith(it) }) {
+                filterChain.doFilter(request, response)
                 return
             }
 
