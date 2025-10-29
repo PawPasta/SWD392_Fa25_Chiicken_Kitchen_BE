@@ -20,6 +20,8 @@ import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.service.menu.DailyMenuService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
@@ -34,6 +36,15 @@ class DailyMenuServiceImpl(
         val list = dailyMenuRepository.findAll()
         if (list.isEmpty()) return null
         return list.toDailyMenuListResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<DailyMenuResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = dailyMenuRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toDailyMenuListResponse()
     }
 
     override fun getById(id: Long): DailyMenuDetailResponse {
@@ -122,6 +133,8 @@ class DailyMenuServiceImpl(
 
         dailyMenuRepository.delete(dailyMenu)
     }
+
+    override fun count(): Long = dailyMenuRepository.count()
 
     override fun getByStoreAndDate(storeId: Long, date: String): DailyMenuByStoreResponse {
         // Expect date as yyyy-MM-dd (local date). Build start/end range in UTC+0; DB side uses Timestamp

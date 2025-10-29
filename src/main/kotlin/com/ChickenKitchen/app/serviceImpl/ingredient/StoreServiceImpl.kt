@@ -15,6 +15,8 @@ import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.service.ingredient.StoreService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
@@ -34,6 +36,15 @@ class StoreServiceImpl (
         val list = storeRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListStoreResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<StoreResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = storeRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toListStoreResponse()
     }
 
     override fun getById(id: Long): StoreResponse {
@@ -99,4 +110,6 @@ class StoreServiceImpl (
 
         storeRepository.delete(store)
     }
+
+    override fun count(): Long = storeRepository.count()
 }

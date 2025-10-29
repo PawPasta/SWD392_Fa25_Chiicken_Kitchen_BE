@@ -6,5 +6,7 @@ import com.ChickenKitchen.app.model.dto.response.NutrientResponse
 import com.ChickenKitchen.app.model.dto.response.NutrientDetailResponse
 import com.ChickenKitchen.app.service.BaseService
 
-interface NutrientService : BaseService<NutrientResponse, NutrientDetailResponse, CreateNutrientRequest, UpdateNutrientRequest, Long>
-
+interface NutrientService : BaseService<NutrientResponse, NutrientDetailResponse, CreateNutrientRequest, UpdateNutrientRequest, Long> {
+    fun getAll(pageNumber: Int, size: Int): List<NutrientResponse>?
+    fun count(): Long
+}

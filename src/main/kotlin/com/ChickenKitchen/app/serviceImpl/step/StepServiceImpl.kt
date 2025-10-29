@@ -19,6 +19,9 @@ import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.service.step.StepService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import kotlin.math.max
 
 @Service
 class StepServiceImpl(
@@ -30,6 +33,15 @@ class StepServiceImpl(
         val steps = stepRepository.findAll().sortedBy { it.stepNumber }
         if (steps.isEmpty()) return null
         return steps.toStepResponseList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<StepResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize, Sort.by("stepNumber").ascending())
+        val page = stepRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toStepResponseList()
     }
 
     override fun getById(id: Long): StepDetailResponse {
@@ -114,6 +126,8 @@ class StepServiceImpl(
         stepRepository.delete(step)
     }
 
+    override fun count(): Long = stepRepository.count()
+
     @Transactional
     override fun changeOrder(id: Long, req: StepOrderRequest): StepResponse {
         val step = stepRepository.findById(id)
@@ -171,4 +185,3 @@ class StepServiceImpl(
         return saved.toStepResponse()
     }
 }
-

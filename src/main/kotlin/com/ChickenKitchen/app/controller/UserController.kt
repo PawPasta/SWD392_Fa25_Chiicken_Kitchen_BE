@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.security.access.prepost.PreAuthorize
 
 @RestController
@@ -31,8 +32,11 @@ class UserController(
     @Operation(summary = "Get all users (ADMIN)")
     // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @GetMapping
-    fun getAllUsers(): ResponseEntity<ResponseModel> {
-        val users = userService.getAll()
+    fun getAllUsers(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val users = userService.getAll(pageNumber = pageNumber, size = size)
         return ResponseEntity.ok(ResponseModel.success(users, "Fetched users successfully"))
     }
 
@@ -78,6 +82,7 @@ class UserController(
 
     // ===================== USER: Profile =====================
     @Operation(summary = "Get current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     fun getProfile(): ResponseEntity<ResponseModel> {
         val profile = userService.getProfile()
@@ -85,6 +90,7 @@ class UserController(
     }
 
     @Operation(summary = "Update current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/me")
     fun updateProfile(@RequestBody req: UpdateUserProfileRequest): ResponseEntity<ResponseModel> {
         val profile = userService.updateProfile(req)
@@ -105,5 +111,13 @@ class UserController(
     fun getAllRoles(): ResponseEntity<ResponseModel> {
         val roles: List<Role> = userService.getAllRoles()
         return ResponseEntity.ok(ResponseModel.success(roles, "Fetched roles successfully"))
+    }
+
+    @Operation(summary = "Get total users and counts by role (ADMIN)")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
+    @GetMapping("/counts")
+    fun getUserCounts(): ResponseEntity<ResponseModel> {
+        val counts = userService.getCounts()
+        return ResponseEntity.ok(ResponseModel.success(counts, "Fetched user counts successfully"))
     }
 }

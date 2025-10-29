@@ -8,6 +8,7 @@ import com.ChickenKitchen.app.model.dto.response.DailyMenuResponse
 import com.ChickenKitchen.app.service.BaseService
 
 interface DailyMenuService : BaseService<DailyMenuResponse, DailyMenuDetailResponse, CreateDailyMenuRequest, UpdateDailyMenuRequest, Long> {
-
+    fun getAll(pageNumber: Int, size: Int): List<DailyMenuResponse>?
+    fun count(): Long
     fun getByStoreAndDate(storeId: Long, date: String): DailyMenuByStoreResponse
 }

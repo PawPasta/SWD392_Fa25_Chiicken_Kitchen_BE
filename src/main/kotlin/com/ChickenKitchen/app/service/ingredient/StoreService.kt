@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.service.BaseService
 
 
 interface StoreService : BaseService<StoreResponse, StoreResponse, CreateStoreRequest, UpdateStoreRequest,Long>{
-
     fun changeStatus (id : Long) : StoreResponse
+    fun getAll(pageNumber: Int, size: Int): List<StoreResponse>?
+    fun count(): Long
 }

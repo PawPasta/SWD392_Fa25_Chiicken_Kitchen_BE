@@ -8,5 +8,6 @@ import com.ChickenKitchen.app.service.BaseService
 
 interface MenuItemService : BaseService<MenuItemResponse, MenuItemDetailResponse, CreateMenuItemRequest, UpdateMenuItemRequest, Long> {
     fun changeStatus(id: Long): MenuItemResponse
+    fun getAll(pageNumber: Int, size: Int): List<MenuItemResponse>?
+    fun count(): Long
 }
-

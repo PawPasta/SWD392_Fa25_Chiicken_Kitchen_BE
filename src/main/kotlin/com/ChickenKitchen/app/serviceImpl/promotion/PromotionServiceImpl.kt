@@ -16,6 +16,8 @@ import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.promotion.PromotionService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
@@ -38,6 +40,15 @@ class PromotionServiceImpl (
        val list = promotionRepository.findAll()
         if(list.isEmpty()) return null
         return  list.toPromotionList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<PromotionResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = promotionRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toPromotionList()
     }
 
     override fun getById(id: Long): PromotionDetailResponse {
@@ -114,4 +125,6 @@ class PromotionServiceImpl (
 
         promotionRepository.delete(promotion)
     }
+
+    override fun count(): Long = promotionRepository.count()
 }

@@ -8,6 +8,7 @@ import com.ChickenKitchen.app.service.BaseService
 
 
 interface IngredientService  : BaseService<IngredientResponse, IngredientDetailResponse, CreateIngredientRequest, UpdateIngredientRequest, Long>{
-
     fun changeStatus (id : Long) : IngredientDetailResponse
+    fun getAll(pageNumber: Int, size: Int): List<IngredientResponse>?
+    fun count(): Long
 }

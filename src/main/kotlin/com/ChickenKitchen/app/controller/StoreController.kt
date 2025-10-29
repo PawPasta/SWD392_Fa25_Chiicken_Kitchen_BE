@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -25,8 +26,11 @@ class StoreController (
 
     @Operation(summary = "Get All Store")
     @GetMapping
-    fun getAllStore() : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(storeService.getAll(), "Get All Store successfully"))
+    fun getAllStore(
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ) : ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(storeService.getAll(pageNumber, size), "Get All Store successfully"))
     }
 
     @Operation(summary = "Get Store By Id")
@@ -59,4 +63,9 @@ class StoreController (
     fun delete (@PathVariable id :Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(storeService.delete(id), "Delete Store Successfully"))
     }
+
+    @Operation(summary = "Get total stores")
+    @GetMapping("/counts")
+    fun getStoreCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to storeService.count()), "Fetched store count"))
 }
