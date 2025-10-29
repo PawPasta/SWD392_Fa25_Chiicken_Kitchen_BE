@@ -54,6 +54,9 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // https://mvnrepository.com/artifact/com.google.firebase/firebase-admin
+    implementation("com.google.firebase:firebase-admin:9.4.3")
 }
 
 kotlin {

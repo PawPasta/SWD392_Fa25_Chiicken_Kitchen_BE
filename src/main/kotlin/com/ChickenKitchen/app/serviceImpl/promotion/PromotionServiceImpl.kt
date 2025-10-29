@@ -6,18 +6,24 @@ import com.ChickenKitchen.app.mapper.toPromotionDetailResponse
 import com.ChickenKitchen.app.mapper.toPromotionList
 import com.ChickenKitchen.app.mapper.toPromotionResponse
 import com.ChickenKitchen.app.model.dto.request.CreatePromotionRequest
+import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
 import com.ChickenKitchen.app.model.dto.request.UpdatePromotionRequest
 import com.ChickenKitchen.app.model.dto.response.PromotionDetailResponse
 import com.ChickenKitchen.app.model.dto.response.PromotionResponse
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
+import com.ChickenKitchen.app.repository.user.UserRepository
+import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.promotion.PromotionService
 import org.springframework.stereotype.Service
 
 
 @Service
 class PromotionServiceImpl (
-    private val promotionRepository: PromotionRepository
+    private val promotionRepository: PromotionRepository,
+    private val userRepository: UserRepository,
+
+    private val notificationService: NotificationService
 ): PromotionService{
 
     override fun changeStatus(id: Long): PromotionResponse {
@@ -53,6 +59,29 @@ class PromotionServiceImpl (
        )
 
         val save = promotionRepository.save(promotion)
+
+        val users = userRepository.findAll()
+        val tokens = users.mapNotNull { it.fcmToken }
+
+        print("Ditconmemay $tokens" )// replace `fcmToken` with your User token property
+
+        if (tokens.isNotEmpty()) {
+            val req = MultipleNotificationRequest(
+                tokens = tokens,
+                title = "Á đù có Khuyến mãi mới này ní, ní có muốn dùng thử không?",
+                body = "Chỉ có 1 trong đêm nay, đêm nay là vua của mọi deal giảm giá, admin mới đúc cần cho mọi người nè"
+            )
+            notificationService.sendToMultipleTokens(req)
+        }
+
+
+//        val req = NotificationRequest (
+//            token= "nice",
+//            title = "Á đù có Khuyến mãi mới này ní, ní có muốn dùng thử không?",
+//            body = "Chỉ có 1 trong đêm nay, đêm nay là vua",
+//        )
+//        notificationService.sendToToken(req)
+
 
         return save.toPromotionDetailResponse()
     }

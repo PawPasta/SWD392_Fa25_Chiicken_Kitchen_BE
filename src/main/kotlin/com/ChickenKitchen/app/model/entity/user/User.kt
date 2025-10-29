@@ -4,7 +4,6 @@ import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.model.entity.auth.MailToken
 import com.ChickenKitchen.app.model.entity.auth.UserSession
 import com.ChickenKitchen.app.model.entity.order.Order
-import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -50,6 +49,9 @@ class User(
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = false,
+
+    @Column(name = "fcm_token", nullable = true, length = 500)
+    var fcmToken: String? = null,
 
     @Column(name = "full_name", nullable = false, length = 100)
     var fullName: String,

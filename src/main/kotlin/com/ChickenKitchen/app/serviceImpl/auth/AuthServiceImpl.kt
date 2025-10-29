@@ -39,15 +39,23 @@ class AuthServiceImpl(
         val uid = payload.path("user_id").asText(payload.path("sub").asText(null))
 
         val user = userRepository.findByEmail(email)
+            ?.apply {
+                // Chỉ cập nhật fcmToken khi req.fcmToken không null
+                if (req.fcmToken != null) {
+                    this.fcmToken = req.fcmToken
+                    userRepository.save(this)
+                }
+            }
             ?: userRepository.save(
                 User(
-                    fullName = fullName, 
+                    fullName = fullName,
                     email = email,
                     role = Role.USER,
                     isActive = true,
                     isVerified = payload.path("email_verified").asBoolean(true),
                     imageURL = picture,
                     provider = provider,
+                    fcmToken = req.fcmToken,
                 ).also { it.uid = uid }
             )
 

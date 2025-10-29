@@ -22,6 +22,8 @@ class FilterConfig(
 
     private val publicApis = listOf(
         // Swagger/OpenAPI
+
+
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-ui.html",
@@ -44,6 +46,8 @@ class FilterConfig(
         "/api/store",
         "/api/transaction",
         "/api/users",
+
+        "/api/notifications"
 
         // Broad allow for all APIs (temporary)
         // "/api" // uncomment to allow absolutely all under /api
