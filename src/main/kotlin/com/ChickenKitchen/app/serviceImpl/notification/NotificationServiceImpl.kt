@@ -1,7 +1,8 @@
 package com.ChickenKitchen.app.serviceImpl.notification
 
 import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
-import com.ChickenKitchen.app.model.dto.request.NotificationRequest
+import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
+import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
@@ -10,41 +11,44 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
 @Service
-class NotificationServiceImpl : NotificationService {
+class NotificationServiceImpl (
+    private val userRepository: UserRepository,
+) : NotificationService {
 
-    private val imageUrl = "https://tse3.mm.bing.net/th/id/OIP.Iuj2Lwxu4EIvK11euDVSPgHaEK?rs=1&pid=ImgDetMain&o=7&rm=3"
+    private val imageUrl = "https://i.pinimg.com/1200x/1c/dd/c0/1cddc02da4fd7350fbf020764e5e612c.jpg"
 
-    override fun sendToToken(req: NotificationRequest) {
-        val message = buildMessage(req.token, req.title, req.body)
+    override fun sendToUser(req: SingleNotificationRequest) {
+        val fcmToken = req.user.fcmToken?.takeIf { it.isNotBlank() } ?: return
+
         try {
-            FirebaseMessaging.getInstance().send(message)
+            FirebaseMessaging.getInstance().send(
+                buildMessage(fcmToken, req.title, req.body)
+            )
         } catch (_: Exception) { }
     }
 
     @Async
-    override fun sendToMultipleTokens(req: MultipleNotificationRequest) {
-        val tokens = req.tokens.filter { it.isNotBlank() }
+    override fun sendToAllUsers(req: MultipleNotificationRequest) {
+        val tokens = userRepository.findAll()
+            .mapNotNull { it.fcmToken }
+            .filter { it.isNotBlank() }
+
         if (tokens.isEmpty()) return
 
         tokens.chunked(500).forEach { batch ->
-            val messages = batch.map { token ->
-                buildMessage(token, req.title, req.body)
-            }
+            val messages = batch.map { token -> buildMessage(token, req.title, req.body) }
             try {
                 FirebaseMessaging.getInstance().sendEach(messages)
-            } catch (e: Exception) {
-
-            }
+            } catch (_: Exception) { }
         }
     }
-
 
     private fun buildMessage(token: String, title: String, body: String): Message {
         return Message.builder()
             .setToken(token)
             .putData("title", title)
             .putData("body", body)
-            .putData("click_action", "FLUTTER_NOTIFICATION_CLICK") // để onMessageOpenedApp hoạt động
+            .putData("click_action", "FLUTTER_NOTIFICATION_CLICK")
             .setNotification(
                 Notification.builder()
                     .setTitle(title)
