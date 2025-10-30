@@ -10,4 +10,5 @@ interface MenuItemService : BaseService<MenuItemResponse, MenuItemDetailResponse
     fun changeStatus(id: Long): MenuItemResponse
     fun getAll(pageNumber: Int, size: Int): List<MenuItemResponse>?
     fun count(): Long
+    fun search(name: String? = null, categoryId: Long? = null, sortBy: String = "name", direction: String = "asc"): List<MenuItemResponse>
 }

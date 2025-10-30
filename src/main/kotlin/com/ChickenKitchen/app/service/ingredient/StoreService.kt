@@ -3,6 +3,7 @@ package com.ChickenKitchen.app.service.ingredient
 import com.ChickenKitchen.app.model.dto.request.CreateStoreRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateStoreRequest
 import com.ChickenKitchen.app.model.dto.response.StoreResponse
+import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.service.BaseService
 
 
@@ -10,4 +11,5 @@ interface StoreService : BaseService<StoreResponse, StoreResponse, CreateStoreRe
     fun changeStatus (id : Long) : StoreResponse
     fun getAll(pageNumber: Int, size: Int): List<StoreResponse>?
     fun count(): Long
+    fun search(name: String? = null, city: String? = null, sortBy: String = "name", direction: String = "asc"): List<Store>
 }

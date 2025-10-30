@@ -26,7 +26,10 @@ import com.ChickenKitchen.app.mapper.toRecipeBriefResponse
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import kotlin.math.max
+import jakarta.persistence.criteria.Predicate
 
 @Service
 class MenuItemServiceImpl(
@@ -173,5 +176,36 @@ class MenuItemServiceImpl(
             nutrients = nutrientBriefs,
             recipes = recipeBriefs
         )
+    }
+
+    override fun search(name: String?, categoryId: Long?, sortBy: String, direction: String): List<MenuItemResponse> {
+        val spec = Specification<MenuItem> { root, query, cb ->
+            val preds = mutableListOf<Predicate>()
+            if (!name.isNullOrBlank()) {
+                preds.add(cb.like(cb.lower(root.get<String>("name")), "%${name.trim().lowercase()}%"))
+            }
+            if (categoryId != null) {
+                preds.add(cb.equal(root.get<Any>("category").get<Long>("id"), categoryId))
+            }
+            if (preds.isNotEmpty()) {
+                query?.where(*preds.toTypedArray())
+            }
+            null
+        }
+
+        val sort = if (direction.equals("desc", true)) Sort.by(sortBy).descending() else Sort.by(sortBy).ascending()
+        return menuItemRepository.findAll(spec, sort).map { mi ->
+            MenuItemResponse(
+                id = mi.id!!,
+                name = mi.name,
+                categoryId = mi.category.id!!,
+                categoryName = mi.category.name,
+                isActive = mi.isActive,
+                imageUrl = mi.imageUrl,
+                price = mi.price,
+                cal = mi.cal,
+                description = mi.description
+            )
+        }
     }
 }
