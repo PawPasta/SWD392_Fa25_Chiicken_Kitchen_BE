@@ -77,5 +77,11 @@ class OrderCustomerController(
         val result = customerOrderService.getFeedbackByOrder(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched feedback"))
     }
-}
 
+    @Operation(summary = "Track order progress by order id")
+    @GetMapping("/{orderId}/tracking")
+    fun getOrderTracking(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = customerOrderService.getOrderTracking(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched order tracking"))
+    }
+}

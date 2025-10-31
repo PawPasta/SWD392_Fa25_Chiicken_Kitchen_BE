@@ -24,6 +24,7 @@ import com.ChickenKitchen.app.model.dto.response.CurrentStepResponse
 import com.ChickenKitchen.app.model.dto.response.FeedbackResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.OrderTrackingResponse
 import com.ChickenKitchen.app.model.entity.order.Feedback
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
@@ -256,6 +257,64 @@ class CustomerOrderServiceImpl(
             reply = fb.reply,
             createdAt = fb.createdAt,
             updatedAt = fb.updatedAt
+        )
+    }
+
+    private fun progressFromStatus(status: OrderStatus): Int = when (status) {
+        OrderStatus.NEW -> 10
+        OrderStatus.FAILED -> 0
+        OrderStatus.CONFIRMED -> 25
+        OrderStatus.PROCESSING -> 60
+        OrderStatus.READY -> 85
+        OrderStatus.COMPLETED -> 100
+        OrderStatus.CANCELLED -> 0
+    }
+
+    override fun getOrderTracking(orderId: Long): OrderTrackingResponse {
+        val user = currentUser()
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.user.id != user.id) {
+            throw IllegalArgumentException("You can only track your own order")
+        }
+
+        val allDishes = dishRepository.findAllByOrderId(order.id!!)
+        val dishResponses = allDishes.map { d ->
+            val steps = orderStepRepository.findAllByDishId(d.id!!)
+            val stepResponses = steps.map { st ->
+                val itemResponses = st.items.map { link ->
+                    val mi = link.dailyMenuItem.menuItem
+                    CurrentStepItemResponse(
+                        dailyMenuItemId = link.dailyMenuItem.id!!,
+                        menuItemId = mi.id!!,
+                        menuItemName = mi.name,
+                        quantity = link.quantity,
+                        price = mi.price,
+                        cal = mi.cal
+                    )
+                }
+                CurrentStepResponse(
+                    stepId = st.step.id!!,
+                    stepName = st.step.name,
+                    items = itemResponses
+                )
+            }
+            CurrentDishResponse(
+                dishId = d.id!!,
+                note = d.note,
+                price = d.price,
+                cal = d.cal,
+                updatedAt = d.updatedAt,
+                steps = stepResponses
+            )
+        }
+
+        return OrderTrackingResponse(
+            orderId = order.id!!,
+            status = order.status.name,
+            progress = progressFromStatus(order.status),
+            dishes = dishResponses
         )
     }
 

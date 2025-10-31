@@ -162,20 +162,21 @@ class OrderPaymentServiceImpl(
             throw InvalidOrderStepException("Invalid payment amount: $finalAmount VND. Must be between 5,000 and < 1,000,000,000")
         }
 
-        return processPayment(order, paymentMethod, finalAmount)
+        return processPayment(order, paymentMethod, finalAmount, req.channel)
     }
 
     override fun processPayment(
         order: Order,
         paymentMethod: PaymentMethod,
-        amount: Int
+        amount: Int,
+        channel: String?
     ): String {
         val payment = paymentRepository.findByOrderId(order.id!!)
             ?: throw InvalidOrderStepException("Payment not found for order ${order.id}")
 
         return when (paymentMethod.name.uppercase()) {
             "VNPAY" -> {
-                vnPayService.createVnPayURL(order)
+                vnPayService.createVnPayURL(order, channel)
             }
             "WALLET" -> {
                 walletService.deductFromWallet(order.user, amount)

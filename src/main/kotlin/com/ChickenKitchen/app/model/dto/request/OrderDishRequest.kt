@@ -26,4 +26,6 @@ data class OrderConfirmRequest(
     val orderId: Long,
     val paymentMethodId : Long,
     val promotionId : Long? = null,
+    // Optional channel to decide VNPay return URL ("web" or "app")
+    val channel: String? = null,
 )

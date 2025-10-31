@@ -8,6 +8,7 @@ import com.ChickenKitchen.app.model.dto.response.AddDishResponse
 import com.ChickenKitchen.app.model.dto.response.FeedbackResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.OrderTrackingResponse
 
 interface CustomerOrderService {
     fun addDishToCurrentOrder(req: CreateDishRequest): AddDishResponse
@@ -20,5 +21,6 @@ interface CustomerOrderService {
 
     fun createFeedback(orderId: Long, req: CreateFeedbackRequest): FeedbackResponse
     fun getFeedbackByOrder(orderId: Long): FeedbackResponse
-}
 
+    fun getOrderTracking(orderId: Long): OrderTrackingResponse
+}

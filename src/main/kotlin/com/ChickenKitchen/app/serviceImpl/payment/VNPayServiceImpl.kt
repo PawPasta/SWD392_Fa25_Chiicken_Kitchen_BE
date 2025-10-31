@@ -32,11 +32,16 @@ class VNPayServiceImpl (
 ) : VNPayService {
 
     @Transactional
-    override fun createVnPayURL (order: Order): String {
+    override fun createVnPayURL(order: Order, channel: String?): String {
         val payment = paymentRepository.findByOrderId(order.id
         ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
         val orderInfo = "Payment for order $order.id ${payment?.user?.id}"
         val vnpTxnRef = VNPayConfig.getRandomNumber(8)
+
+        val returnUrlBase = when (channel?.lowercase()) {
+            "app" -> vnPayConfig.vnpAppReturnUrl
+            else -> vnPayConfig.vnpReturnUrl
+        }
 
         val vnpParams = mutableMapOf(
             "vnp_Version" to vnPayConfig.vnpVersion,
@@ -49,7 +54,7 @@ class VNPayServiceImpl (
             "vnp_OrderInfo" to orderInfo,
             "vnp_OrderType" to vnPayConfig.vnpOrderType,
             "vnp_Locale" to "vn",
-            "vnp_ReturnUrl" to "${vnPayConfig.vnpReturnUrl}?orderId=${order.id}",
+            "vnp_ReturnUrl" to "$returnUrlBase?orderId=${order.id}",
             "vnp_IpAddr" to vnPayConfig.vnpIpAddr
         )
 
