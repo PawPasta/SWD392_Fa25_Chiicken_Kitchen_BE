@@ -236,15 +236,26 @@ CREATE TABLE `orders` (
 DROP TABLE IF EXISTS `dishes`;
 CREATE TABLE `dishes` (
                           `id` BIGINT NOT NULL AUTO_INCREMENT,
-                          `order_id` BIGINT NOT NULL,
                           `price` INT NOT NULL,
                           `cal` INT NOT NULL,
+                          `is_custom` BIT(1) NOT NULL DEFAULT 0,
                           `note` VARCHAR(255) DEFAULT NULL,
                           `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                           `updated_at` DATETIME(6) DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
-                          PRIMARY KEY (`id`),
-                          INDEX `idx_order` (`order_id`),
-                          CONSTRAINT `FK_dish_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+                          PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Join table between orders and dishes
+DROP TABLE IF EXISTS `order_dishes`;
+CREATE TABLE `order_dishes` (
+                                `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                `order_id` BIGINT NOT NULL,
+                                `dish_id` BIGINT NOT NULL,
+                                PRIMARY KEY (`id`),
+                                INDEX `idx_order` (`order_id`),
+                                INDEX `idx_dish` (`dish_id`),
+                                CONSTRAINT `FK_od_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+                                CONSTRAINT `FK_od_dish` FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Bước thực hiện cho món

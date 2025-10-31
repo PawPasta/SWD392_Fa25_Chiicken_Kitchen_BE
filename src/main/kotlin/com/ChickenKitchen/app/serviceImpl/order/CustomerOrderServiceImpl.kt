@@ -36,6 +36,7 @@ import com.ChickenKitchen.app.repository.order.FeedbackRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
+import com.ChickenKitchen.app.repository.order.OrderDishRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
@@ -61,6 +62,7 @@ class CustomerOrderServiceImpl(
     private val menuItemRepository: MenuItemRepository,
     private val dailyMenuRepository: DailyMenuRepository,
     private val dishRepository: DishRepository,
+    private val orderDishRepository: OrderDishRepository,
     private val paymentRepository: PaymentRepository,
 ) : CustomerOrderService {
 
@@ -126,15 +128,19 @@ class CustomerOrderServiceImpl(
                     // Cleanup duplicate NEW orders fully then delete the order
                     orderStepItemRepository.deleteByOrderId(dup.id!!)
                     orderStepRepository.deleteByDishOrderId(dup.id!!)
+                    // Delete custom dishes linked to this order, then remove links
                     dishRepository.deleteByOrderId(dup.id!!)
+                    orderDishRepository.deleteByOrderId(dup.id!!)
                     orderRepository.delete(dup)
                 }
             }
             keeper
         }
 
-        // Create dish entry with temporary totals = 0
-        val dish = dishRepository.save(Dish(order = order, price = 0, cal = 0, note = req.note))
+        // Create dish entry with temporary totals = 0, mark as custom
+        val dish = dishRepository.save(Dish(price = 0, cal = 0, isCustom = true, note = req.note))
+        // Link dish to order via join table
+        orderDishRepository.save(com.ChickenKitchen.app.model.entity.order.OrderDish(order = order, dish = dish))
 
         val stepMap = stepRepository.findAllById(req.selections.map { it.stepId }).associateBy { it.id!! }
         val createdSteps = mutableListOf<CreatedOrderStep>()
@@ -373,6 +379,7 @@ class CustomerOrderServiceImpl(
                 orderStepItemRepository.deleteByOrderId(order.id!!)
                 orderStepRepository.deleteByDishOrderId(order.id!!)
                 dishRepository.deleteByOrderId(order.id!!)
+                orderDishRepository.deleteByOrderId(order.id!!)
                 // Reset order total when clearing dishes
                 order.totalPrice = 0
                 orderRepository.save(order)
@@ -440,9 +447,12 @@ class CustomerOrderServiceImpl(
     override fun updateDish(dishId: Long, req: UpdateDishRequest): AddDishResponse {
         if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
 
-        val dish =
-            dishRepository.findById(dishId).orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
-        val order = dish.order
+        val dish = dishRepository.findById(dishId)
+            .orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
+        val orderId = orderDishRepository.findOrderIdByDishId(dishId)
+            ?: throw OrderNotFoundException("Order for dish $dishId not found")
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
 
         if (order.status != OrderStatus.NEW)
             throw InvalidOrderStatusException("Cannot update dish when order is ${order.status}")
@@ -529,11 +539,13 @@ class CustomerOrderServiceImpl(
     override fun deleteDish(dishId: Long): Long {
         val dish = dishRepository.findById(dishId)
             .orElseThrow { DishNotFoundException("Dish with id $dishId not found") }
-
-        val orderId = dish.order.id!!
+        val orderId = orderDishRepository.findOrderIdByDishId(dishId)
+            ?: throw OrderNotFoundException("Order for dish $dishId not found")
         try {
             orderStepItemRepository.deleteByDishId(dishId)
             orderStepRepository.deleteByDishId(dishId)
+            // Remove link and dish entity
+            orderDishRepository.deleteByDishId(dishId)
             dishRepository.delete(dish)
         } catch (ex: Exception) {
             throw DeleteDishFailedException("Failed to delete dish with id $dishId: ${ex.message}")

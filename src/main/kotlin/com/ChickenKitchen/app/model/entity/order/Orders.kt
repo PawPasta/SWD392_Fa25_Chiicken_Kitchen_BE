@@ -4,7 +4,7 @@ import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.model.entity.payment.Payment
 import com.ChickenKitchen.app.model.entity.promotion.OrderPromotion
-import com.ChickenKitchen.app.model.entity.step.Dish
+import com.ChickenKitchen.app.model.entity.order.OrderDish
 import com.ChickenKitchen.app.model.entity.user.User
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
@@ -47,8 +47,9 @@ class Order(
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Timestamp? = null,
 
-    @OneToMany(mappedBy = "order")
-    var dishes: MutableList<Dish> = mutableListOf(),
+    // Dishes are linked via OrderDish join entity (order_dishes table)
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var orderDishes: MutableList<OrderDish> = mutableListOf(),
 
     @OneToMany(mappedBy = "order")
     var orderPromotions: MutableList<OrderPromotion> = mutableListOf(),
