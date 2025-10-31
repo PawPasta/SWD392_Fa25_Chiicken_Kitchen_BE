@@ -1,9 +1,6 @@
 package com.ChickenKitchen.app.controller
 
-
-
 import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
-import com.ChickenKitchen.app.model.dto.request.NotificationRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.notification.NotificationService
 import io.swagger.v3.oas.annotations.Operation
@@ -21,14 +18,8 @@ class NotificationController(
 ) {
 
     @Operation(summary = "Send test notification to a device ")
-    @PostMapping("/personal")
-    fun sendToTokenPersonal(@RequestBody req : NotificationRequest) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(notificationService.sendToToken(req), "Send successfully" ))
-    }
-
-    @Operation(summary = "Send test notification to a device ")
     @PostMapping("/mutiple")
-    fun sendToTokenMutiple(@RequestBody req : MultipleNotificationRequest) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(notificationService.sendToMultipleTokens(req), "Send successfully" ))
+    fun sendToTokenMultiple(@RequestBody req : MultipleNotificationRequest) : ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(notificationService.sendToAllUsers(req), "Send successfully" ))
     }
 }

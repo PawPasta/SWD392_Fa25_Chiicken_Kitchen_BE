@@ -16,7 +16,10 @@ import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.service.ingredient.StoreService
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import kotlin.math.max
+import jakarta.persistence.criteria.Predicate
 
 
 @Service
@@ -112,4 +115,22 @@ class StoreServiceImpl (
     }
 
     override fun count(): Long = storeRepository.count()
+    override fun search(name: String?, city: String?, sortBy: String, direction: String): List<Store> {
+        val spec = Specification<Store> { root, query, cb ->
+            val preds = mutableListOf<Predicate>()
+            if (!name.isNullOrBlank()) {
+                preds.add(cb.like(cb.lower(root.get("name")), "%${name.trim().lowercase()}%"))
+            }
+            if (!city.isNullOrBlank()) {
+                preds.add(cb.equal(cb.lower(root.get("city")), city.trim().lowercase()))
+            }
+            if (preds.isNotEmpty()) {
+                query?.where(*preds.toTypedArray()) // ✅ safe call
+            }
+            null
+        }
+
+        val sort = if (direction.equals("desc", true)) Sort.by(sortBy).descending() else Sort.by(sortBy).ascending()
+        return storeRepository.findAll(spec, sort)
+    }
 }
