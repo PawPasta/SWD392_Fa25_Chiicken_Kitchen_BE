@@ -4,11 +4,12 @@ import com.ChickenKitchen.app.config.VNPayConfig
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
 import com.ChickenKitchen.app.handler.OrderNotFoundException
+import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
-import com.ChickenKitchen.app.repository.user.WalletRepository
+import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import jakarta.transaction.Transactional
@@ -25,10 +26,10 @@ class VNPayServiceImpl (
     private val vnPayConfig: VNPayConfig,
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
-    private val walletRepository: WalletRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
 
-    private val transactionService: TransactionService
+    private val transactionService: TransactionService,
+    private val notificationService: NotificationService
 ) : VNPayService {
 
     @Transactional
@@ -99,7 +100,14 @@ class VNPayServiceImpl (
 
                 transactionService.createPaymentTransaction(payment,order,paymentMethod)
 
+                notificationService.sendToUser(SingleNotificationRequest (
+                    user = order.user,
+                    title = "Payment Successful",
+                    body = "Your payment for order ${order.id} was successful."
+                ))
+
                 return "Payment success and transactions created"
+
             }
             "24" -> {
                 payment.status = PaymentStatus.CANCELLED
