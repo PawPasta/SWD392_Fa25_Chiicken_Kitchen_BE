@@ -17,6 +17,7 @@ import com.ChickenKitchen.app.model.entity.menu.Nutrient
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
+import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import com.ChickenKitchen.app.repository.category.CategoryRepository
@@ -31,6 +32,7 @@ import com.ChickenKitchen.app.repository.menu.NutrientRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
+import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
 import org.springframework.boot.CommandLineRunner
@@ -54,6 +56,7 @@ class DataInitializer {
         storeRepository: StoreRepository,
         categoryRepository: CategoryRepository,
         stepRepository: StepRepository,
+        dishRepository: DishRepository,
         menuItemRepository: MenuItemRepository,
         nutrientRepository: NutrientRepository,
         menuItemNutrientRepository: MenuItemNutrientRepository,
@@ -184,6 +187,79 @@ class DataInitializer {
             println("✓ Users seeded: ${1 + 1 + employeeData.size + 1 + 2}")
         } else {
             println("⏭ Users table not empty, skipping")
+        }
+
+        // ==================== DISHES (realistic combos, non-custom) ====================
+        if (dishRepository.count() == 0L) {
+            println("Seeding dishes (realistic combos, non-custom)...")
+
+            data class Component(val name: String, val price: Int, val cal: Int)
+
+            val bases = listOf(
+                Component("Cơm Jasmine", 15000, 200),
+                Component("Gạo lứt", 18000, 220),
+                Component("Quinoa", 35000, 240),
+                Component("Mì ống nguyên cám", 25000, 250),
+                Component("Khoai lang nghiền", 20000, 180),
+                Component("Udon", 28000, 260),
+                Component("Couscous", 30000, 230)
+            )
+
+            val proteins = listOf(
+                Component("Ức gà nướng", 35000, 250),
+                Component("Gà chiên xù", 40000, 380),
+                Component("Bò bít tết", 70000, 500),
+                Component("Đậu hũ", 25000, 160),
+                Component("Cá hồi", 80000, 300),
+                Component("Tôm", 60000, 200),
+                Component("Trứng luộc", 10000, 150)
+            )
+
+            val veggies = listOf(
+                Component("Bông cải xanh", 5000, 50),
+                Component("Cà rốt", 5000, 45),
+                Component("Rau chân vịt", 5000, 30),
+                Component("Cà chua", 5000, 25),
+                Component("Dưa leo", 5000, 15)
+            )
+
+            val sauces = listOf(
+                Component("Sốt Teriyaki", 3000, 60),
+                Component("Sốt BBQ", 3000, 80),
+                Component("Mayonnaise", 5000, 150),
+                Component("Sốt sữa chua Hy Lạp", 5000, 90),
+                Component("Dầu ô liu & thảo mộc", 5000, 120)
+            )
+
+            fun pickVeggies(index: Int): Pair<Component, Component> {
+                val v1 = veggies[index % veggies.size]
+                val v2 = veggies[(index / veggies.size + index) % veggies.size]
+                return if (v1.name != v2.name) v1 to v2 else v1 to veggies[(index + 1) % veggies.size]
+            }
+
+            val dishes = (0 until 100).map { i ->
+                val base = bases[i % bases.size]
+                val protein = proteins[(i / bases.size) % proteins.size]
+                val sauce = sauces[(i / (bases.size * 2) + i) % sauces.size]
+                val (veg1, veg2) = pickVeggies(i)
+
+                val price = base.price + protein.price + veg1.price + veg2.price + sauce.price
+                val cal = base.cal + protein.cal + veg1.cal + veg2.cal + sauce.cal
+
+                val note = "${base.name} + ${protein.name} + ${veg1.name}, ${veg2.name} + ${sauce.name}"
+
+                Dish(
+                    price = price,
+                    cal = cal,
+                    isCustom = false,
+                    note = note
+                )
+            }
+
+            dishRepository.saveAll(dishes)
+            println("✓ Dishes seeded: ${dishes.size}")
+        } else {
+            println("⏭ Dishes table not empty, skipping dish seeding")
         }
 
         // ==================== STORES ====================

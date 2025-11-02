@@ -12,7 +12,8 @@ import com.ChickenKitchen.app.handler.OrderNotFoundException
 import com.ChickenKitchen.app.handler.StepNotFoundException
 import com.ChickenKitchen.app.handler.StoreNotFoundException
 import com.ChickenKitchen.app.handler.UserNotFoundException
-import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
+import com.ChickenKitchen.app.model.dto.request.CreateCustomDishRequest
+import com.ChickenKitchen.app.model.dto.request.CreateExistingDishRequest
 import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.AddDishResponse
@@ -67,7 +68,8 @@ class CustomerOrderServiceImpl(
 ) : CustomerOrderService {
 
     private fun recalcAndPersistOrderTotal(order: Order) {
-        val sum = dishRepository.findAllByOrderId(order.id!!).sumOf { it.price }
+        val links = orderDishRepository.findAllByOrderId(order.id!!)
+        val sum = links.sumOf { link -> link.dish.price * (link.quantity) }
         order.totalPrice = sum
         orderRepository.save(order)
     }
@@ -98,20 +100,11 @@ class CustomerOrderServiceImpl(
             ?: throw UserNotFoundException("User not found with email: $email")
     }
 
-    @Transactional
-    override fun addDishToCurrentOrder(req: CreateDishRequest): AddDishResponse {
-        if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
-
-        val user = currentUser()
-
-        val store = storeRepository.findById(req.storeId)
-            .orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
-
-        // Enforce single NEW order per user+store: keep latest, remove the rest
+    private fun ensureCurrentNewOrderFor(user: com.ChickenKitchen.app.model.entity.user.User, store: com.ChickenKitchen.app.model.entity.ingredient.Store): Order {
         val newOrders = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
             user.email, store.id!!, listOf(OrderStatus.NEW)
         )
-        val order = if (newOrders.isEmpty()) {
+        return if (newOrders.isEmpty()) {
             orderRepository.save(
                 Order(
                     user = user,
@@ -128,18 +121,62 @@ class CustomerOrderServiceImpl(
                     // Cleanup duplicate NEW orders fully then delete the order
                     orderStepItemRepository.deleteByOrderId(dup.id!!)
                     orderStepRepository.deleteByDishOrderId(dup.id!!)
-                    // Delete custom dishes linked to this order, then remove links
                     dishRepository.deleteByOrderId(dup.id!!)
                     orderDishRepository.deleteByOrderId(dup.id!!)
                     orderRepository.delete(dup)
                 }
             }
-            keeper
+            return keeper
+        }
+    }
+
+    @Transactional
+    override fun addExistingDishToCurrentOrder(req: CreateExistingDishRequest): AddDishResponse {
+        if (req.quantity <= 0) throw InvalidOrderStepException("Quantity must be greater than 0")
+
+        val user = currentUser()
+        val store = storeRepository.findById(req.storeId)
+            .orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
+
+        val order = ensureCurrentNewOrderFor(user, store)
+
+        val dish = dishRepository.findById(req.dishId)
+            .orElseThrow { DishNotFoundException("Dish with id ${req.dishId} not found") }
+        if (dish.isCustom) throw InvalidOrderStepException("Dish ${req.dishId} is custom; use custom endpoint instead")
+
+        val existingLink = orderDishRepository.findByOrderIdAndDishId(order.id!!, dish.id!!)
+        if (existingLink != null) {
+            existingLink.quantity += req.quantity
+            orderDishRepository.save(existingLink)
+        } else {
+            orderDishRepository.save(
+                com.ChickenKitchen.app.model.entity.order.OrderDish(order = order, dish = dish, quantity = req.quantity)
+            )
         }
 
-        // Create dish entry with temporary totals = 0, mark as custom
+        recalcAndPersistOrderTotal(order)
+        syncPendingPaymentAmounts(order)
+
+        return AddDishResponse(
+            orderId = order.id!!,
+            dishId = dish.id!!,
+            status = order.status.name,
+            createdSteps = emptyList()
+        )
+    }
+
+    @Transactional
+    override fun addCustomDishToCurrentOrder(req: CreateCustomDishRequest): AddDishResponse {
+        if (!req.isCustom) throw InvalidOrderStepException("Custom dish must have isCustom=true")
+        if (req.selections.isEmpty()) throw InvalidOrderStepException("Dish must contain at least one step selection")
+
+        val user = currentUser()
+        val store = storeRepository.findById(req.storeId)
+            .orElseThrow { StoreNotFoundException("Store with id ${req.storeId} not found") }
+
+        val order = ensureCurrentNewOrderFor(user, store)
+
         val dish = dishRepository.save(Dish(price = 0, cal = 0, isCustom = true, note = req.note))
-        // Link dish to order via join table
         orderDishRepository.save(com.ChickenKitchen.app.model.entity.order.OrderDish(order = order, dish = dish))
 
         val stepMap = stepRepository.findAllById(req.selections.map { it.stepId }).associateBy { it.id!! }
@@ -181,16 +218,13 @@ class CustomerOrderServiceImpl(
             createdSteps.add(CreatedOrderStep(id = orderStep.id!!, stepId = step.id!!, items = createdItems))
         }
 
-        // Update dish totals
         dish.price = totalPrice
         dish.cal = totalCal
         dishRepository.save(dish)
 
-        // Recalculate and persist order total to avoid drift
         recalcAndPersistOrderTotal(order)
-        // If there is a pending payment, sync its amount to new order total
         syncPendingPaymentAmounts(order)
-        
+
         return AddDishResponse(
             orderId = order.id!!,
             dishId = dish.id!!,
@@ -371,7 +405,8 @@ class CustomerOrderServiceImpl(
 
         val allDishes = dishRepository.findAllByOrderId(order.id!!)
         if (allDishes.isNotEmpty()) {
-            val allUpdatedToday = allDishes.all { d ->
+            val customDishes = allDishes.filter { it.isCustom }
+            val allUpdatedToday = if (customDishes.isEmpty()) true else customDishes.all { d ->
                 val u = d.updatedAt
                 u != null && !u.before(start) && !u.after(end)
             }

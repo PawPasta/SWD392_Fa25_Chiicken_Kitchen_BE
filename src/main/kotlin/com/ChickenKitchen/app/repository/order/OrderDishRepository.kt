@@ -23,5 +23,13 @@ interface OrderDishRepository : JpaRepository<OrderDish, Long> {
 
     @Query("select od.order.id from OrderDish od where od.dish.id = :dishId")
     fun findOrderIdByDishId(@Param("dishId") dishId: Long): Long?
-}
 
+    @Query("select od from OrderDish od where od.order.id = :orderId and od.dish.id = :dishId")
+    fun findByOrderIdAndDishId(
+        @Param("orderId") orderId: Long,
+        @Param("dishId") dishId: Long,
+    ): OrderDish?
+
+    @Query("select od from OrderDish od where od.order.id = :orderId")
+    fun findAllByOrderId(@Param("orderId") orderId: Long): List<OrderDish>
+}
