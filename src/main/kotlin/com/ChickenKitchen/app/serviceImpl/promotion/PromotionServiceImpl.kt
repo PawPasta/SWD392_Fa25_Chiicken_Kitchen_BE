@@ -21,9 +21,10 @@ import kotlin.math.max
 
 @Service
 class PromotionServiceImpl (
-    private val promotionRepository: PromotionRepository,
 
+    private val promotionRepository: PromotionRepository,
     private val notificationService: NotificationService
+
 ): PromotionService{
 
     override fun changeStatus(id: Long): PromotionResponse {

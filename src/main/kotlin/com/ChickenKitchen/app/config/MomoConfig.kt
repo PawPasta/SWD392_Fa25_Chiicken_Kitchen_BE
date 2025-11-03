@@ -27,8 +27,12 @@ class MomoConfig(
     @param:Value("\${momo.redirectUrl}")
     val redirectUrl: String,
 
+    @param:Value("\${momo.redirectAppUrl}")
+    val appRedirectUrl: String,
+
     @param:Value("\${momo.lang:vi}")
     val lang: String
+
 ) {
 
     companion object {

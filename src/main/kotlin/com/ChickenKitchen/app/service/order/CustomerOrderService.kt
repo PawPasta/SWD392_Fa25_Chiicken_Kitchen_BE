@@ -25,4 +25,6 @@ interface CustomerOrderService {
     fun getFeedbackByOrder(orderId: Long): FeedbackResponse
 
     fun getOrderTracking(orderId: Long): OrderTrackingResponse
+
+    fun getCancelledOrder(orderId : Long) : OrderTrackingResponse
 }

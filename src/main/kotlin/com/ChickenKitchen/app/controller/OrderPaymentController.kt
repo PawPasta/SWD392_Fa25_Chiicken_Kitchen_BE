@@ -22,22 +22,12 @@ class OrderPaymentController(
         return ResponseEntity.ok(ResponseModel.success(url, "Confirmed on going"))
     }
 
-    // Keep backward-compatible callback path
-    @Operation(summary = "VNPay callback (legacy path)")
-    @PostMapping("/api/orders/vnpay-callback")
-    fun vnpayCallbackLegacy(@RequestBody params: Map<String, String>): ResponseEntity<ResponseModel> {
-        val msg = vnPayService.callbackURL(params)
-        return ResponseEntity.ok(ResponseModel.success(msg, "Nice"))
-    }
-
-    // New structured callback path
     @Operation(summary = "VNPay callback")
     @PostMapping("/api/payments/vnpay/callback")
     fun vnpayCallback(@RequestBody params: Map<String, String>): ResponseEntity<ResponseModel> {
         val msg = vnPayService.callbackURL(params)
         return ResponseEntity.ok(ResponseModel.success(msg, "Nice"))
     }
-
 
     @Operation(summary = "Momo callback")
     @PostMapping("/api/payments/momo/callback")
@@ -46,6 +36,8 @@ class OrderPaymentController(
         return ResponseEntity.ok(ResponseModel.success(msg, "Nice"))
     }
 
+
+    //Cái này chỉ để test momo sandbox với amount tùy ý, không cần order
     @Operation(summary = "Test MoMo sandbox with custom amount (no order required)")
     @PostMapping("/api/payments/momo/test")
     fun momoTest(@RequestParam amount: Long): ResponseEntity<ResponseModel> {

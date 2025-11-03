@@ -39,7 +39,16 @@ class MomoServiceImpl(
         )
         val amount = payment?.finalAmount ?: 0L
         val orderInfo = "Payment for order ${order.id}"
-        return createMomoURLInternal(amount.toLong(), orderInfo, partnerName = "Chicken Kitchen")
+
+        // ✅ Chọn redirectUrl tùy theo channel
+        val redirectUrl = if (channel?.uppercase() == "APP") momoConfig.appRedirectUrl else momoConfig.redirectUrl
+
+        return createMomoURLInternal(
+            amount = amount.toLong(),
+            orderInfo = orderInfo,
+            partnerName = "Chicken Kitchen",
+            redirectUrl = redirectUrl
+        )
     }
 
     override fun createMomoURLTest(amount: Long): String {
@@ -49,7 +58,8 @@ class MomoServiceImpl(
             orderInfo = orderInfo,
             partnerName = "Chicken Kitchen (Test)",
             storeId = "ChickenKitchenSandbox",
-            requestType = DEFAULT_REQUEST_TYPE
+            requestType = DEFAULT_REQUEST_TYPE,
+            redirectUrl = momoConfig.redirectUrl
         )
     }
 
@@ -58,7 +68,8 @@ class MomoServiceImpl(
         orderInfo: String,
         partnerName: String,
         storeId: String = DEFAULT_STORE_ID,
-        requestType: String = DEFAULT_REQUEST_TYPE
+        requestType: String = DEFAULT_REQUEST_TYPE,
+        redirectUrl: String
     ): String {
         val orderId = UUID.randomUUID().toString()
         val requestId = UUID.randomUUID().toString()
@@ -72,7 +83,7 @@ class MomoServiceImpl(
             orderId = orderId,
             orderInfo = orderInfo,
             partnerCode = momoConfig.partnerCode,
-            redirectUrl = momoConfig.redirectUrl,
+            redirectUrl = redirectUrl, // 👈 truyền redirectUrl động vào đây
             requestId = requestId,
             requestType = requestType
         )
@@ -84,7 +95,7 @@ class MomoServiceImpl(
             storeId = storeId,
             requestType = requestType,
             ipnUrl = momoConfig.ipnUrl,
-            redirectUrl = momoConfig.redirectUrl,
+            redirectUrl = redirectUrl, // 👈 truyền redirectUrl vào request
             orderId = orderId,
             amount = amount,
             lang = momoConfig.lang,

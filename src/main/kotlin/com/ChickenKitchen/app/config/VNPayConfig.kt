@@ -13,7 +13,7 @@ import kotlin.random.Random
 class VNPayConfig(
     @param:Value("\${vnpay.pay-url}") val vnpPayUrl: String,
     @param:Value("\${vnpay.return-url}") val vnpReturnUrl: String,
-    @param:Value("\${vnpay.app-return-url:chickenapp://vnpay-result}") val vnpAppReturnUrl: String,
+    @param:Value("\${vnpay.app-return-url}") val vnpAppReturnUrl: String,
     @param:Value("\${vnpay.tmn-code}") val vnpTmnCode: String,
     @param:Value("\${vnpay.hash-secret}") val vnpHashSecret: String,
     @param:Value("\${vnpay.api-url}") val vnpApiUrl: String,
