@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.model.dto.request.GrantRoleRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.user.UserService
 import com.ChickenKitchen.app.enums.Role
+import com.ChickenKitchen.app.service.user.WalletService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,7 +25,8 @@ import org.springframework.security.access.prepost.PreAuthorize
 @RestController
 @RequestMapping("/api/users")
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val walletService: WalletService
 ) {
 
     // ===================== MANAGER: CRUD =====================
@@ -119,5 +121,11 @@ class UserController(
     fun getUserCounts(): ResponseEntity<ResponseModel> {
         val counts = userService.getCounts()
         return ResponseEntity.ok(ResponseModel.success(counts, "Fetched user counts successfully"))
+    }
+
+    @Operation(summary = "Get current user wallet (LOGGED)")
+    @GetMapping("/me/wallet")
+    fun getUserWallet(): ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(walletService.getMyWallet(), "Fetched  your wallet successfully"))
     }
 }

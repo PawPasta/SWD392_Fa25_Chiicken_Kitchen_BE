@@ -25,6 +25,7 @@ import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.service.order.OrderPaymentService
+import com.ChickenKitchen.app.service.payment.MomoService
 import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import com.ChickenKitchen.app.service.user.WalletService
@@ -46,7 +47,8 @@ class OrderPaymentServiceImpl(
 
     private val vnPayService: VNPayService,
     private val walletService: WalletService,
-    private val transactionService: TransactionService
+    private val transactionService: TransactionService,
+    private val momoService: MomoService
 
 ) : OrderPaymentService {
 
@@ -185,7 +187,7 @@ class OrderPaymentServiceImpl(
             }
 
             "MOMO" -> {
-                throw PaymentMethodNameNotAvailable("MoMo payment method not yet supported")
+                momoService.createMomoURL(order, channel)
             }
 
             else -> throw PaymentMethodNameNotAvailable(

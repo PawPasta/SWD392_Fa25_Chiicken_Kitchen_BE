@@ -3,6 +3,8 @@ import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.model.dto.response.UserResponse
 import com.ChickenKitchen.app.model.dto.response.UserDetailResponse
 import com.ChickenKitchen.app.model.dto.response.UserProfileResponse
+import com.ChickenKitchen.app.model.dto.response.UserWalletResponse
+import com.ChickenKitchen.app.model.entity.user.Wallet
 
 fun User.toUserResponse(): UserResponse =
     UserResponse(
@@ -37,4 +39,11 @@ fun User.toUserProfileResponse(): UserProfileResponse =
         email = this.email,
         birthday = this.birthday,
         createdAt = this.createdAt.toString(),
+    )
+
+
+fun Wallet.toWalletResponse() : UserWalletResponse =
+    UserWalletResponse(
+        balance = this.balance,
+        transactions = this.transactions.map { it.toTransactionResponse() },
     )
