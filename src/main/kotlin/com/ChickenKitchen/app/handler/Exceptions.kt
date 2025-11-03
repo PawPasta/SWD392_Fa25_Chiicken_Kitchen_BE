@@ -25,21 +25,13 @@ class IngredientHasBatchesException(message: String) : RuntimeException(message)
 //STORE
 class StoreNotFoundException(message: String) : RuntimeException(message)
 class StoreHasOrdersException(message: String) : RuntimeException(message)
-class StoreUsedInMenuException(message: String) : RuntimeException(message)
 class StoreHasIngredientsException(message: String) : RuntimeException(message)
 class StoreNameExistException(message: String) : RuntimeException(message)
 class StoreAddressExistException(message: String) : RuntimeException(message)
 
-//DAILY MENU
-class DailyMenuNotFoundException(message: String) : RuntimeException(message)
-class DailyMenuHasStoresException(message: String) : RuntimeException(message)
-class DailyMenuAlreadyExistsException(message: String) : RuntimeException(message)
-
-
 //MENU ITEMS
 class MenuItemNotFoundException(message: String) : RuntimeException(message)
 class MenuItemHasOrdersException(message: String) : RuntimeException(message)
-class MenuItemUsedInDailyMenuException(message: String) : RuntimeException(message)
 class MenuItemHasRecipesException(message: String) : RuntimeException(message)
 
 //NUTRIENTS
@@ -81,7 +73,7 @@ class DishNotFoundException(message: String) : RuntimeException(message)
 class UpdateDishFailedException(message: String) : RuntimeException(message)
 class DeleteDishFailedException(message: String) : RuntimeException(message)
 class CurrentOrderNotFoundException(message: String) : RuntimeException(message)
-class DailyMenuUnavailableException(message: String) : RuntimeException(message)
+ 
 
 // WALLET
 class WalletNotEnoughBalance(message: String) : RuntimeException(message)

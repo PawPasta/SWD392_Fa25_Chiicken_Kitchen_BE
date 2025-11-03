@@ -13,6 +13,14 @@ interface OrderStepRepository : JpaRepository<OrderStep, Long> {
 
     fun findAllByDishId(dishId: Long): List<OrderStep>
 
+    @Query(
+        "select distinct os from OrderStep os " +
+        "left join fetch os.items it " +
+        "left join fetch it.menuItem mi " +
+        "where os.dish.id = :dishId"
+    )
+    fun findAllWithItemsByDishId(@Param("dishId") dishId: Long): List<OrderStep>
+
     @Transactional
     @Modifying
     @Query(

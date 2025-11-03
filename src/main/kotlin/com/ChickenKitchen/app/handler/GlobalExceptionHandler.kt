@@ -74,9 +74,7 @@ class GlobalExceptionHandler {
     fun handleHasOrders(e: StoreHasOrdersException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "Store has orders, cannot delete")
 
-    @ExceptionHandler(StoreUsedInMenuException::class)
-    fun handleUsedInMenu(e: StoreUsedInMenuException) =
-        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Store is used in menu, cannot delete")
+    
 
     @ExceptionHandler(StoreHasIngredientsException::class)
     fun handleHasIngredients(e: StoreHasIngredientsException) =
@@ -90,18 +88,7 @@ class GlobalExceptionHandler {
     fun handleNameExist(e: StoreAddressExistException) =
         buildError(HttpStatus.CONFLICT, e.message ?: "Store address already exists")
 
-    //DAILY MENU
-    @ExceptionHandler(DailyMenuNotFoundException::class)
-    fun handleNotFound(e: DailyMenuNotFoundException) =
-        buildError(HttpStatus.NOT_FOUND, e.message ?: "Daily menu not found")
-
-    @ExceptionHandler(DailyMenuHasStoresException::class)
-    fun handleHasStores(e: DailyMenuHasStoresException) =
-        buildError(HttpStatus.BAD_REQUEST, e.message ?: "Daily menu is associated with stores, cannot delete")
-
-    @ExceptionHandler(DailyMenuAlreadyExistsException::class)
-    fun handleAlreadyExists(e: DailyMenuAlreadyExistsException) =
-        buildError(HttpStatus.CONFLICT, e.message ?: "Daily menu already exists for this date")
+    
 
 
     //MENU ITEMS
@@ -113,9 +100,7 @@ class GlobalExceptionHandler {
     fun handleHasOrders(e: MenuItemHasOrdersException) =
         buildError(HttpStatus.BAD_REQUEST, e.message ?: "MenuItem has orders, cannot delete")
 
-    @ExceptionHandler(MenuItemUsedInDailyMenuException::class)
-    fun handleUsedInDailyMenu(e: MenuItemUsedInDailyMenuException) =
-        buildError(HttpStatus.BAD_REQUEST, e.message ?: "MenuItem is used in daily menu, cannot delete")
+    
 
     @ExceptionHandler(MenuItemHasRecipesException::class)
     fun handleHasRecipes(e: MenuItemHasRecipesException) =
@@ -235,9 +220,7 @@ class GlobalExceptionHandler {
     fun handleCurrentOrderNotFound(e: CurrentOrderNotFoundException) =
         buildError(HttpStatus.NOT_FOUND, e.message ?: "No current order found")
 
-    @ExceptionHandler(DailyMenuUnavailableException::class)
-    fun handleDailyMenuUnavailable(e: DailyMenuUnavailableException) =
-        buildError(HttpStatus.NOT_FOUND, e.message ?: "Daily menu unavailable for this store")
+    
 
 
     //WALLET

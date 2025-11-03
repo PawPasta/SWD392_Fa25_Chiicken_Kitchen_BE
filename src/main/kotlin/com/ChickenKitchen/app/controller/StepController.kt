@@ -21,10 +21,12 @@ class StepController(
     @Operation(summary = "Get all steps (LOGGED)")
     @GetMapping
     fun getAll(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
-    ): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(stepService.getAll(pageNumber, size), "Fetched steps"))
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) stepService.getAll() else stepService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched steps"))
+    }
 
     @Operation(summary = "Get step by id (LOGGED)")
     @GetMapping("/{id}")

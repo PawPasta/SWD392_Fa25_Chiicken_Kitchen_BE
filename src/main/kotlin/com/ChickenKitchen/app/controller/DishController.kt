@@ -6,6 +6,7 @@ import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.step.DishService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -17,10 +18,12 @@ class DishController(
     @Operation(summary = "Get all dishes (paginated)")
     @GetMapping
     fun getAll(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
-    ): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(dishService.getAll(pageNumber, size), "Fetched dishes"))
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) dishService.getAll() else dishService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched dishes"))
+    }
 
     @Operation(summary = "Get dish by id")
     @GetMapping("/{id}")
@@ -48,5 +51,29 @@ class DishController(
     @GetMapping("/counts")
     fun getCounts(): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(mapOf("total" to dishService.count()), "Fetched dish count"))
-}
 
+    @Operation(summary = "Get my custom dishes (requires auth)")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/custom/mine")
+    fun getMyCustomDishes(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(dishService.getMyCustomDishes(), "Fetched my custom dishes"))
+
+    @Operation(summary = "Search sample dishes (components + calories + price), paginated with total")
+    @GetMapping("/search")
+    fun search(
+        @RequestParam(name = "menuItemIds", required = false) menuItemIds: List<Long>?,
+        @RequestParam(name = "keyword", required = false) keyword: String?,
+        @RequestParam(name = "minCal", required = false) minCal: Int?,
+        @RequestParam(name = "maxCal", required = false) maxCal: Int?,
+        @RequestParam(name = "minPrice", required = false) minPrice: Int?,
+        @RequestParam(name = "maxPrice", required = false) maxPrice: Int?,
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(
+            ResponseModel.success(
+                dishService.search(menuItemIds, keyword, minCal, maxCal, minPrice, maxPrice, pageNumber, size),
+                "Fetched dishes"
+            )
+        )
+}

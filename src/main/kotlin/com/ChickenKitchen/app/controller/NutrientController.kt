@@ -18,10 +18,12 @@ class NutrientController(
     @Operation(summary = "Get all nutrients (all actor)")
     @GetMapping
     fun getAll(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
-    ): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(nutrientService.getAll(pageNumber, size), "Fetched nutrients"))
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) nutrientService.getAll() else nutrientService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched nutrients"))
+    }
 
     @Operation(summary = "Get nutrient by id (all actor)")
     @GetMapping("/{id}")

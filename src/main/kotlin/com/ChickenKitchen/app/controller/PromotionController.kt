@@ -27,10 +27,11 @@ class PromotionController (
     @Operation(summary = "Get List promotions (all actor)")
     @GetMapping
     fun getAll(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(promotionService.getAll(pageNumber, size), "Get Promotion Successfully"))
+        val data = if (size <= 0 || pageNumber <= 0) promotionService.getAll() else promotionService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get Promotion Successfully"))
     }
 
     @Operation(summary = "Get promotions by Ids ")

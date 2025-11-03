@@ -1,7 +1,7 @@
 package com.ChickenKitchen.app.model.dto.response
 
 data class CreatedStepItem(
-    val dailyMenuItemId: Long,
+    val menuItemId: Long,
     val quantity: Int,
 )
 

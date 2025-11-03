@@ -28,15 +28,11 @@ class IngredientController (
     @Operation(summary = "Get All Ingredients")
     @GetMapping
     fun getAllIngredients(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ): ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(
-            ResponseModel.success(
-                ingredientService.getAll(pageNumber, size),
-                "Get All Ingredients successfully"
-            )
-        )
+        val data = if (size <= 0 || pageNumber <= 0) ingredientService.getAll() else ingredientService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get All Ingredients successfully"))
     }
 
     @Operation(summary = "Get Ingredient Detail By ID (Only Manager)")

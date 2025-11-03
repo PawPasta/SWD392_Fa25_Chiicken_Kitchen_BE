@@ -2,7 +2,6 @@ package com.ChickenKitchen.app.serviceImpl.order
 
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
-import com.ChickenKitchen.app.handler.DailyMenuUnavailableException
 import com.ChickenKitchen.app.handler.DeleteDishFailedException
 import com.ChickenKitchen.app.handler.DishNotFoundException
 import com.ChickenKitchen.app.handler.InvalidOrderStatusException
@@ -31,7 +30,6 @@ import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.order.OrderStepItem
 import com.ChickenKitchen.app.model.entity.step.Dish
-import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.order.FeedbackRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
@@ -61,7 +59,6 @@ class CustomerOrderServiceImpl(
     private val storeRepository: StoreRepository,
     private val stepRepository: StepRepository,
     private val menuItemRepository: MenuItemRepository,
-    private val dailyMenuRepository: DailyMenuRepository,
     private val dishRepository: DishRepository,
     private val orderDishRepository: OrderDishRepository,
     private val paymentRepository: PaymentRepository,
@@ -197,21 +194,13 @@ class CustomerOrderServiceImpl(
                 if (menuItem.category.id != step.category.id)
                     throw InvalidOrderStepException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
 
-                val today = java.time.LocalDate.now()
-                val start = Timestamp.valueOf(today.atStartOfDay())
-                val end = Timestamp.valueOf(today.atTime(23, 59, 59))
-                val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-                    ?: throw DailyMenuUnavailableException("No daily menu available for store ${store.id} today")
-                val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
-                    ?: throw DailyMenuUnavailableException("Menu item ${item.menuItemId} not in today's daily menu")
-
-                val osi = OrderStepItem(orderStep = orderStep, dailyMenuItem = dmi, quantity = item.quantity)
+                val osi = OrderStepItem(orderStep = orderStep, menuItem = menuItem, quantity = item.quantity)
                 orderStep.items.add(osi)
 
                 totalPrice += menuItem.price * item.quantity
                 totalCal += menuItem.cal * item.quantity
 
-                CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity)
+                CreatedStepItem(menuItemId = menuItem.id!!, quantity = item.quantity)
             }
 
             orderStepRepository.save(orderStep)
@@ -324,11 +313,11 @@ class CustomerOrderServiceImpl(
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
                 val itemResponses = st.items.map { link ->
-                    val mi = link.dailyMenuItem.menuItem
+                    val mi = link.menuItem
                     CurrentStepItemResponse(
-                        dailyMenuItemId = link.dailyMenuItem.id!!,
                         menuItemId = mi.id!!,
                         menuItemName = mi.name,
+                        imageUrl = mi.imageUrl,
                         quantity = link.quantity,
                         price = mi.price,
                         cal = mi.cal
@@ -342,6 +331,7 @@ class CustomerOrderServiceImpl(
             }
             CurrentDishResponse(
                 dishId = d.id!!,
+                name = d.name,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
@@ -426,11 +416,11 @@ class CustomerOrderServiceImpl(
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
                 val itemResponses = st.items.map { link ->
-                    val mi = link.dailyMenuItem.menuItem
+                    val mi = link.menuItem
                     CurrentStepItemResponse(
-                        dailyMenuItemId = link.dailyMenuItem.id!!,
                         menuItemId = mi.id!!,
                         menuItemName = mi.name,
+                        imageUrl = mi.imageUrl,
                         quantity = link.quantity,
                         price = mi.price,
                         cal = mi.cal
@@ -444,6 +434,7 @@ class CustomerOrderServiceImpl(
             }
             CurrentDishResponse(
                 dishId = d.id!!,
+                name = d.name,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
@@ -528,22 +519,13 @@ class CustomerOrderServiceImpl(
                 if (menuItem.category.id != step.category.id)
                     throw InvalidOrderStepException("MenuItem ${menuItem.id} does not belong to step ${step.id} category")
 
-                val today = java.time.LocalDate.now()
-                val start = Timestamp.valueOf(today.atStartOfDay())
-                val end = Timestamp.valueOf(today.atTime(23, 59, 59))
-                val todaysMenu = dailyMenuRepository.findByStoreAndDateRange(store.id!!, start, end)
-                    ?: throw DailyMenuUnavailableException("No daily menu for store ${store.id} today")
-
-                val dmi = todaysMenu.dailyMenuItems.firstOrNull { it.menuItem.id == item.menuItemId }
-                    ?: throw DailyMenuUnavailableException("Menu item ${item.menuItemId} not in today's daily menu")
-
                 val link = com.ChickenKitchen.app.model.entity.order.OrderStepItem(
                     orderStep = orderStep,
-                    dailyMenuItem = dmi,
+                    menuItem = menuItem,
                     quantity = item.quantity
                 )
                 orderStep.items.add(link)
-                createdItems.add(CreatedStepItem(dailyMenuItemId = dmi.id!!, quantity = item.quantity))
+                createdItems.add(CreatedStepItem(menuItemId = menuItem.id!!, quantity = item.quantity))
 
                 totalPrice += (menuItem.price * item.quantity)
                 totalCal += (menuItem.cal * item.quantity)

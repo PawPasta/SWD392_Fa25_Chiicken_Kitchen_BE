@@ -3,9 +3,9 @@ package com.ChickenKitchen.app.model.dto.response
 import java.sql.Timestamp
 
 data class CurrentStepItemResponse(
-    val dailyMenuItemId: Long,
     val menuItemId: Long,
     val menuItemName: String,
+    val imageUrl: String?,
     val quantity: Int,
     val price: Int,
     val cal: Int
@@ -19,6 +19,7 @@ data class CurrentStepResponse(
 
 data class CurrentDishResponse(
     val dishId: Long,
+    val name: String,
     val note: String?,
     val price: Int,
     val cal: Int,

@@ -4,11 +4,11 @@ import com.ChickenKitchen.app.handler.CategoryNotFoundException
 import com.ChickenKitchen.app.handler.MenuItemHasOrdersException
 import com.ChickenKitchen.app.handler.MenuItemHasRecipesException
 import com.ChickenKitchen.app.handler.MenuItemNotFoundException
-import com.ChickenKitchen.app.handler.MenuItemUsedInDailyMenuException
 import com.ChickenKitchen.app.handler.NutrientNotFoundException
 import com.ChickenKitchen.app.model.dto.request.CreateMenuItemRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateMenuItemRequest
 import com.ChickenKitchen.app.model.dto.response.MenuItemDetailResponse
+import com.ChickenKitchen.app.model.dto.response.MenuItemSearchResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
@@ -137,12 +137,8 @@ class MenuItemServiceImpl(
         val item = menuItemRepository.findById(id)
             .orElseThrow { MenuItemNotFoundException("MenuItem with id $id not found") }
 
-        val orderCount = orderStepItemRepository.countByDailyMenuItemMenuItemId(id)
+        val orderCount = orderStepItemRepository.countByMenuItemId(id)
         if (orderCount > 0) throw MenuItemHasOrdersException("Cannot delete MenuItem with id $id: it has $orderCount orders")
-
-        if (item.dailyMenuItems.isNotEmpty()) {
-            throw MenuItemUsedInDailyMenuException("Cannot delete MenuItem with id $id: it is used in ${item.dailyMenuItems.size} daily menus")
-        }
 
         if (item.recipes.isNotEmpty()) {
             throw MenuItemHasRecipesException("Cannot delete MenuItem with id $id: it has ${item.recipes.size} recipes")
@@ -206,6 +202,58 @@ class MenuItemServiceImpl(
                 cal = mi.cal,
                 description = mi.description
             )
+        }
+    }
+
+    override fun searchPaged(
+        name: String?,
+        categoryId: Long?,
+        minPrice: Int?,
+        maxPrice: Int?,
+        minCal: Int?,
+        maxCal: Int?,
+        pageNumber: Int,
+        size: Int,
+        sortBy: String,
+        direction: String
+    ): MenuItemSearchResponse? {
+        val spec = Specification<MenuItem> { root, query, cb ->
+            val preds = mutableListOf<Predicate>()
+            if (!name.isNullOrBlank()) {
+                preds.add(cb.like(cb.lower(root.get("name")), "%${name.trim().lowercase()}%"))
+            }
+            if (categoryId != null) {
+                preds.add(cb.equal(root.get<Any>("category").get<Long>("id"), categoryId))
+            }
+            if (minPrice != null) {
+                preds.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice))
+            }
+            if (maxPrice != null) {
+                preds.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice))
+            }
+            if (minCal != null) {
+                preds.add(cb.greaterThanOrEqualTo(root.get("cal"), minCal))
+            }
+            if (maxCal != null) {
+                preds.add(cb.lessThanOrEqualTo(root.get("cal"), maxCal))
+            }
+            if (preds.isNotEmpty()) {
+                query?.where(*preds.toTypedArray())
+            }
+            null
+        }
+
+        val sort = if (direction.equals("desc", true)) Sort.by(sortBy).descending() else Sort.by(sortBy).ascending()
+
+        return if (pageNumber <= 0 || size <= 0) {
+            val list = menuItemRepository.findAll(spec, sort)
+            if (list.isEmpty()) MenuItemSearchResponse(emptyList(), 0)
+            else MenuItemSearchResponse(list.map { it.toMenuItemResponse() }, list.size.toLong())
+        } else {
+            val pageable = PageRequest.of(kotlin.math.max(pageNumber, 1) - 1, kotlin.math.max(size, 1), sort)
+            val page = menuItemRepository.findAll(spec, pageable)
+            if (page.isEmpty) MenuItemSearchResponse(emptyList(), 0)
+            else MenuItemSearchResponse(page.content.map { it.toMenuItemResponse() }, page.totalElements)
         }
     }
 }

@@ -27,10 +27,11 @@ class StoreController (
     @Operation(summary = "Get All Store")
     @GetMapping
     fun getAllStore(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(storeService.getAll(pageNumber, size), "Get All Store successfully"))
+        val data = if (size <= 0 || pageNumber <= 0) storeService.getAll() else storeService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get All Store successfully"))
     }
 
     @Operation(summary = "Get Store By Id")

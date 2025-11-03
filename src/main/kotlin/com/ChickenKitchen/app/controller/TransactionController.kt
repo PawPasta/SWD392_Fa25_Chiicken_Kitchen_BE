@@ -30,10 +30,11 @@ class TransactionController (
     @Operation(summary = "Get all payment Method (all actor)")
     @GetMapping("/payment-method")
     fun getAllPaymentMethod(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(paymentMethodService.getAll(pageNumber, size), "Get all payment method successfully"))
+        val data = if (size <= 0 || pageNumber <= 0) paymentMethodService.getAll() else paymentMethodService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get all payment method successfully"))
     }
 
     @Operation(summary = "Get Payment Method By Id (all actor)")
@@ -74,10 +75,11 @@ class TransactionController (
     @Operation(summary = "Get All Transaction (manager only)")
     @GetMapping
     fun getAllTransaction(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ) : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(transactionService.getAll(pageNumber, size), "Get All Transaction Successfully"))
+        val data = if (size <= 0 || pageNumber <= 0) transactionService.getAll() else transactionService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get All Transaction Successfully"))
     }
 
     @Operation(summary = "Get Transaction By Id (manager only)")

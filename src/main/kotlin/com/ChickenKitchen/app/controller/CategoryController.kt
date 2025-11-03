@@ -17,10 +17,12 @@ class CategoryController(
     @Operation(summary = "Get all categories (all actor)")
     @GetMapping
     fun getAll(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
-    ): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(categoryService.getAll(pageNumber, size), "Fetched categories"))
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) categoryService.getAll() else categoryService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched categories"))
+    }
 
     @Operation(summary = "Get category by id (all actor)")
     @GetMapping("/{id}")

@@ -5,7 +5,6 @@ import com.ChickenKitchen.app.handler.StoreHasIngredientsException
 import com.ChickenKitchen.app.handler.StoreHasOrdersException
 import com.ChickenKitchen.app.handler.StoreNameExistException
 import com.ChickenKitchen.app.handler.StoreNotFoundException
-import com.ChickenKitchen.app.handler.StoreUsedInMenuException
 import com.ChickenKitchen.app.mapper.toListStoreResponse
 import com.ChickenKitchen.app.mapper.toStoreResponse
 import com.ChickenKitchen.app.model.dto.request.CreateStoreRequest
@@ -103,9 +102,7 @@ class StoreServiceImpl (
             throw StoreHasOrdersException("Cannot delete Store with id $id: it has ${store.orders.size} orders")
         }
 
-        if (store.dailyMenus.isNotEmpty()) {
-            throw StoreUsedInMenuException("Cannot delete Store with id $id: it is used in ${store.dailyMenus.size} daily menus")
-        }
+        // Daily menu feature removed: no menu linkage check
 
         if (store.ingredientBatches.isNotEmpty()) {
             throw StoreHasIngredientsException("Cannot delete Store with id $id: it has ${store.ingredientBatches.size} ingredient batches")

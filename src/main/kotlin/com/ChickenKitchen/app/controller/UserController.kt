@@ -33,11 +33,11 @@ class UserController(
     // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @GetMapping
     fun getAllUsers(
-        @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
     ): ResponseEntity<ResponseModel> {
-        val users = userService.getAll(pageNumber = pageNumber, size = size)
-        return ResponseEntity.ok(ResponseModel.success(users, "Fetched users successfully"))
+        val data = if (size <= 0 || pageNumber <= 0) userService.getAll() else userService.getAll(pageNumber = pageNumber, size = size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched users successfully"))
     }
 
     @Operation(summary = "Get user by id (ADMIN)")

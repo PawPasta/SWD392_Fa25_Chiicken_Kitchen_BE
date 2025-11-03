@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface OrderStepItemRepository : JpaRepository<OrderStepItem, Long> {
-    fun countByDailyMenuItemMenuItemId(menuItemId: Long): Long
+    fun countByMenuItemId(menuItemId: Long): Long
 
     @Transactional
     @Modifying

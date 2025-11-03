@@ -1,6 +1,5 @@
 package com.ChickenKitchen.app.model.entity.ingredient
 
-import com.ChickenKitchen.app.model.entity.menu.DailyMenu
 import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
 import com.ChickenKitchen.app.model.entity.order.Order
 import jakarta.persistence.*
@@ -32,9 +31,6 @@ class Store(
 
     @OneToMany(mappedBy = "store")
     val orders: MutableList<Order> = mutableListOf(),
-
-    @ManyToMany(mappedBy = "stores")
-    val dailyMenus: MutableSet<DailyMenu> = mutableSetOf(),
 
     @OneToMany(mappedBy = "store")
     val ingredientBatches: MutableList<StoreIngredientBatch> = mutableListOf(),

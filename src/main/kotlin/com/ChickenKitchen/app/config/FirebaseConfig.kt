@@ -59,11 +59,11 @@ class FirebaseConfig (
     fun firebaseApp(): FirebaseApp {
 
         // Chỉ đổi khi build image để deploy lên server
-        // val serviceAccount =
-        //     FileInputStream(System.getenv("FIREBASE_CONFIG_PATH"))
+        val serviceAccount =
+            FileInputStream(System.getenv("FIREBASE_CONFIG_PATH"))
 
         // Chạy local thì dùng cái này
-        val serviceAccount = FileInputStream(configuredPath)
+        // val serviceAccount = FileInputStream(configuredPath)
 
         val options = FirebaseOptions.builder()
             .setCredentials(GoogleCredentials.fromStream(serviceAccount))

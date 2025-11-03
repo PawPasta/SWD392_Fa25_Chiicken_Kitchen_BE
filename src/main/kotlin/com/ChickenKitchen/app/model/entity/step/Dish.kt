@@ -13,6 +13,9 @@ class Dish(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(name = "name", nullable = false, length = 150)
+    var name: String = "",
+
     @Column(name = "price", nullable = false)
     var price: Int = 0,
 
@@ -33,6 +36,12 @@ class Dish(
     @Column(name = "note")
     var note: String? = null,
 
+    @Column(name = "image_url", length = 500)
+    var imageUrl: String? = null,
+
     @OneToMany(mappedBy = "dish")
-    val orderSteps: MutableList<OrderStep> = mutableListOf()
+    val orderSteps: MutableList<OrderStep> = mutableListOf(),
+
+    @Column(name = "nutrition_json", columnDefinition = "TEXT")
+    var nutritionJson: String? = null
 )

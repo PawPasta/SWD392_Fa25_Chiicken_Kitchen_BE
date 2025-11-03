@@ -89,11 +89,11 @@ class EmployeeOrderServiceImpl(
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
                 val itemResponses = st.items.map { link ->
-                    val mi = link.dailyMenuItem.menuItem
+                    val mi = link.menuItem
                     CurrentStepItemResponse(
-                        dailyMenuItemId = link.dailyMenuItem.id!!,
                         menuItemId = mi.id!!,
                         menuItemName = mi.name,
+                        imageUrl = mi.imageUrl,
                         quantity = link.quantity,
                         price = mi.price,
                         cal = mi.cal
@@ -107,6 +107,7 @@ class EmployeeOrderServiceImpl(
             }
             CurrentDishResponse(
                 dishId = d.id!!,
+                name = d.name,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
