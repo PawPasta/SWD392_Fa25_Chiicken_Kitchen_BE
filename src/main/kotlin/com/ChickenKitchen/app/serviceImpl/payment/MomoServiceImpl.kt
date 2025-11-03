@@ -204,7 +204,7 @@ class MomoServiceImpl(
 
             "Payment successful and transaction created"
         } else {
-            payment.status = PaymentStatus.CANCELLED
+            payment.status = PaymentStatus.PENDING
             order.status = OrderStatus.FAILED
             paymentRepository.save(payment)
             orderRepository.save(order)

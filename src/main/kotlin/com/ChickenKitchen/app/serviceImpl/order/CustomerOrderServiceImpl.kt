@@ -2,6 +2,7 @@ package com.ChickenKitchen.app.serviceImpl.order
 
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
+import com.ChickenKitchen.app.enums.TransactionStatus
 import com.ChickenKitchen.app.handler.DeleteDishFailedException
 import com.ChickenKitchen.app.handler.DishNotFoundException
 import com.ChickenKitchen.app.handler.InvalidOrderStatusException
@@ -29,7 +30,9 @@ import com.ChickenKitchen.app.model.entity.order.Feedback
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import com.ChickenKitchen.app.model.entity.order.OrderStepItem
+import com.ChickenKitchen.app.model.entity.payment.Transaction
 import com.ChickenKitchen.app.model.entity.step.Dish
+import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.order.FeedbackRepository
 import com.ChickenKitchen.app.repository.order.OrderRepository
@@ -41,6 +44,10 @@ import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
+import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
+import com.ChickenKitchen.app.repository.payment.TransactionRepository
+import com.ChickenKitchen.app.repository.promotion.OrderPromotionRepository
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import com.ChickenKitchen.app.service.order.CustomerOrderService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
@@ -62,6 +69,10 @@ class CustomerOrderServiceImpl(
     private val dishRepository: DishRepository,
     private val orderDishRepository: OrderDishRepository,
     private val paymentRepository: PaymentRepository,
+    private val walletRepository: WalletRepository,
+    private val transactionRepository: TransactionRepository,
+    private val paymentMethodRepository: PaymentMethodRepository,
+    private val orderPromotionRepository: OrderPromotionRepository,
 ) : CustomerOrderService {
 
     private fun recalcAndPersistOrderTotal(order: Order) {
@@ -348,10 +359,6 @@ class CustomerOrderServiceImpl(
         )
     }
 
-    override fun getCancelledOrder(orderId: Long): OrderTrackingResponse {
-        TODO("Not yet implemented")
-    }
-
     @Transactional
     override fun getCurrentOrderForStore(storeId: Long): OrderCurrentResponse {
         val user = currentUser()
@@ -575,6 +582,105 @@ class CustomerOrderServiceImpl(
         val order = orderRepository.findById(orderId).orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
         recalcAndPersistOrderTotal(order)
         return orderId
+    }
+
+    @Transactional
+    override fun customerCancelOrder(orderId: Long): OrderTrackingResponse? {
+        val user = currentUser()
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.user.id != user.id) {
+            throw OrderNotFoundException("You can only cancel your own order")
+        }
+
+        return when (order.status) {
+            OrderStatus.NEW -> handleNewOrderCancellation(order)
+            OrderStatus.FAILED,
+            OrderStatus.PROCESSING,
+            OrderStatus.CONFIRMED -> handleRefundableCancellation(order, user)
+            OrderStatus.READY -> handleReadyOrderCancellation(order)
+            else -> getOrderTracking(order.id!!)
+        }
+    }
+
+
+    private fun handleNewOrderCancellation(order: Order): OrderTrackingResponse? {
+        val orderId = order.id ?: throw IllegalArgumentException("Order ID cannot be null")
+
+        // Xóa step liên quan
+        orderStepItemRepository.deleteByOrderId(orderId)
+        orderStepRepository.deleteByDishOrderId(orderId)
+        orderDishRepository.deleteByOrderId(orderId) // xoá bảng trung gian
+
+        // Xử lý dish
+        val orderDishes = orderDishRepository.findByOrderId(orderId)
+        orderDishes.map { it.dish }
+            .filter { !it.isCustom } // chỉ dish không custom
+            .forEach { dish ->
+                // Kiểm tra dish có còn được dùng ở order khác không
+                val linkedCount = orderDishRepository.countByDishId(dish.id!!)
+                if (linkedCount == 0L) {
+                    dishRepository.delete(dish)
+                }
+            }
+
+        // Xử lý payment
+        paymentRepository.findByOrderId(orderId)?.let { payment ->
+            if (payment.status == PaymentStatus.PENDING) {
+                paymentRepository.delete(payment)
+            }
+        }
+
+        orderPromotionRepository.deleteByOrderId(order.id!!)
+        // Xóa order chính
+        orderRepository.delete(order)
+        return null
+    }
+
+    private fun handleRefundableCancellation(order: Order, user: User): OrderTrackingResponse {
+
+        order.status = OrderStatus.CANCELLED
+        orderRepository.save(order)
+
+        val payment = paymentRepository.findByOrderId(order.id!!)
+            ?: throw OrderNotFoundException("Payment for order ${order.id} not found")
+
+
+        payment.status = PaymentStatus.REFUNDED
+        paymentRepository.save(payment)
+
+
+        val wallet = walletRepository.findByUser(user)
+            ?: throw IllegalStateException("Wallet for user ${user.id} not found")
+
+        wallet.balance += payment.finalAmount
+        walletRepository.save(wallet)
+
+        val refundTxn = Transaction(
+            amount = payment.finalAmount,
+            payment = payment,
+            wallet = wallet,
+            transactionType = TransactionStatus.DEBIT, // Tiền vào ví
+            paymentMethod = paymentMethodRepository.findByName("Wallet")
+        )
+        transactionRepository.save(refundTxn)
+
+        return getOrderTracking(order.id!!)
+    }
+
+    private fun handleReadyOrderCancellation(order: Order): OrderTrackingResponse {
+        // Với READY: huỷ nhưng không hoàn tiền
+        order.status = OrderStatus.CANCELLED
+        orderRepository.save(order)
+
+        val payment = paymentRepository.findByOrderId(order.id!!)
+            ?: throw OrderNotFoundException("Payment for order ${order.id} not found")
+
+        payment.status = PaymentStatus.REFUNDED_REJECT
+        paymentRepository.save(payment)
+
+        return getOrderTracking(order.id!!)
     }
 
 }

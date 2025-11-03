@@ -88,4 +88,12 @@ class OrderCustomerController(
         val result = customerOrderService.getOrderTracking(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched order tracking"))
     }
+
+
+    @Operation(summary = "Cancelled Order (for customer)")
+    @PostMapping("/api/orders/{orderId}/cancel")
+    fun cancelOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val res = customerOrderService.customerCancelOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(res, "Order cancelled"))
+    }
 }

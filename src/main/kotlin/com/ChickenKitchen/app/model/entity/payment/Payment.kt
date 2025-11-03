@@ -43,7 +43,7 @@ class Payment(
     val createdAt: Timestamp? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 50)
     var status: PaymentStatus,
 
     @Column(columnDefinition = "TEXT")

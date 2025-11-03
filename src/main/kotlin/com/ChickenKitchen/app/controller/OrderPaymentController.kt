@@ -35,8 +35,6 @@ class OrderPaymentController(
         val msg = momoService.callBack(params)
         return ResponseEntity.ok(ResponseModel.success(msg, "Nice"))
     }
-
-
     //Cái này chỉ để test momo sandbox với amount tùy ý, không cần order
     @Operation(summary = "Test MoMo sandbox with custom amount (no order required)")
     @PostMapping("/api/payments/momo/test")

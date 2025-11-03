@@ -17,7 +17,7 @@ enum class TransactionStatus {
 }
 
 enum class PaymentStatus {
-    PENDING, FINISHED, CANCELLED
+    PENDING, FINISHED, REFUNDED, REFUNDED_REJECT
 }
 
 enum class MenuCategory {

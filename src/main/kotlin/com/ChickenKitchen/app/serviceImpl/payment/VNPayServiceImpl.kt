@@ -115,7 +115,7 @@ class VNPayServiceImpl (
 
             }
             "24" -> {
-                payment.status = PaymentStatus.CANCELLED
+                payment.status = PaymentStatus.PENDING
                 order.status = OrderStatus.FAILED
                 orderRepository.save(order)
                 paymentRepository.save(payment)

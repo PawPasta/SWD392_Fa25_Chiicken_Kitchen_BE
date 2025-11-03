@@ -32,4 +32,10 @@ interface OrderDishRepository : JpaRepository<OrderDish, Long> {
 
     @Query("select od from OrderDish od where od.order.id = :orderId")
     fun findAllByOrderId(@Param("orderId") orderId: Long): List<OrderDish>
+
+    @Query("SELECT COUNT(od) FROM OrderDish od WHERE od.dish.id = :dishId")
+    fun countByDishId(@Param("dishId") dishId: Long): Long
+
+    @Query("SELECT od FROM OrderDish od WHERE od.order.id = :orderId")
+    fun findByOrderId(@Param("orderId") orderId: Long): List<OrderDish>
 }
