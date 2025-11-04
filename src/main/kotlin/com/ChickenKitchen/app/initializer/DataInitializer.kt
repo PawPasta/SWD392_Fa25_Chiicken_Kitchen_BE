@@ -39,7 +39,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 import kotlin.random.Random
@@ -152,9 +151,6 @@ class DataInitializer {
                 Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
                 Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
                 Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
-                Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
-                Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
-                Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
             )
 
             employeeData.forEachIndexed { idx, (uid, email, name) ->
@@ -373,9 +369,6 @@ class DataInitializer {
                 Triple("Chicken Kitchen Binh Thanh", "720A Điện Biên Phủ, Phường 22, Bình Thạnh, Thành phố Hồ Chí Minh", "0281234567"),
                 Triple("Chicken Kitchen High Technology bay", "Lô E2a-7, Đường D1, Khu Công nghệ cao, Phường Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh", "0281234568"),
                 Triple("Chicken Kitchen District 3", "643 Điện Biên Phủ, Quận 3, Thành phố Hồ Chí Minh.", "0281234569"),
-                Triple("Chicken Kitchen Binh Duong", "Đường Lưu Hữu Phước, phường Đông Hòa, thành phố Dĩ An, tỉnh Bình Dương", "0281234570"),
-                Triple("Chicken Kitchen Phu Nhuan", "124 Phan Xích Long, Phường 2, Phú Nhuận, Thành phố Hồ Chí Minh ", "0281234571"),
-                Triple("Chicken Kitchen Binh Chanh", "240-242 Phạm Văn Đồng, phường Hiệp Bình Chánh, quận Thủ Đức, Thành phố Hồ Chí Minh", "0281234572")
             )
 
             storesData.forEach { (name, address, phone) ->
@@ -854,7 +847,7 @@ class DataInitializer {
                                 )
                                 totalPrice += mi.price
                                 totalCal += mi.cal
-                                if (pickedImage == null) pickedImage = mi.imageUrl
+                                pickedImage = mi.imageUrl
                             }
                         }
 
