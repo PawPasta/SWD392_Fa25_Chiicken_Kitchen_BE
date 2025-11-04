@@ -45,5 +45,12 @@ class OrderEmployeeController(
         val result = employeeOrderService.employeeCompleteOrder(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Order moved to COMPLETED"))
     }
+
+    @Operation(summary = "Employee: cancel an order")
+    @PostMapping("/cancel/{orderId}")
+    fun employeeCancelOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = employeeOrderService.employeeCancelOrder(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Order cancelled"))
+    }
 }
 
