@@ -2,6 +2,7 @@ package com.ChickenKitchen.app.serviceImpl.notification
 
 import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
 import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
+import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
 import com.google.firebase.messaging.FirebaseMessaging
@@ -11,7 +12,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
 @Service
-class NotificationServiceImpl (
+class NotificationServiceImpl(
     private val userRepository: UserRepository,
 ) : NotificationService {
 
@@ -19,7 +20,6 @@ class NotificationServiceImpl (
 
     override fun sendToUser(req: SingleNotificationRequest) {
         val fcmToken = req.user.fcmToken?.takeIf { it.isNotBlank() } ?: return
-
         try {
             FirebaseMessaging.getInstance().send(
                 buildMessage(fcmToken, req.title, req.body)
@@ -32,6 +32,20 @@ class NotificationServiceImpl (
         val tokens = userRepository.findAll()
             .mapNotNull { it.fcmToken }
             .filter { it.isNotBlank() }
+
+        if (tokens.isEmpty()) return
+
+        tokens.chunked(500).forEach { batch ->
+            val messages = batch.map { token -> buildMessage(token, req.title, req.body) }
+            try {
+                FirebaseMessaging.getInstance().sendEach(messages)
+            } catch (_: Exception) { }
+        }
+    }
+
+    @Async
+    override fun sendToUsers(req: MultipleNotificationRequest, users: List<User>) {
+        val tokens = users.mapNotNull { it.fcmToken }.filter { it.isNotBlank() }
 
         if (tokens.isEmpty()) return
 
@@ -58,5 +72,4 @@ class NotificationServiceImpl (
             )
             .build()
     }
-
 }

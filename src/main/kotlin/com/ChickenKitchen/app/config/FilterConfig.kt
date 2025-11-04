@@ -36,7 +36,6 @@ class FilterConfig(
         // Temporarily making all application APIs public
         // Add base paths for each controller
         "/api/categories",
-        "/api/daily-menu",
         "/api/ingredient",
         "/api/menu-items",
         "/api/nutrients",
@@ -48,7 +47,9 @@ class FilterConfig(
         "/api/users",
 
         "/api/notifications",
-        "/api/payments/momo/test"
+        "/api/payments/momo/test",
+
+        "/api/dishes"
 
         // Broad allow for all APIs (temporary)
         // "/api" // uncomment to allow absolutely all under /api

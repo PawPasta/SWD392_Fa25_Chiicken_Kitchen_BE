@@ -16,9 +16,11 @@ import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.order.EmployeeOrderService
+import com.ChickenKitchen.app.service.payment.PaymentService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class EmployeeOrderServiceImpl(
@@ -27,6 +29,8 @@ class EmployeeOrderServiceImpl(
     private val dishRepository: DishRepository,
     private val userRepository: UserRepository,
     private val employeeDetailRepository: EmployeeDetailRepository,
+
+    private val paymentService: PaymentService,
 ) : EmployeeOrderService {
 
     private fun currentUser() : com.ChickenKitchen.app.model.entity.user.User {
@@ -200,6 +204,46 @@ class EmployeeOrderServiceImpl(
 
         order.status = OrderStatus.COMPLETED
         orderRepository.save(order)
+
+        return OrderBriefResponse(
+            orderId = order.id!!,
+            storeId = order.store.id!!,
+            status = order.status.name,
+            totalPrice = order.totalPrice,
+            createdAt = order.createdAt,
+            pickupTime = order.pickupTime
+        )
+    }
+
+    @Transactional
+    override fun employeeCancelOrder(orderId: Long): OrderBriefResponse {
+        val employee = currentUser()
+        val detail = employeeDetailRepository.findByUser(employee)
+            ?: throw UserNotFoundException("Employee detail not found for user ${employee.email}")
+
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.store.id != detail.store.id) {
+            throw StoreNotFoundException("Order does not belong to employee's store")
+        }
+
+        when (order.status) {
+            OrderStatus.CONFIRMED, OrderStatus.PROCESSING -> {
+                // ✅ Hoàn tiền và huỷ đơn
+                paymentService.refundPayment(order, "Cancelled by employee")
+                order.status = OrderStatus.CANCELLED
+                orderRepository.save(order)
+            }
+
+            OrderStatus.READY, OrderStatus.COMPLETED -> {
+                throw InvalidOrderStatusException("Employee cannot cancel READY or COMPLETED orders")
+            }
+
+            else -> {
+                throw InvalidOrderStatusException("Order cannot be cancelled in status ${order.status}")
+            }
+        }
 
         return OrderBriefResponse(
             orderId = order.id!!,

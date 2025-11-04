@@ -120,7 +120,15 @@ class VNPayServiceImpl (
                 orderRepository.save(order)
                 paymentRepository.save(payment)
 
-                "Payment Failed"
+                notificationService.sendToUser(
+                    SingleNotificationRequest (
+                        user = order.user,
+                        title = "Payment Failed",
+                        body = "Your payment for order ${order.id} has failed."
+                    )
+                )
+
+                return "Payment Failed"
             }
             else ->{
                 "Payment failed"

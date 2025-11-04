@@ -92,8 +92,8 @@ class OrderCustomerController(
 
     @Operation(summary = "Cancelled Order (for customer)")
     @PostMapping("/api/orders/{orderId}/cancel")
-    fun cancelOrder(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
-        val res = customerOrderService.customerCancelOrder(orderId)
+    fun cancelOrder(@PathVariable orderId: Long, @RequestBody reason: String): ResponseEntity<ResponseModel> {
+        val res = customerOrderService.customerCancelOrder(orderId,reason)
         return ResponseEntity.ok(ResponseModel.success(res, "Order cancelled"))
     }
 }

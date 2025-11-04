@@ -47,7 +47,7 @@ class Payment(
     var status: PaymentStatus,
 
     @Column(columnDefinition = "TEXT")
-    val note: String? = null,
+    var note: String? = null,
 
     @OneToMany(mappedBy = "payment")
     val transactions: MutableList<Transaction> = mutableListOf()

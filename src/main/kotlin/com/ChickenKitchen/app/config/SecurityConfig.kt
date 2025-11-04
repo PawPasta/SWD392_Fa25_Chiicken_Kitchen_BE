@@ -48,7 +48,8 @@ class SecurityConfig(
                     "/api/transaction/**",
                     "/api/users/**",
                     "/api/notifications/**",
-                    "/api/payments/momo/test"
+                    "/api/payments/momo/test",
+                    "/api/dishes"
                 ).permitAll()
 
                 it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

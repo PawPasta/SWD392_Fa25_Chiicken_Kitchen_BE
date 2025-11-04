@@ -202,13 +202,30 @@ class MomoServiceImpl(
                 )
             )
 
+            notificationService.sendToUser(
+                SingleNotificationRequest(
+                    user = order.user,
+                    title = "Payment Successful",
+                    body = "Your MoMo payment for order ${order.id} was successful."
+                )
+            )
+
             "Payment successful and transaction created"
         } else {
             payment.status = PaymentStatus.PENDING
             order.status = OrderStatus.FAILED
             paymentRepository.save(payment)
             orderRepository.save(order)
-            "Payment failed: $message"
+
+            notificationService.sendToUser(
+                SingleNotificationRequest (
+                    user = order.user,
+                    title = "Payment Failed",
+                    body = "Your payment for order ${order.id} using MoMo has failed."
+                )
+            )
+            return "Payment failed: $message"
+
         }
     }
 }
