@@ -4,6 +4,7 @@ import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.model.dto.request.CreateCustomDishRequest
 import com.ChickenKitchen.app.model.dto.request.CreateExistingDishRequest
 import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
+import com.ChickenKitchen.app.model.dto.request.OrderCancelledRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.DishDeleteResponse
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
@@ -91,9 +92,9 @@ class OrderCustomerController(
 
 
     @Operation(summary = "Cancelled Order (for customer)")
-    @PostMapping("/api/orders/{orderId}/cancel")
-    fun cancelOrder(@PathVariable orderId: Long, @RequestBody reason: String): ResponseEntity<ResponseModel> {
-        val res = customerOrderService.customerCancelOrder(orderId,reason)
+    @PostMapping("/api/orders/cancel")
+    fun cancelOrder(@RequestBody req: OrderCancelledRequest): ResponseEntity<ResponseModel> {
+        val res = customerOrderService.customerCancelOrder(req.orderId,req.reason)
         return ResponseEntity.ok(ResponseModel.success(res, "Order cancelled"))
     }
 }
