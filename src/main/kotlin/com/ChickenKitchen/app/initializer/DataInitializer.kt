@@ -853,7 +853,7 @@ class DataInitializer {
                                 )
                                 totalPrice += mi.price
                                 totalCal += mi.cal
-                                if (pickedImage == null) pickedImage = mi.imageUrl
+                                pickedImage = mi.imageUrl
                             }
                         }
 
