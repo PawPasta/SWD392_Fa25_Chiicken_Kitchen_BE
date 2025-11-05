@@ -20,6 +20,7 @@ data class CurrentStepResponse(
 data class CurrentDishResponse(
     val dishId: Long,
     val name: String,
+    val isCustom: Boolean,
     val note: String?,
     val price: Int,
     val cal: Int,

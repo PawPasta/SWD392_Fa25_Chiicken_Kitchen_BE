@@ -332,6 +332,7 @@ class CustomerOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
@@ -435,6 +436,7 @@ class CustomerOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
