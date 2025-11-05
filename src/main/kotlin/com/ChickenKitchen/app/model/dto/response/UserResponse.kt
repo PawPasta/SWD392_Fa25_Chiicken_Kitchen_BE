@@ -35,3 +35,8 @@ data class UserProfileResponse(
     val createdAt: String,
     val imageURL : String? = null,
 )
+
+data class UserWalletResponse(
+    val balance: Int,
+    val transactions: List<TransactionResponse>,
+)

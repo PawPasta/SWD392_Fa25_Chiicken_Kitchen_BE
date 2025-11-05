@@ -25,6 +25,7 @@ import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.service.order.OrderPaymentService
+import com.ChickenKitchen.app.service.payment.MomoService
 import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import com.ChickenKitchen.app.service.user.WalletService
@@ -43,14 +44,19 @@ class OrderPaymentServiceImpl(
     private val paymentRepository: PaymentRepository,
     private val userRepository: UserRepository,
     private val dishRepository: DishRepository,
-
     private val vnPayService: VNPayService,
     private val walletService: WalletService,
-    private val transactionService: TransactionService
-
+    private val transactionService: TransactionService,
+    private val momoService: MomoService
 ) : OrderPaymentService {
 
-    private fun currentUser() : User {
+    companion object {
+        private const val MIN_AMOUNT = 5_000
+        private const val MAX_AMOUNT_EXCLUSIVE = 1_000_000_000
+        private val ALLOWED_ORDER_STATUSES = setOf(OrderStatus.NEW, OrderStatus.FAILED)
+    }
+
+    private fun currentUser(): User {
         val auth = SecurityContextHolder.getContext().authentication
         val email = when (val principal = auth?.principal) {
             is UserDetails -> principal.username
@@ -69,7 +75,7 @@ class OrderPaymentServiceImpl(
         val order = orderRepository.findById(req.orderId)
             .orElseThrow { OrderNotFoundException("Order with id ${req.orderId} not found") }
 
-        if (order.status != OrderStatus.NEW && order.status != OrderStatus.FAILED) {
+        if (order.status !in ALLOWED_ORDER_STATUSES) {
             throw InvalidOrderStatusException("Order is not in a valid state to confirm payment (must be NEW or FAILED)")
         }
 
@@ -81,118 +87,102 @@ class OrderPaymentServiceImpl(
         }
 
         val user = currentUser()
+        ensureOrderTotalUpToDate(order)
 
-        // Ensure order total is up-to-date before confirming
+        val existingPayment = paymentRepository.findByOrderId(order.id!!)
+        val (discountAmount, finalAmount) = when {
+            existingPayment != null && existingPayment.status == PaymentStatus.PENDING -> {
+                // keep existing discount, update amounts to reflect current total
+                val discount = existingPayment.discountAmount
+                existingPayment.amount = order.totalPrice
+                existingPayment.finalAmount = (order.totalPrice - discount).coerceAtLeast(0)
+                paymentRepository.save(existingPayment)
+                discount to existingPayment.finalAmount
+            }
+            else -> {
+                val discount = req.promotionId?.let { applyPromotion(it, order, user) } ?: 0
+                val final = (order.totalPrice - discount).coerceAtLeast(0)
+                when {
+                    existingPayment != null && order.status == OrderStatus.FAILED -> {
+                        existingPayment.amount = order.totalPrice
+                        existingPayment.discountAmount = discount
+                        existingPayment.finalAmount = final
+                        existingPayment.status = PaymentStatus.PENDING
+                        paymentRepository.save(existingPayment)
+                    }
+                    existingPayment == null -> {
+                        paymentRepository.save(
+                            Payment(
+                                user = user,
+                                order = order,
+                                amount = order.totalPrice,
+                                discountAmount = discount,
+                                finalAmount = final,
+                                status = PaymentStatus.PENDING
+                            )
+                        )
+                    }
+                    else -> throw InvalidOrderStepException("This order already has a payment and cannot be confirmed again.")
+                }
+                discount to final
+            }
+        }
+
+        validateFinalAmount(finalAmount)
+        return processPayment(order, paymentMethod, finalAmount, req.channel)
+    }
+
+    private fun ensureOrderTotalUpToDate(order: Order) {
         val sum = dishRepository.findAllByOrderId(order.id!!).sumOf { it.price }
         if (order.totalPrice != sum) {
             order.totalPrice = sum
             orderRepository.save(order)
         }
-
-        val existingPayment = paymentRepository.findByOrderId(order.id!!)
-
-        var discountAmount: Int
-        var finalAmount: Int
-
-        if (existingPayment != null && existingPayment.status == PaymentStatus.PENDING) {
-            // Reconfirm: keep existing discount, update amounts to reflect current order total
-            discountAmount = existingPayment.discountAmount
-            finalAmount = (order.totalPrice - discountAmount).coerceAtLeast(0)
-            existingPayment.amount = order.totalPrice
-            existingPayment.finalAmount = finalAmount
-            paymentRepository.save(existingPayment)
-        } else {
-            // Fresh confirm or retry after FAILED: apply optional promotion
-            var computedDiscount = 0
-            req.promotionId?.let { promotionId ->
-                val promo = promotionRepository.findById(promotionId)
-                    .orElseThrow { PromotionNotFoundException("Promotion with id $promotionId not found") }
-
-                val now = LocalDateTime.now()
-                if (now.isBefore(promo.startDate) || now.isAfter(promo.endDate)) {
-                    throw PromotionNotValidThisTime("Promotion is not valid at this time")
-                }
-
-                if (promo.quantity <= 0) {
-                    throw PromotionNotValidThisTime("Promotion is out of quantity")
-                }
-
-                computedDiscount = if (promo.discountType == DiscountType.PERCENT) {
-                    (order.totalPrice * promo.discountValue) / 100
-                } else {
-                    promo.discountValue
-                }
-
-                // Save OrderPromotion and decrement quantity
-                orderPromotionRepository.save(
-                    OrderPromotion(order = order, promotion = promo, user = user, usedDate = now)
-                )
-                promo.quantity -= 1
-                promotionRepository.save(promo)
-            }
-
-            discountAmount = computedDiscount
-            finalAmount = (order.totalPrice - discountAmount).coerceAtLeast(0)
-
-            if (existingPayment != null && order.status == OrderStatus.FAILED) {
-                // Retry after FAILED
-                existingPayment.amount = order.totalPrice
-                existingPayment.discountAmount = discountAmount
-                existingPayment.finalAmount = finalAmount
-                existingPayment.status = PaymentStatus.PENDING
-                paymentRepository.save(existingPayment)
-            } else if (existingPayment == null) {
-                // Create new payment if none
-                Payment(
-                    user = user,
-                    order = order,
-                    amount = order.totalPrice,
-                    discountAmount = discountAmount,
-                    finalAmount = finalAmount,
-                    status = PaymentStatus.PENDING
-                ).also { paymentRepository.save(it) }
-            } else {
-
-                throw InvalidOrderStepException("This order already has a payment and cannot be confirmed again.")
-            }
-        }
-
-        // Guard invalid VNPay amount range (VND, VNPay expects amount*100 in request)
-        if (finalAmount !in 5000..<1_000_000_000) {
-            throw InvalidOrderStepException("Invalid payment amount: $finalAmount VND. Must be between 5,000 and < 1,000,000,000")
-        }
-
-        return processPayment(order, paymentMethod, finalAmount, req.channel)
     }
 
-    override fun processPayment(
-        order: Order,
-        paymentMethod: PaymentMethod,
-        amount: Int,
-        channel: String?
-    ): String {
+    private fun applyPromotion(promotionId: Long, order: Order, user: User): Int {
+        val promo = promotionRepository.findById(promotionId)
+            .orElseThrow { PromotionNotFoundException("Promotion with id $promotionId not found") }
+
+        val now = LocalDateTime.now()
+        if (now.isBefore(promo.startDate) || now.isAfter(promo.endDate)) {
+            throw PromotionNotValidThisTime("Promotion is not valid at this time")
+        }
+        if (promo.quantity <= 0) {
+            throw PromotionNotValidThisTime("Promotion is out of quantity")
+        }
+
+        val computed = if (promo.discountType == DiscountType.PERCENT) {
+            (order.totalPrice * promo.discountValue) / 100
+        } else {
+            promo.discountValue
+        }
+
+        orderPromotionRepository.save(OrderPromotion(order = order, promotion = promo, user = user, usedDate = now))
+        promo.quantity -= 1
+        promotionRepository.save(promo)
+        return computed
+    }
+
+    private fun validateFinalAmount(finalAmount: Int) {
+        if (finalAmount !in MIN_AMOUNT until MAX_AMOUNT_EXCLUSIVE) {
+            throw InvalidOrderStepException("Invalid payment amount: $finalAmount VND. Must be between $MIN_AMOUNT and < $MAX_AMOUNT_EXCLUSIVE")
+        }
+    }
+
+    override fun processPayment(order: Order, paymentMethod: PaymentMethod, amount: Int, channel: String?): String {
         val payment = paymentRepository.findByOrderId(order.id!!)
             ?: throw InvalidOrderStepException("Payment not found for order ${order.id}")
 
         return when (paymentMethod.name.uppercase()) {
-            "VNPAY" -> {
-                vnPayService.createVnPayURL(order, channel)
-            }
+            "VNPAY" -> vnPayService.createVnPayURL(order, channel)
             "WALLET" -> {
                 walletService.deductFromWallet(order.user, amount)
-                transactionService.createPaymentTransaction(payment,order,paymentMethod)
+                transactionService.createPaymentTransaction(payment, order, paymentMethod)
                 "Payment via wallet successful"
             }
-
-            "MOMO" -> {
-                throw PaymentMethodNameNotAvailable("MoMo payment method not yet supported")
-            }
-
-            else -> throw PaymentMethodNameNotAvailable(
-                "Payment method ${paymentMethod.name} is not supported yet"
-            )
+            "MOMO" -> momoService.createMomoURL(order, channel)
+            else -> throw PaymentMethodNameNotAvailable("Payment method ${paymentMethod.name} is not supported yet")
         }
     }
-
-
 }

@@ -349,6 +349,10 @@ class CustomerOrderServiceImpl(
         )
     }
 
+    override fun getCancelledOrder(orderId: Long): OrderTrackingResponse {
+        TODO("Not yet implemented")
+    }
+
     @Transactional
     override fun getCurrentOrderForStore(storeId: Long): OrderCurrentResponse {
         val user = currentUser()
@@ -574,4 +578,5 @@ class CustomerOrderServiceImpl(
         recalcAndPersistOrderTotal(order)
         return orderId
     }
+
 }
