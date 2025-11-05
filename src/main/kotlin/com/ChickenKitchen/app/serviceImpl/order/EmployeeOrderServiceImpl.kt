@@ -112,6 +112,7 @@ class EmployeeOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
                 cal = d.cal,
