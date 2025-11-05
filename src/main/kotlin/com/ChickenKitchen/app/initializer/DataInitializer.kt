@@ -39,7 +39,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 import kotlin.random.Random
@@ -47,7 +46,7 @@ import kotlin.math.absoluteValue
 
 @Configuration
 class DataInitializer {
-
+    
     @Bean
     @Transactional
     fun initData(
