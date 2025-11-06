@@ -46,7 +46,7 @@ import kotlin.math.absoluteValue
 
 @Configuration
 class DataInitializer {
-
+    
     @Bean
     @Transactional
     fun initData(

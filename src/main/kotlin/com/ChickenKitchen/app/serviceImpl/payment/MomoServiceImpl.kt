@@ -15,7 +15,7 @@ import com.ChickenKitchen.app.service.payment.TransactionService
 import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import java.util.UUID
+import java.util.*
 
 @Service
 class MomoServiceImpl(
@@ -37,13 +37,20 @@ class MomoServiceImpl(
         val payment = paymentRepository.findByOrderId(
             order.id ?: throw OrderNotFoundException("Payment with order id ${order.id} not found")
         )
+
         val amount = payment?.finalAmount ?: 0L
         val orderInfo = "Payment for order ${order.id}"
 
-        // ✅ Chọn redirectUrl tùy theo channel
+        //  Phải làm bước này vì sao ư
+        // Tại anh momo khá là khó tính, nếu như orderId trong db có dạng Long khi truyền vào thì sẽ không được chấp nhận
+        // Nếu như đã dùng UUID thì không sao, nhưng nếu đã lỡ làm Long rồi thì phải ma đạo id sao cho nó thành chuỗi thi` momo moi chap nhan
+        val safeOrderId = "CK-${UUID.randomUUID().toString().substring(0, 8)}-${order.id}"
+
+        // ✅ Chọn redirectUrl theo channel
         val redirectUrl = if (channel?.uppercase() == "APP") momoConfig.appRedirectUrl else momoConfig.redirectUrl
 
         return createMomoURLInternal(
+            orderId = safeOrderId,
             amount = amount.toLong(),
             orderInfo = orderInfo,
             partnerName = "Chicken Kitchen",
@@ -54,6 +61,7 @@ class MomoServiceImpl(
     override fun createMomoURLTest(amount: Long): String {
         val orderInfo = "Test MoMo payment - amount $amount"
         return createMomoURLInternal(
+            orderId = "TEST-${UUID.randomUUID()}",
             amount = amount,
             orderInfo = orderInfo,
             partnerName = "Chicken Kitchen (Test)",
@@ -64,6 +72,7 @@ class MomoServiceImpl(
     }
 
     private fun createMomoURLInternal(
+        orderId: String,
         amount: Long,
         orderInfo: String,
         partnerName: String,
@@ -71,7 +80,6 @@ class MomoServiceImpl(
         requestType: String = DEFAULT_REQUEST_TYPE,
         redirectUrl: String
     ): String {
-        val orderId = UUID.randomUUID().toString()
         val requestId = UUID.randomUUID().toString()
         val extraData = ""
 
@@ -83,26 +91,27 @@ class MomoServiceImpl(
             orderId = orderId,
             orderInfo = orderInfo,
             partnerCode = momoConfig.partnerCode,
-            redirectUrl = redirectUrl, // 👈 truyền redirectUrl động vào đây
+            redirectUrl = redirectUrl,
             requestId = requestId,
             requestType = requestType
         )
+
         val signature = momoConfig.sign(raw)
 
-        val body = buildRequestBody(
-            partnerCode = momoConfig.partnerCode,
-            partnerName = partnerName,
-            storeId = storeId,
-            requestType = requestType,
-            ipnUrl = momoConfig.ipnUrl,
-            redirectUrl = redirectUrl, // 👈 truyền redirectUrl vào request
-            orderId = orderId,
-            amount = amount,
-            lang = momoConfig.lang,
-            orderInfo = orderInfo,
-            requestId = requestId,
-            extraData = extraData,
-            signature = signature
+        val body = mapOf(
+            "partnerCode" to momoConfig.partnerCode,
+            "partnerName" to partnerName,
+            "storeId" to storeId,
+            "requestType" to requestType,
+            "ipnUrl" to momoConfig.ipnUrl,
+            "redirectUrl" to redirectUrl,
+            "orderId" to orderId,
+            "amount" to amount,
+            "lang" to momoConfig.lang,
+            "orderInfo" to orderInfo,
+            "requestId" to requestId,
+            "extraData" to extraData,
+            "signature" to signature
         )
 
         return postAndExtractPayUrl(body)
@@ -134,56 +143,30 @@ class MomoServiceImpl(
         ).joinToString("&")
     }
 
-    private fun buildRequestBody(
-        partnerCode: String,
-        partnerName: String,
-        storeId: String,
-        requestType: String,
-        ipnUrl: String,
-        redirectUrl: String,
-        orderId: String,
-        amount: Long,
-        lang: String,
-        orderInfo: String,
-        requestId: String,
-        extraData: String,
-        signature: String
-    ): Map<String, Any> {
-        return mapOf(
-            "partnerCode" to partnerCode,
-            "partnerName" to partnerName,
-            "storeId" to storeId,
-            "requestType" to requestType,
-            "ipnUrl" to ipnUrl,
-            "redirectUrl" to redirectUrl,
-            "orderId" to orderId,
-            "amount" to amount,
-            "lang" to lang,
-            "orderInfo" to orderInfo,
-            "requestId" to requestId,
-            "extraData" to extraData,
-            "signature" to signature
-        )
-    }
-
     private fun postAndExtractPayUrl(requestBody: Map<String, Any>): String {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val entity = HttpEntity(requestBody, headers)
 
         val response = restTemplate.postForEntity(momoConfig.endpoint, entity, Map::class.java)
         val body = response.body ?: throw RuntimeException("Empty response from MoMo")
-        return body["payUrl"]?.toString() ?: throw RuntimeException("Missing payUrl")
+
+        return body["payUrl"]?.toString() ?: throw RuntimeException("Missing payUrl: $body")
     }
 
     override fun callBack(params: Map<String, Any>): String {
         val resultCode = params["resultCode"]?.toString() ?: return "Missing result code"
-        val orderIdStr = params["orderId"]?.toString() ?: return "Missing order id"
+        val momoOrderId = params["orderId"]?.toString() ?: return "Missing order id"
         val message = params["message"]?.toString() ?: ""
 
-        val order = orderRepository.findById(orderIdStr.toLong())
-            .orElseThrow { OrderNotFoundException("Order not found with id $orderIdStr") }
+        // ✅ Tách ra order.id thật từ chuỗi "CK-xxxxxxx-<id>"
+        val orderIdStr = momoOrderId.substringAfterLast("-")
+        val orderId = orderIdStr.toLongOrNull()
+            ?: throw RuntimeException("Invalid order id format in momoOrderId: $momoOrderId")
 
-        val payment = order.payment ?: throw OrderNotFoundException("Payment not found for order $orderIdStr")
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order not found with id $orderId") }
+
+        val payment = order.payment ?: throw OrderNotFoundException("Payment not found for order $orderId")
         val paymentMethod = paymentMethodRepository.findByName("MoMo")
             ?: throw OrderNotFoundException("Payment method MoMo not found")
 
@@ -202,14 +185,6 @@ class MomoServiceImpl(
                 )
             )
 
-            notificationService.sendToUser(
-                SingleNotificationRequest(
-                    user = order.user,
-                    title = "Payment Successful",
-                    body = "Your MoMo payment for order ${order.id} was successful."
-                )
-            )
-
             "Payment successful and transaction created"
         } else {
             payment.status = PaymentStatus.PENDING
@@ -218,14 +193,13 @@ class MomoServiceImpl(
             orderRepository.save(order)
 
             notificationService.sendToUser(
-                SingleNotificationRequest (
+                SingleNotificationRequest(
                     user = order.user,
                     title = "Payment Failed",
                     body = "Your payment for order ${order.id} using MoMo has failed."
                 )
             )
-            return "Payment failed: $message"
-
+            "Payment failed: $message"
         }
     }
 }
