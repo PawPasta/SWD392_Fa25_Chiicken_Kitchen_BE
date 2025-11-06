@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository
 
 
 @Repository
-interface MenuItemNutrientRepository : JpaRepository<MenuItemNutrient, Long> {
+interface MenuItemNutrientRepository : JpaRepository<MenuItemNutrient, Long>{
     fun findByMenuItemId(menuItemId: Long): List<MenuItemNutrient>
 }

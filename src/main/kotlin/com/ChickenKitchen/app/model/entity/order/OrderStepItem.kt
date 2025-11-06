@@ -1,6 +1,6 @@
 package com.ChickenKitchen.app.model.entity.order
 
-import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
+import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import jakarta.persistence.*
 
 @Entity
@@ -15,10 +15,9 @@ class OrderStepItem(
     val orderStep: OrderStep,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "daily_menu_item_id", nullable = false)
-    val dailyMenuItem: DailyMenuItem,
+    @JoinColumn(name = "menu_item_id", nullable = false)
+    val menuItem: MenuItem,
 
     @Column(nullable = false)
     val quantity: Int
 )
-

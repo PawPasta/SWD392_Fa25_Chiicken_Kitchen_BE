@@ -7,6 +7,5 @@ import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 interface OrderPaymentService {
 
     fun confirmOrder(req: OrderConfirmRequest): String
-    fun processPayment(order: Order, paymentMethod: PaymentMethod, amount : Int) : String
+    fun processPayment(order: Order, paymentMethod: PaymentMethod, amount: Int, channel: String? = null): String
 }
-

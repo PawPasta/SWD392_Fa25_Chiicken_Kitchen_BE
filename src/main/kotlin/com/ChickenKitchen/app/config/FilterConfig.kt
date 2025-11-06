@@ -36,7 +36,6 @@ class FilterConfig(
         // Temporarily making all application APIs public
         // Add base paths for each controller
         "/api/categories",
-        "/api/daily-menu",
         "/api/ingredient",
         "/api/menu-items",
         "/api/nutrients",
@@ -47,7 +46,10 @@ class FilterConfig(
         "/api/transaction",
         "/api/users",
 
-        "/api/notifications"
+        "/api/notifications",
+        "/api/payments/momo/test",
+
+        "/api/dishes"
 
         // Broad allow for all APIs (temporary)
         // "/api" // uncomment to allow absolutely all under /api
@@ -65,9 +67,10 @@ class FilterConfig(
             }
             val requestUri = request.requestURI
 
-            // Public thì cho qua luôn
-            if (publicApis.any { requestUri.startsWith(it) }) {
-                filterChain.doFilter(request, response) 
+            // Allow public APIs except profile endpoint which must be authenticated
+            val isProfileEndpoint = requestUri.startsWith("/api/users/me")
+            if (!isProfileEndpoint && publicApis.any { requestUri.startsWith(it) }) {
+                filterChain.doFilter(request, response)
                 return
             }
 

@@ -2,7 +2,6 @@ package com.ChickenKitchen.app.model.entity.menu
 
 import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
-import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 import java.sql.Timestamp
 import org.hibernate.annotations.CreationTimestamp
@@ -40,11 +39,6 @@ data class MenuItem(
 
     @Column(name = "description")
     var description: String? = null,
-
-    // Order steps relationship now goes via DailyMenuItem -> OrderStepItem
-
-    @OneToMany(mappedBy = "menuItem")
-    val dailyMenuItems: MutableList<DailyMenuItem> = mutableListOf(),
 
     @OneToMany(mappedBy = "menuItem")
     val recipes: MutableList<Recipe> = mutableListOf()

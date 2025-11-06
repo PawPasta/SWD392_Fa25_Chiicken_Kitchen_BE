@@ -5,7 +5,6 @@ import com.ChickenKitchen.app.handler.StoreHasIngredientsException
 import com.ChickenKitchen.app.handler.StoreHasOrdersException
 import com.ChickenKitchen.app.handler.StoreNameExistException
 import com.ChickenKitchen.app.handler.StoreNotFoundException
-import com.ChickenKitchen.app.handler.StoreUsedInMenuException
 import com.ChickenKitchen.app.mapper.toListStoreResponse
 import com.ChickenKitchen.app.mapper.toStoreResponse
 import com.ChickenKitchen.app.model.dto.request.CreateStoreRequest
@@ -15,6 +14,11 @@ import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.service.ingredient.StoreService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
+import kotlin.math.max
+import jakarta.persistence.criteria.Predicate
 
 
 @Service
@@ -34,6 +38,15 @@ class StoreServiceImpl (
         val list = storeRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListStoreResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<StoreResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = storeRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toListStoreResponse()
     }
 
     override fun getById(id: Long): StoreResponse {
@@ -89,14 +102,32 @@ class StoreServiceImpl (
             throw StoreHasOrdersException("Cannot delete Store with id $id: it has ${store.orders.size} orders")
         }
 
-        if (store.dailyMenus.isNotEmpty()) {
-            throw StoreUsedInMenuException("Cannot delete Store with id $id: it is used in ${store.dailyMenus.size} daily menus")
-        }
+        // Daily menu feature removed: no menu linkage check
 
         if (store.ingredientBatches.isNotEmpty()) {
             throw StoreHasIngredientsException("Cannot delete Store with id $id: it has ${store.ingredientBatches.size} ingredient batches")
         }
 
         storeRepository.delete(store)
+    }
+
+    override fun count(): Long = storeRepository.count()
+    override fun search(name: String?, city: String?, sortBy: String, direction: String): List<Store> {
+        val spec = Specification<Store> { root, query, cb ->
+            val preds = mutableListOf<Predicate>()
+            if (!name.isNullOrBlank()) {
+                preds.add(cb.like(cb.lower(root.get("name")), "%${name.trim().lowercase()}%"))
+            }
+            if (!city.isNullOrBlank()) {
+                preds.add(cb.equal(cb.lower(root.get("city")), city.trim().lowercase()))
+            }
+            if (preds.isNotEmpty()) {
+                query?.where(*preds.toTypedArray()) // ✅ safe call
+            }
+            null
+        }
+
+        val sort = if (direction.equals("desc", true)) Sort.by(sortBy).descending() else Sort.by(sortBy).ascending()
+        return storeRepository.findAll(spec, sort)
     }
 }

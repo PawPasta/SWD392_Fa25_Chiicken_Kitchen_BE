@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.service.menu.MenuItemService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 @RequestMapping("/api/menu-items")
@@ -15,8 +16,13 @@ class MenuItemController(
 ) {
     @Operation(summary = "Get all menu items (all actor)")
     @GetMapping
-    fun getAll(): ResponseEntity<ResponseModel> =
-        ResponseEntity.ok(ResponseModel.success(menuItemService.getAll(), "Fetched menu items"))
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) menuItemService.getAll() else menuItemService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched menu items"))
+    }
 
     @Operation(summary = "Get menu item by id (all actor)")
     @GetMapping("/{id}")
@@ -44,5 +50,30 @@ class MenuItemController(
     @PatchMapping("/{id}/status")
     fun changeStatus(@PathVariable id: Long): ResponseEntity<ResponseModel> =
         ResponseEntity.ok(ResponseModel.success(menuItemService.changeStatus(id), "Status toggled"))
-}
 
+    @Operation(summary = "Get total menu items (manager only)")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to menuItemService.count()), "Fetched menu items count"))
+
+    @Operation(summary = "Search menu items by name/category/price/cal with pagination and total")
+    @GetMapping("/search")
+    fun search(
+        @RequestParam(name = "name", required = false) name: String?,
+        @RequestParam(name = "categoryId", required = false) categoryId: Long?,
+        @RequestParam(name = "minPrice", required = false) minPrice: Int?,
+        @RequestParam(name = "maxPrice", required = false) maxPrice: Int?,
+        @RequestParam(name = "minCal", required = false) minCal: Int?,
+        @RequestParam(name = "maxCal", required = false) maxCal: Int?,
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "sortBy", defaultValue = "createdAt") sortBy: String,
+        @RequestParam(name = "direction", defaultValue = "desc") direction: String,
+    ): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(
+            ResponseModel.success(
+                menuItemService.searchPaged(name, categoryId, minPrice, maxPrice, minCal, maxCal, pageNumber, size, sortBy, direction),
+                "Fetched menu items with total"
+            )
+        )
+}

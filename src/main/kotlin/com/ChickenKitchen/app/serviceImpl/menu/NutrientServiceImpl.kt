@@ -14,6 +14,8 @@ import com.ChickenKitchen.app.mapper.toNutrientDetailResponse
 import com.ChickenKitchen.app.mapper.toNutrientResponse
 import com.ChickenKitchen.app.mapper.toNutrientResponseList
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 @Service
 class NutrientServiceImpl(
@@ -24,6 +26,15 @@ class NutrientServiceImpl(
         val list = nutrientRepository.findAll()
         if (list.isEmpty()) return null
         return list.toNutrientResponseList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<NutrientResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = nutrientRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toNutrientResponseList()
     }
 
     override fun getById(id: Long): NutrientDetailResponse {
@@ -69,5 +80,6 @@ class NutrientServiceImpl(
 
         nutrientRepository.delete(current)
     }
-}
 
+    override fun count(): Long = nutrientRepository.count()
+}

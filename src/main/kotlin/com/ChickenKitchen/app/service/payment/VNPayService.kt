@@ -4,6 +4,6 @@ import com.ChickenKitchen.app.model.entity.order.Order
 
 
 interface VNPayService {
-    fun createVnPayURL (order : Order) : String
-    fun callbackURL (params: Map<String, String>): String
+    fun createVnPayURL(order: Order, channel: String? = null): String
+    fun callbackURL(params: Map<String, String>): String
 }

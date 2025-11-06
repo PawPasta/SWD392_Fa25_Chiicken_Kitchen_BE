@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface OrderPromotionRepository : JpaRepository<OrderPromotion, Long> {
+
+    fun deleteByOrderId(orderId: Long)
 }

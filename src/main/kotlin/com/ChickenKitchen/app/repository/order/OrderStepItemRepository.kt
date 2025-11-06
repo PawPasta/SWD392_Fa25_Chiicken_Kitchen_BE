@@ -10,11 +10,15 @@ import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface OrderStepItemRepository : JpaRepository<OrderStepItem, Long> {
-    fun countByDailyMenuItemMenuItemId(menuItemId: Long): Long
+    fun countByMenuItemId(menuItemId: Long): Long
 
     @Transactional
     @Modifying
-    @Query("delete from OrderStepItem osi where osi.orderStep.dish.order.id = :orderId")
+    @Query(
+        "delete from OrderStepItem osi where osi.orderStep.dish.id in (" +
+        "  select od.dish.id from OrderDish od where od.order.id = :orderId" +
+        ")"
+    )
     fun deleteByOrderId(@Param("orderId") orderId: Long): Int
 
     @Transactional

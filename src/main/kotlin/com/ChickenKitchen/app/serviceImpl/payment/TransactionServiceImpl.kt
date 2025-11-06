@@ -15,6 +15,8 @@ import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
 import com.ChickenKitchen.app.model.entity.payment.Transaction
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
@@ -27,6 +29,15 @@ class TransactionServiceImpl (
         val list = transactionRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListTransactionResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<TransactionResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = transactionRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toListTransactionResponse()
     }
 
     override fun getById(id: Long): TransactionResponse {
@@ -89,4 +100,5 @@ class TransactionServiceImpl (
         }
     }
 
+    override fun count(): Long = transactionRepository.count()
 }

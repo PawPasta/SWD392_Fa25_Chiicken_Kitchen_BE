@@ -4,11 +4,12 @@ import com.ChickenKitchen.app.config.VNPayConfig
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
 import com.ChickenKitchen.app.handler.OrderNotFoundException
+import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
-import com.ChickenKitchen.app.repository.user.WalletRepository
+import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
 import jakarta.transaction.Transactional
@@ -25,18 +26,23 @@ class VNPayServiceImpl (
     private val vnPayConfig: VNPayConfig,
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
-    private val walletRepository: WalletRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
 
-    private val transactionService: TransactionService
+    private val transactionService: TransactionService,
+    private val notificationService: NotificationService
 ) : VNPayService {
 
     @Transactional
-    override fun createVnPayURL (order: Order): String {
+    override fun createVnPayURL(order: Order, channel: String?): String {
         val payment = paymentRepository.findByOrderId(order.id
         ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
         val orderInfo = "Payment for order $order.id ${payment?.user?.id}"
         val vnpTxnRef = VNPayConfig.getRandomNumber(8)
+
+        val returnUrlBase = when (channel?.lowercase()) {
+            "app" -> vnPayConfig.vnpAppReturnUrl
+            else -> vnPayConfig.vnpReturnUrl
+        }
 
         val vnpParams = mutableMapOf(
             "vnp_Version" to vnPayConfig.vnpVersion,
@@ -49,7 +55,7 @@ class VNPayServiceImpl (
             "vnp_OrderInfo" to orderInfo,
             "vnp_OrderType" to vnPayConfig.vnpOrderType,
             "vnp_Locale" to "vn",
-            "vnp_ReturnUrl" to "${vnPayConfig.vnpReturnUrl}?orderId=${order.id}",
+            "vnp_ReturnUrl" to "$returnUrlBase?orderId=${order.id}",
             "vnp_IpAddr" to vnPayConfig.vnpIpAddr
         )
 
@@ -99,15 +105,30 @@ class VNPayServiceImpl (
 
                 transactionService.createPaymentTransaction(payment,order,paymentMethod)
 
+                notificationService.sendToUser(SingleNotificationRequest (
+                    user = order.user,
+                    title = "Payment Successful",
+                    body = "Your payment for order ${order.id} was successful."
+                ))
+
                 return "Payment success and transactions created"
+
             }
             "24" -> {
-                payment.status = PaymentStatus.CANCELLED
+                payment.status = PaymentStatus.PENDING
                 order.status = OrderStatus.FAILED
                 orderRepository.save(order)
                 paymentRepository.save(payment)
 
-                "Payment Failed"
+                notificationService.sendToUser(
+                    SingleNotificationRequest (
+                        user = order.user,
+                        title = "Payment Failed",
+                        body = "Your payment for order ${order.id} has failed."
+                    )
+                )
+
+                return "Payment Failed"
             }
             else ->{
                 "Payment failed"

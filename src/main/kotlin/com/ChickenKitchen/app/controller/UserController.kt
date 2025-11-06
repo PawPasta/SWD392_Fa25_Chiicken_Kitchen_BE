@@ -7,6 +7,7 @@ import com.ChickenKitchen.app.model.dto.request.GrantRoleRequest
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.user.UserService
 import com.ChickenKitchen.app.enums.Role
+import com.ChickenKitchen.app.service.user.WalletService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -18,12 +19,14 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.security.access.prepost.PreAuthorize
 
 @RestController
 @RequestMapping("/api/users")
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val walletService: WalletService
 ) {
 
     // ===================== MANAGER: CRUD =====================
@@ -31,9 +34,12 @@ class UserController(
     @Operation(summary = "Get all users (ADMIN)")
     // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
     @GetMapping
-    fun getAllUsers(): ResponseEntity<ResponseModel> {
-        val users = userService.getAll()
-        return ResponseEntity.ok(ResponseModel.success(users, "Fetched users successfully"))
+    fun getAllUsers(
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) userService.getAll() else userService.getAll(pageNumber = pageNumber, size = size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Fetched users successfully"))
     }
 
     @Operation(summary = "Get user by id (ADMIN)")
@@ -78,6 +84,7 @@ class UserController(
 
     // ===================== USER: Profile =====================
     @Operation(summary = "Get current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     fun getProfile(): ResponseEntity<ResponseModel> {
         val profile = userService.getProfile()
@@ -85,6 +92,7 @@ class UserController(
     }
 
     @Operation(summary = "Update current user profile (LOGGED)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/me")
     fun updateProfile(@RequestBody req: UpdateUserProfileRequest): ResponseEntity<ResponseModel> {
         val profile = userService.updateProfile(req)
@@ -105,5 +113,19 @@ class UserController(
     fun getAllRoles(): ResponseEntity<ResponseModel> {
         val roles: List<Role> = userService.getAllRoles()
         return ResponseEntity.ok(ResponseModel.success(roles, "Fetched roles successfully"))
+    }
+
+    @Operation(summary = "Get total users and counts by role (ADMIN)")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily public
+    @GetMapping("/counts")
+    fun getUserCounts(): ResponseEntity<ResponseModel> {
+        val counts = userService.getCounts()
+        return ResponseEntity.ok(ResponseModel.success(counts, "Fetched user counts successfully"))
+    }
+
+    @Operation(summary = "Get current user wallet (LOGGED)")
+    @GetMapping("/me/wallet")
+    fun getUserWallet(): ResponseEntity<ResponseModel> {
+        return ResponseEntity.ok(ResponseModel.success(walletService.getMyWallet(), "Fetched  your wallet successfully"))
     }
 }

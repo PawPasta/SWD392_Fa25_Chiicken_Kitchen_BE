@@ -1,13 +1,16 @@
 package com.ChickenKitchen.app.service.notification
 
 import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
-import com.ChickenKitchen.app.model.dto.request.NotificationRequest
+import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
+import com.ChickenKitchen.app.model.entity.user.User
 
 
 interface NotificationService {
 
-    fun sendToToken(req : NotificationRequest)
+    fun sendToUser(req: SingleNotificationRequest)
 
-    fun sendToMultipleTokens(req: MultipleNotificationRequest)
+    fun sendToAllUsers(req: MultipleNotificationRequest)
+
+    fun sendToUsers(req: MultipleNotificationRequest, users: List<User>)
 
 }

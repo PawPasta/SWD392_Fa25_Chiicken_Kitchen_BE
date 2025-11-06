@@ -17,6 +17,8 @@ import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.service.ingredient.IngredientService
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 @Service
 class IngredientServiceImpl (
@@ -38,6 +40,15 @@ class IngredientServiceImpl (
         val list = ingredientRepository.findAll()
         if (list.isEmpty()) return null
         return list.toListIngredientResponse()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<IngredientResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = ingredientRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toListIngredientResponse()
     }
 
     override fun getById(id: Long): IngredientDetailResponse {
@@ -120,4 +131,6 @@ class IngredientServiceImpl (
 
         ingredientRepository.delete(ingredient)
     }
+
+    override fun count(): Long = ingredientRepository.count()
 }

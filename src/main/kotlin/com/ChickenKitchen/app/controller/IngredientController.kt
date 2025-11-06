@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -26,13 +27,12 @@ class IngredientController (
 
     @Operation(summary = "Get All Ingredients")
     @GetMapping
-    fun getAllIngredients(): ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(
-            ResponseModel.success(
-                ingredientService.getAll(),
-                "Get All Ingredients successfully"
-            )
-        )
+    fun getAllIngredients(
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ): ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) ingredientService.getAll() else ingredientService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get All Ingredients successfully"))
     }
 
     @Operation(summary = "Get Ingredient Detail By ID (Only Manager)")
@@ -87,6 +87,11 @@ class IngredientController (
     fun deleteIngredient(@PathVariable id: Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(ingredientService.delete(id), "Delete Ingredient Successfully"))
     }
+
+    @Operation(summary = "Get total Ingredients")
+    @GetMapping("/counts")
+    fun getIngredientCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to ingredientService.count()), "Fetched ingredient count"))
 
 
 }

@@ -11,12 +11,23 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface OrderStepRepository : JpaRepository<OrderStep, Long> {
 
-    fun findAllByDishOrderId(orderId: Long): List<OrderStep>
     fun findAllByDishId(dishId: Long): List<OrderStep>
+
+    @Query(
+        "select distinct os from OrderStep os " +
+        "left join fetch os.items it " +
+        "left join fetch it.menuItem mi " +
+        "where os.dish.id = :dishId"
+    )
+    fun findAllWithItemsByDishId(@Param("dishId") dishId: Long): List<OrderStep>
 
     @Transactional
     @Modifying
-    @Query("delete from OrderStep os where os.dish.order.id = :orderId")
+    @Query(
+        "delete from OrderStep os where os.dish.id in (" +
+        "  select od.dish.id from OrderDish od where od.order.id = :orderId" +
+        ")"
+    )
     fun deleteByDishOrderId(@Param("orderId") orderId: Long): Int
 
     @Transactional

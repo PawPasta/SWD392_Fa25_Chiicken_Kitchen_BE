@@ -1,6 +1,5 @@
 package com.ChickenKitchen.app.model.entity.step
 
-import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 import jakarta.persistence.*
 import java.sql.Timestamp
@@ -14,15 +13,17 @@ class Dish(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    val order: Order,
+    @Column(name = "name", nullable = false, length = 150)
+    var name: String = "",
 
     @Column(name = "price", nullable = false)
     var price: Int = 0,
 
     @Column(name = "cal", nullable = false)
     var cal: Int = 0,
+
+    @Column(name = "is_custom", nullable = false)
+    var isCustom: Boolean = false,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -35,6 +36,12 @@ class Dish(
     @Column(name = "note")
     var note: String? = null,
 
+    @Column(name = "image_url", length = 500)
+    var imageUrl: String? = null,
+
     @OneToMany(mappedBy = "dish")
-    val orderSteps: MutableList<OrderStep> = mutableListOf()
+    val orderSteps: MutableList<OrderStep> = mutableListOf(),
+
+    @Column(name = "nutrition_json", columnDefinition = "TEXT")
+    var nutritionJson: String? = null
 )

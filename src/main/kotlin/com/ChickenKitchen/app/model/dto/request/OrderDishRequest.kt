@@ -3,7 +3,9 @@ package com.ChickenKitchen.app.model.dto.request
 data class CreateDishRequest(
     val storeId: Long,
     val note: String? = null,
-    val selections: List<StepSelection>
+    val selections: List<StepSelection>,
+    // Added to explicitly mark custom dishes in legacy endpoint
+    val isCustom: Boolean = true,
 )
 
 data class UpdateDishRequest(
@@ -26,4 +28,6 @@ data class OrderConfirmRequest(
     val orderId: Long,
     val paymentMethodId : Long,
     val promotionId : Long? = null,
+    // Optional channel to decide VNPay return URL ("web" or "app")
+    val channel: String? = null,
 )

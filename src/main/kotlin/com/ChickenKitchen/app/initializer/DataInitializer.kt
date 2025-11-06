@@ -5,40 +5,53 @@ import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.enums.UnitType
 import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.enums.MenuCategory
+import com.ChickenKitchen.app.enums.OrderStatus
+import com.ChickenKitchen.app.enums.PaymentStatus
+import com.ChickenKitchen.app.enums.TransactionStatus
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
 import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
-import com.ChickenKitchen.app.model.entity.menu.DailyMenu
-import com.ChickenKitchen.app.model.entity.menu.DailyMenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.model.entity.menu.Nutrient
+import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.order.OrderDish
+import com.ChickenKitchen.app.model.entity.payment.Payment
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
+import com.ChickenKitchen.app.model.entity.payment.Transaction
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
+import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
+import com.ChickenKitchen.app.model.entity.user.Wallet
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
 import com.ChickenKitchen.app.repository.ingredient.StoreIngredientBatchRepository
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
-import com.ChickenKitchen.app.repository.menu.DailyMenuRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemNutrientRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.NutrientRepository
+import com.ChickenKitchen.app.repository.order.OrderDishRepository
+import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
+import com.ChickenKitchen.app.repository.step.DishRepository
+import com.ChickenKitchen.app.repository.order.OrderStepRepository
+import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
+import com.ChickenKitchen.app.repository.payment.PaymentRepository
+import com.ChickenKitchen.app.repository.payment.TransactionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 import kotlin.random.Random
@@ -46,7 +59,7 @@ import kotlin.math.absoluteValue
 
 @Configuration
 class DataInitializer {
-
+    
     @Bean
     @Transactional
     fun initData(
@@ -54,6 +67,9 @@ class DataInitializer {
         storeRepository: StoreRepository,
         categoryRepository: CategoryRepository,
         stepRepository: StepRepository,
+        orderStepRepository: OrderStepRepository,
+        orderStepItemRepository: OrderStepItemRepository,
+        dishRepository: DishRepository,
         menuItemRepository: MenuItemRepository,
         nutrientRepository: NutrientRepository,
         menuItemNutrientRepository: MenuItemNutrientRepository,
@@ -61,17 +77,21 @@ class DataInitializer {
         recipeRepository: RecipeRepository,
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
-        dailyMenuRepository: DailyMenuRepository,
         storeIngredientBatchRepository: StoreIngredientBatchRepository,
-        employeeDetailRepository: EmployeeDetailRepository
+        employeeDetailRepository: EmployeeDetailRepository,
+        walletRepository: WalletRepository,
+        orderDishRepository: OrderDishRepository,
+        orderRepository: OrderRepository,
+        paymentRepository: PaymentRepository,
+        transactionRepository: TransactionRepository,
     ) = CommandLineRunner {
 
         // ==================== USERS ====================
         if (userRepository.count() == 0L) {
-            println("Seeding users...")
+            println("Seeding users and wallets...")
 
             // Admin users
-            userRepository.save(User(
+            val admin1 = userRepository.save(User(
                 role = Role.ADMIN,
                 uid = "admin-uid-001",
                 email = "chickenkitchen785@gmail.com",
@@ -82,20 +102,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null,
             ))
+            walletRepository.save(Wallet(user = admin1, balance = 200000))
 
-            userRepository.save(User(
-                role = Role.ADMIN,
-                uid = "admin-uid-002",
-                email = "admin2@chickenkitchen.com",
-                isVerified = true,
-                phone = "0901234590",
-                isActive = true,
-                fullName = "Admin Nguyen Van A",
-                provider = "Google",
-                imageURL = "https://example.com/admin2.jpg"
-            ))
-
-            userRepository.save(User(
+            val admin3 = userRepository.save(User(
                 role = Role.ADMIN,
                 uid = "admin-uid-007",
                 email = "PhoenixZ3004@gmail.com",
@@ -106,9 +115,10 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null,
             ))
+            walletRepository.save(Wallet(user = admin3, balance = 200000))
 
             // Manager users
-            userRepository.save(User(
+            val manager1 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-001",
                 email = "khiem1371@gmail.com",
@@ -119,8 +129,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null
             ))
+            walletRepository.save(Wallet(user = manager1, balance = 200000))
 
-            userRepository.save(User(
+            val manager2 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-002",
                 email = "manager2@chickenkitchen.com",
@@ -131,8 +142,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = "https://example.com/manager2.jpg"
             ))
+            walletRepository.save(Wallet(user = manager2, balance = 200000))
 
-            userRepository.save(User(
+            val manager3 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-008",
                 email = "PhoenixZ3303@gmail.com",
@@ -143,19 +155,17 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = "https://example.com/manager2.jpg"
             ))
+            walletRepository.save(Wallet(user = manager3, balance = 200000))
 
             // Employee users
             val employeeData = listOf(
                 Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
                 Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
                 Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
-                Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
-                Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
-                Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
             )
 
             employeeData.forEachIndexed { idx, (uid, email, name) ->
-                userRepository.save(User(
+                val employee = userRepository.save(User(
                     role = Role.EMPLOYEE,
                     uid = uid,
                     email = email,
@@ -166,10 +176,11 @@ class DataInitializer {
                     provider = "Local",
                     imageURL = null
                 ))
+                walletRepository.save(Wallet(user = employee, balance = 200000))
             }
 
             // Store user
-            userRepository.save(User(
+            val storeUser = userRepository.save(User(
                 role = Role.STORE,
                 uid = "store-uid-002",
                 email = "letrangiabao2004@gmail.com",
@@ -180,10 +191,202 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null
             ))
+            walletRepository.save(Wallet(user = storeUser, balance = 200000))
 
-            println("✓ Users seeded: ${1 + 1 + employeeData.size + 1 + 2}")
+            // Customer user
+            val customer = userRepository.save(User(
+                role = Role.USER,
+                uid = "user-giabao-uid-002",
+                email = "userTest01@gmail.com",
+                isVerified = true,
+                phone = "0901334522",
+                isActive = true,
+                fullName = "Test User",
+                provider = "Local",
+                imageURL = null
+            ))
+            walletRepository.save(Wallet(user = customer, balance = 200000))
+
+            println("✓ Users seeded: ${3 + 3 + employeeData.size + 1 + 1}")
+            println("✓ Wallets seeded: ${3 + 3 + employeeData.size + 1 + 1}")
         } else {
             println("⏭ Users table not empty, skipping")
+        }
+
+        // ==================== DISHES (realistic combos, non-custom) ====================
+        if (dishRepository.count() == 0L) {
+            println("Seeding dishes (realistic combos, non-custom)...")
+
+            data class Component(val name: String, val price: Int, val cal: Int)
+
+            val bases = listOf(
+                Component("Cơm Jasmine", 15000, 200),
+                Component("Gạo lứt", 18000, 220),
+                Component("Quinoa", 35000, 240),
+                Component("Mì ống nguyên cám", 25000, 250),
+                Component("Khoai lang nghiền", 20000, 180),
+                Component("Udon", 28000, 260),
+                Component("Couscous", 30000, 230)
+            )
+
+            val proteins = listOf(
+                Component("Ức gà nướng", 35000, 250),
+                Component("Gà chiên xù", 40000, 380),
+                Component("Bò bít tết", 70000, 500),
+                Component("Đậu hũ", 25000, 160),
+                Component("Cá hồi", 80000, 300),
+                Component("Tôm", 60000, 200),
+                Component("Trứng luộc", 10000, 150)
+            )
+
+            val veggies = listOf(
+                Component("Bông cải xanh", 5000, 50),
+                Component("Cà rốt", 5000, 45),
+                Component("Rau chân vịt", 5000, 30),
+                Component("Cà chua", 5000, 25),
+                Component("Dưa leo", 5000, 15)
+            )
+
+            val sauces = listOf(
+                Component("Sốt Teriyaki", 3000, 60),
+                Component("Sốt BBQ", 3000, 80),
+                Component("Mayonnaise", 5000, 150),
+                Component("Sốt sữa chua Hy Lạp", 5000, 90),
+                Component("Dầu ô liu & thảo mộc", 5000, 120)
+            )
+
+            fun pickVeggies(index: Int): Pair<Component, Component> {
+                val v1 = veggies[index % veggies.size]
+                val v2 = veggies[(index / veggies.size + index) % veggies.size]
+                return if (v1.name != v2.name) v1 to v2 else v1 to veggies[(index + 1) % veggies.size]
+            }
+
+            // Map combo (base + protein) -> complete meal image
+            fun chooseDishImage(baseName: String, proteinName: String): String {
+                val b = baseName.lowercase()
+                val p = proteinName.lowercase()
+
+                val baseType = when {
+                    b.contains("cơm") || b.contains("gạo") || b.contains("rice") -> "rice"
+                    b.contains("mì") || b.contains("udon") || b.contains("pasta") || b.contains("soba") || b.contains("noodle") -> "noodle"
+                    b.contains("khoai") || b.contains("potato") -> "potato"
+                    b.contains("quinoa") || b.contains("couscous") || b.contains("bulgur") || b.contains("farro") || b.contains("barley") || b.contains("polenta") || b.contains("oat") || b.contains("buckwheat") -> "grain"
+                    else -> "bowl"
+                }
+
+                val proteinType = when {
+                    p.contains("gà") || p.contains("chicken") -> "chicken"
+                    p.contains("bò") || p.contains("beef") || p.contains("steak") -> "beef"
+                    p.contains("đậu") || p.contains("tofu") -> "tofu"
+                    p.contains("cá") || p.contains("salmon") || p.contains("fish") -> "fish"
+                    p.contains("tôm") || p.contains("shrimp") || p.contains("prawn") -> "shrimp"
+                    p.contains("trứng") || p.contains("egg") -> "egg"
+                    else -> "mixed"
+                }
+
+                // curated complete-meal images per combo
+                val map = mapOf(
+                    // rice combos
+                    "rice:chicken" to "https://images.unsplash.com/photo-1604908554007-83dd8219ef39?auto=format&fit=crop&q=80&w=1200", // chicken rice bowl
+                    "rice:beef" to "https://images.unsplash.com/photo-1608138273859-81f71b9d26a2?auto=format&fit=crop&q=80&w=1200",    // beef rice bowl
+                    "rice:fish" to "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=1200",     // salmon rice bowl
+                    "rice:shrimp" to "https://images.unsplash.com/photo-1604908553598-1b22e1c4c091?auto=format&fit=crop&q=80&w=1200", // shrimp rice bowl
+                    "rice:egg" to "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&q=80&w=1200",     // egg rice bowl
+                    "rice:tofu" to "https://images.unsplash.com/photo-1625940897002-6fc1b40add63?auto=format&fit=crop&q=80&w=1200",    // tofu rice bowl
+
+                    // noodle combos
+                    "noodle:chicken" to "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=1200", // chicken pasta/noodle
+                    "noodle:beef" to "https://images.unsplash.com/photo-1617195737497-7d8a12b4b49f?auto=format&fit=crop&q=80&w=1200",     // beef noodle bowl
+                    "noodle:shrimp" to "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=1200",     // shrimp noodle
+
+                    // grain/others
+                    "grain:chicken" to "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1200",
+                    "grain:beef" to "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200",
+                    "grain:tofu" to "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?auto=format&fit=crop&q=80&w=1200",   // quinoa + tofu, couscous + tofu ...
+                    "potato:beef" to "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200",
+                    "potato:chicken" to "https://images.unsplash.com/photo-1604908554007-83dd8219ef39?auto=format&fit=crop&q=80&w=1200"    // khoai + gà
+                )
+
+                val key = "$baseType:$proteinType"
+                return map[key]
+                    ?: if (baseType == "noodle") "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&q=80&w=1200"
+                    else "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1200"
+            }
+
+            val dishes = (0 until 100).map { i ->
+                val base = bases[i % bases.size]
+                val protein = proteins[(i / bases.size) % proteins.size]
+                val sauce = sauces[(i / (bases.size * 2) + i) % sauces.size]
+                val (veg1, veg2) = pickVeggies(i)
+
+                val price = base.price + protein.price + veg1.price + veg2.price + sauce.price
+                val cal = base.cal + protein.cal + veg1.cal + veg2.cal + sauce.cal
+
+                val note = "${base.name} + ${protein.name} + ${veg1.name}, ${veg2.name} + ${sauce.name}"
+
+                fun chooseDishName(baseName: String, proteinName: String, sauceName: String?, index: Int): String {
+                    val b = baseName.lowercase()
+                    val p = proteinName.lowercase()
+                    val s = sauceName?.lowercase() ?: ""
+
+                    val baseType = when {
+                        b.contains("cơm") || b.contains("gạo") || b.contains("rice") -> "rice"
+                        b.contains("mì") || b.contains("udon") || b.contains("pasta") || b.contains("noodle") || b.contains("soba") -> "noodle"
+                        b.contains("khoai") || b.contains("potato") -> "potato"
+                        b.contains("quinoa") -> "quinoa"
+                        b.contains("couscous") -> "couscous"
+                        b.contains("bulgur") || b.contains("farro") || b.contains("barley") || b.contains("polenta") || b.contains("oat") || b.contains("buckwheat") -> "grain"
+                        else -> "bowl"
+                    }
+
+                    val proteinLabel = when {
+                        p.contains("gà") || p.contains("chicken") -> listOf("Grilled Chicken", "Roasted Chicken", "Crispy Chicken")[index % 3]
+                        p.contains("bò") || p.contains("beef") || p.contains("steak") -> listOf("Seared Beef", "Garlic Beef", "Pepper Steak")[index % 3]
+                        p.contains("đậu") || p.contains("tofu") -> listOf("Crispy Tofu", "Sesame Tofu", "Herbed Tofu")[index % 3]
+                        p.contains("cá hồi") || p.contains("salmon") -> listOf("Seared Salmon", "Honey Salmon", "Herb Salmon")[index % 3]
+                        p.contains("cá") || p.contains("fish") -> listOf("Pan-seared Fish", "Herb Fish", "Lemon Fish")[index % 3]
+                        p.contains("tôm") || p.contains("shrimp") || p.contains("prawn") -> listOf("Garlic Shrimp", "Butter Shrimp", "Grilled Shrimp")[index % 3]
+                        p.contains("trứng") || p.contains("egg") -> listOf("Soy Egg", "Soft-boiled Egg", "Herb Egg")[index % 3]
+                        else -> "Chef's Protein"
+                    }
+
+                    val sauceTail = when {
+                        s.contains("teriyaki") -> "with Teriyaki Glaze"
+                        s.contains("bbq") -> "with Smoky BBQ"
+                        s.contains("mayonnaise") || s.contains("mayo") -> "with Creamy Mayo"
+                        s.contains("sữa chua") || s.contains("greek") || s.contains("yogurt") -> "with Greek Yogurt Dressing"
+                        s.contains("olive") || s.contains("thảo mộc") || s.contains("herb") -> "with Herb Olive Oil"
+                        else -> listOf("with House Dressing", "with Fresh Greens", "with Chef's Sauce")[index % 3]
+                    }
+
+                    val name = when (baseType) {
+                        "rice" -> "${proteinLabel} Rice Bowl $sauceTail"
+                        "noodle" -> "${proteinLabel} Noodle Bowl $sauceTail"
+                        "potato" -> "${proteinLabel} & Potato Bowl $sauceTail"
+                        "quinoa" -> "${proteinLabel} Quinoa Bowl $sauceTail"
+                        "couscous" -> "${proteinLabel} Couscous Bowl $sauceTail"
+                        "grain" -> "${proteinLabel} Grain Bowl $sauceTail"
+                        else -> "${proteinLabel} Bowl $sauceTail"
+                    }
+                    return name.trim()
+                }
+
+                val dishName = chooseDishName(base.name, protein.name, sauce.name, i)
+
+                Dish(
+                    name = dishName,
+                    price = price,
+                    cal = cal,
+                    isCustom = false,
+                    note = note,
+                    imageUrl = chooseDishImage(base.name, protein.name)
+                )
+            }
+
+            dishRepository.saveAll(dishes)
+            println("✓ Dishes seeded: ${dishes.size}")
+        } else {
+            println("⏭ Dishes table not empty, skipping dish seeding")
         }
 
         // ==================== STORES ====================
@@ -194,9 +397,6 @@ class DataInitializer {
                 Triple("Chicken Kitchen Binh Thanh", "720A Điện Biên Phủ, Phường 22, Bình Thạnh, Thành phố Hồ Chí Minh", "0281234567"),
                 Triple("Chicken Kitchen High Technology bay", "Lô E2a-7, Đường D1, Khu Công nghệ cao, Phường Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh", "0281234568"),
                 Triple("Chicken Kitchen District 3", "643 Điện Biên Phủ, Quận 3, Thành phố Hồ Chí Minh.", "0281234569"),
-                Triple("Chicken Kitchen Binh Duong", "Đường Lưu Hữu Phước, phường Đông Hòa, thành phố Dĩ An, tỉnh Bình Dương", "0281234570"),
-                Triple("Chicken Kitchen Phu Nhuan", "124 Phan Xích Long, Phường 2, Phú Nhuận, Thành phố Hồ Chí Minh ", "0281234571"),
-                Triple("Chicken Kitchen Binh Chanh", "240-242 Phạm Văn Đồng, phường Hiệp Bình Chánh, quận Thủ Đức, Thành phố Hồ Chí Minh", "0281234572")
             )
 
             storesData.forEach { (name, address, phone) ->
@@ -637,6 +837,116 @@ class DataInitializer {
             println("✓ Menu items seeded: ${entities.size}")
         } else {
             println("⏭ Menu items table not empty, skipping")
+        }
+
+        // ==================== ATTACH STEPS + ITEMS TO NON-CUSTOM DISHES ====================
+        run {
+            val dishes = dishRepository.findAll().filter { !it.isCustom }
+            if (dishes.isEmpty()) {
+                println("⏭ No non-custom dishes to attach steps")
+            } else {
+                val steps = stepRepository.findAll()
+                if (steps.isEmpty()) {
+                    println("⚠️ No steps available; cannot attach to dishes")
+                } else {
+                    val itemsByCategory = menuItemRepository.findAll().groupBy { it.category.name }
+
+                    fun pickOne(list: List<MenuItem>, idx: Int): MenuItem? =
+                        if (list.isEmpty()) null else list[idx % list.size]
+
+                    var attachedCount = 0
+                    dishes.forEachIndexed { idx, dish ->
+                        val existing = orderStepRepository.findAllByDishId(dish.id!!)
+                        if (existing.isNotEmpty()) return@forEachIndexed
+
+                        val byStepNumber = steps.associateBy { it.stepNumber }
+                        var totalPrice = 0
+                        var totalCal = 0
+                        var pickedImage: String? = null
+
+                        // 1. Carbohydrate base
+                        byStepNumber[1]?.let { st ->
+                            val list = itemsByCategory["Carbohydrates"] ?: emptyList()
+                            val mi = pickOne(list, idx)
+                            if (mi != null) {
+                                val os = orderStepRepository.save(com.ChickenKitchen.app.model.entity.order.OrderStep(dish = dish, step = st))
+                                orderStepItemRepository.save(
+                                    com.ChickenKitchen.app.model.entity.order.OrderStepItem(orderStep = os, menuItem = mi, quantity = 1)
+                                )
+                                totalPrice += mi.price
+                                totalCal += mi.cal
+                                pickedImage = mi.imageUrl
+                            }
+                        }
+
+                        // 2. Protein
+                        byStepNumber[2]?.let { st ->
+                            val list = itemsByCategory["Proteins"] ?: emptyList()
+                            val mi = pickOne(list, idx / 2 + idx)
+                            if (mi != null) {
+                                val os = orderStepRepository.save(com.ChickenKitchen.app.model.entity.order.OrderStep(dish = dish, step = st))
+                                orderStepItemRepository.save(
+                                    com.ChickenKitchen.app.model.entity.order.OrderStepItem(orderStep = os, menuItem = mi, quantity = 1)
+                                )
+                                totalPrice += mi.price
+                                totalCal += mi.cal
+                                if (pickedImage == null) pickedImage = mi.imageUrl
+                            }
+                        }
+
+                        // 3. Vegetables (two items)
+                        byStepNumber[3]?.let { st ->
+                            val list = itemsByCategory["Vegetables"] ?: emptyList()
+                            if (list.isNotEmpty()) {
+                                val os = orderStepRepository.save(com.ChickenKitchen.app.model.entity.order.OrderStep(dish = dish, step = st))
+                                val mi1 = pickOne(list, idx)
+                                val mi2 = pickOne(list, idx + 1)
+                                if (mi1 != null) {
+                                    orderStepItemRepository.save(
+                                        com.ChickenKitchen.app.model.entity.order.OrderStepItem(orderStep = os, menuItem = mi1, quantity = 1)
+                                    )
+                                    totalPrice += mi1.price
+                                    totalCal += mi1.cal
+                                    if (pickedImage == null) pickedImage = mi1.imageUrl
+                                }
+                                if (mi2 != null && mi2.id != mi1?.id) {
+                                    orderStepItemRepository.save(
+                                        com.ChickenKitchen.app.model.entity.order.OrderStepItem(orderStep = os, menuItem = mi2, quantity = 1)
+                                    )
+                                    totalPrice += mi2.price
+                                    totalCal += mi2.cal
+                                    if (pickedImage == null) pickedImage = mi2.imageUrl
+                                }
+                            }
+                        }
+
+                        // 4. Sauce
+                        byStepNumber[4]?.let { st ->
+                            val list = itemsByCategory["Sauces"] ?: emptyList()
+                            val mi = pickOne(list, idx / 3 + idx)
+                            if (mi != null) {
+                                val os = orderStepRepository.save(com.ChickenKitchen.app.model.entity.order.OrderStep(dish = dish, step = st))
+                                orderStepItemRepository.save(
+                                    com.ChickenKitchen.app.model.entity.order.OrderStepItem(orderStep = os, menuItem = mi, quantity = 1)
+                                )
+                                totalPrice += mi.price
+                                totalCal += mi.cal
+                                if (pickedImage == null) pickedImage = mi.imageUrl
+                            }
+                        }
+
+                        // Update dish totals from selected items (computed above)
+                        if (totalPrice > 0 || totalCal > 0) {
+                            dish.price = totalPrice
+                            dish.cal = totalCal
+                            if (dish.imageUrl.isNullOrBlank()) dish.imageUrl = pickedImage
+                            dishRepository.save(dish)
+                            attachedCount++
+                        }
+                    }
+                    println("✓ Attached steps/items to non-custom dishes: $attachedCount")
+                }
+            }
         }
 
         // ==================== NUTRIENTS ====================
@@ -1378,53 +1688,99 @@ class DataInitializer {
             println("⏭ Recipes table not empty, skipping")
         }
 
-        // ==================== DAILY MENU ====================
-        if (dailyMenuRepository.count() == 0L) {
-            println("Seeding daily menus...")
-
+        run {
+            val customer = userRepository.findByEmail("userTest01@gmail.com")
             val stores = storeRepository.findAll()
-            val items = menuItemRepository.findAll()
+            val dishes = dishRepository.findAll()
+            val wallet = walletRepository.findByUser(customer!!)
+            val paymentMethods = paymentMethodRepository.findAll()
 
-            // Create daily menus for the past 7 days and next 7 days
-            val dailyMenus = mutableListOf<DailyMenu>()
+            if (stores.isNotEmpty() && dishes.isNotEmpty() && wallet != null) {
+                println("Seeding 20 sample orders for userTest01@gmail.com...")
 
-            for (dayOffset in -7..7) {
-                val menuDate = Timestamp.valueOf(LocalDateTime.now().plusDays(dayOffset.toLong()).withHour(12).withMinute(0).withSecond(0).withNano(0))
+                val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.READY, OrderStatus.PROCESSING)
+                val now = java.sql.Timestamp(System.currentTimeMillis())
 
-                val dailyMenu = DailyMenu(menuDate = menuDate)
+                repeat(20) { index ->
+                    val createdAt = java.sql.Timestamp(System.currentTimeMillis() - (index * 86400000L)) // trừ ngày
+                    val pickupTime = java.sql.Timestamp(createdAt.time + (30 * 60 * 1000)) // cộng 30 phút
+                    val status = statuses.random()
+                    val store = stores.random()
+                    val totalPrice = (80_000..250_000).random()
+                    val discount = listOf(0, 5_000, 10_000, 15_000).random()
+                    val finalAmount = totalPrice - discount
 
-                // Add all stores to this daily menu
-                dailyMenu.stores.addAll(stores)
-
-                // Select random items from each category for variety
-                val carbItems = items.filter { it.category.name == "Carbohydrates" }.shuffled().take(5)
-                val proteinItems = items.filter { it.category.name == "Proteins" }.shuffled().take(8)
-                val vegItems = items.filter { it.category.name == "Vegetables" }.shuffled().take(6)
-                val sauceItems = items.filter { it.category.name == "Sauces" }.shuffled().take(4)
-                val dairyItems = items.filter { it.category.name == "Dairy" }.shuffled().take(3)
-                val fruitItems = items.filter { it.category.name == "Fruits" }.shuffled().take(3)
-
-                val selectedItems = carbItems + proteinItems + vegItems + sauceItems + dairyItems + fruitItems
-
-                selectedItems.forEach { menuItem ->
-                    val dailyMenuItem = DailyMenuItem(
-                        dailyMenu = dailyMenu,
-                        menuItem = menuItem
+                    // Tạo Order
+                    val order = orderRepository.save(
+                        Order(
+                            user = customer,
+                            store = store,
+                            totalPrice = totalPrice,
+                            status = status,
+                            pickupTime = pickupTime,
+                            createdAt = createdAt
+                        )
                     )
-                    dailyMenu.dailyMenuItems.add(dailyMenuItem)
+
+                    // Tạo Payment (1-1 với Order)
+                    val payment = paymentRepository.save(
+                        Payment(
+                            user = customer,
+                            order = order,
+                            discountAmount = discount,
+                            amount = totalPrice,
+                            finalAmount = finalAmount,
+                            status = PaymentStatus.FINISHED,
+                            note = "Thanh toán đơn hàng #${index + 1}"
+                        )
+                    )
+
+                    // Thêm món ăn
+                    val selectedDishes = dishes.shuffled().take((1..3).random())
+                    selectedDishes.forEach { dish ->
+                        orderDishRepository.save(
+                            OrderDish(
+                                order = order,
+                                dish = dish,
+                                quantity = (1..3).random()
+                            )
+                        )
+                    }
+
+                    // Chọn payment method MoMo (id=2) hoặc VNPay (id=3)
+                    val method = paymentMethods.firstOrNull { it.id == 2L || it.id == 3L } ?: paymentMethods.random()
+
+                    // Giao dịch DEBIT
+                    transactionRepository.save(
+                        Transaction(
+                            payment = payment,
+                            wallet = wallet,
+                            paymentMethod = method,
+                            transactionType = TransactionStatus.DEBIT,
+                            amount = finalAmount,
+                            note = "Thanh toán đơn hàng #${index + 1}"
+                        )
+                    )
+
+                    // Giao dịch CREDIT (chỉ nếu có khuyến mãi)
+                    if (discount > 0) {
+                        transactionRepository.save(
+                            Transaction(
+                                payment = payment,
+                                wallet = wallet,
+                                paymentMethod = method,
+                                transactionType = TransactionStatus.CREDIT,
+                                amount = discount,
+                                note = "Hoàn tiền khuyến mãi đơn hàng #${index + 1}"
+                            )
+                        )
+                    }
                 }
 
-                dailyMenus.add(dailyMenu)
-            }
-
-            if (dailyMenus.isNotEmpty()) {
-                dailyMenuRepository.saveAll(dailyMenus)
-                println("✓ Daily menus seeded: ${dailyMenus.size} days with varying items")
+                println("✓ 20 sample orders, payments, and transactions seeded for ${customer.email}")
             } else {
-                println("⚠️ Skipped seeding daily menus: missing stores or items")
+                println("⚠️ Cannot seed sample orders: missing user/stores/dishes/wallet")
             }
-        } else {
-            println("⏭ Daily menu table not empty, skipping")
         }
 
         println("\n" + "=".repeat(50))
@@ -1443,7 +1799,6 @@ class DataInitializer {
         println("- Store Ingredient Batches: ${storeIngredientBatchRepository.count()}")
         println("- Payment Methods: ${paymentMethodRepository.count()}")
         println("- Promotions: ${promotionRepository.count()}")
-        println("- Daily Menus: ${dailyMenuRepository.count()}")
         println("=".repeat(50))
     }
 }

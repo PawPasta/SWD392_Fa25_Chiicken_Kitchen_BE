@@ -7,4 +7,7 @@ import com.ChickenKitchen.app.model.dto.response.CategoryDetailResponse
 import com.ChickenKitchen.app.service.BaseService
 
 interface CategoryService : BaseService<CategoryResponse, CategoryDetailResponse, CreateCategoryRequest, UpdateCategoryRequest, Long>
-
+{
+    fun getAll(pageNumber: Int, size: Int): List<CategoryResponse>?
+    fun count(): Long
+}

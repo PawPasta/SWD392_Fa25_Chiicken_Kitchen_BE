@@ -12,18 +12,19 @@ import com.ChickenKitchen.app.model.dto.response.PromotionDetailResponse
 import com.ChickenKitchen.app.model.dto.response.PromotionResponse
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
-import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.promotion.PromotionService
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.PageRequest
+import kotlin.math.max
 
 
 @Service
 class PromotionServiceImpl (
-    private val promotionRepository: PromotionRepository,
-    private val userRepository: UserRepository,
 
+    private val promotionRepository: PromotionRepository,
     private val notificationService: NotificationService
+
 ): PromotionService{
 
     override fun changeStatus(id: Long): PromotionResponse {
@@ -38,6 +39,15 @@ class PromotionServiceImpl (
        val list = promotionRepository.findAll()
         if(list.isEmpty()) return null
         return  list.toPromotionList()
+    }
+
+    override fun getAll(pageNumber: Int, size: Int): List<PromotionResponse>? {
+        val safeSize = max(size, 1)
+        val safePage = max(pageNumber, 1)
+        val pageable = PageRequest.of(safePage - 1, safeSize)
+        val page = promotionRepository.findAll(pageable)
+        if (page.isEmpty) return null
+        return page.content.toPromotionList()
     }
 
     override fun getById(id: Long): PromotionDetailResponse {
@@ -60,28 +70,10 @@ class PromotionServiceImpl (
 
         val save = promotionRepository.save(promotion)
 
-        val users = userRepository.findAll()
-        val tokens = users.mapNotNull { it.fcmToken }
-
-        print("Ditconmemay $tokens" )// replace `fcmToken` with your User token property
-
-        if (tokens.isNotEmpty()) {
-            val req = MultipleNotificationRequest(
-                tokens = tokens,
-                title = "Á đù có Khuyến mãi mới này ní, ní có muốn dùng thử không?",
-                body = "Chỉ có 1 trong đêm nay, đêm nay là vua của mọi deal giảm giá, admin mới đúc cần cho mọi người nè"
-            )
-            notificationService.sendToMultipleTokens(req)
-        }
-
-
-//        val req = NotificationRequest (
-//            token= "nice",
-//            title = "Á đù có Khuyến mãi mới này ní, ní có muốn dùng thử không?",
-//            body = "Chỉ có 1 trong đêm nay, đêm nay là vua",
-//        )
-//        notificationService.sendToToken(req)
-
+        notificationService.sendToAllUsers(MultipleNotificationRequest (
+            title = "New Promotion: ${save.name}",
+            body = "Enjoy a discount of ${save.discountValue} with code ${save.code}!"
+        ))
 
         return save.toPromotionDetailResponse()
     }
@@ -114,4 +106,6 @@ class PromotionServiceImpl (
 
         promotionRepository.delete(promotion)
     }
+
+    override fun count(): Long = promotionRepository.count()
 }

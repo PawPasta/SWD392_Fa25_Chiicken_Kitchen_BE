@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
 
 
 @RestController
@@ -25,8 +26,12 @@ class PromotionController (
 
     @Operation(summary = "Get List promotions (all actor)")
     @GetMapping
-    fun getAll() : ResponseEntity<ResponseModel> {
-        return ResponseEntity.ok(ResponseModel.success(promotionService.getAll(), "Get Promotion Successfully"))
+    fun getAll(
+        @RequestParam(name = "size", defaultValue = "0") size: Int,
+        @RequestParam(name = "pageNumber", defaultValue = "0") pageNumber: Int,
+    ) : ResponseEntity<ResponseModel> {
+        val data = if (size <= 0 || pageNumber <= 0) promotionService.getAll() else promotionService.getAll(pageNumber, size)
+        return ResponseEntity.ok(ResponseModel.success(data, "Get Promotion Successfully"))
     }
 
     @Operation(summary = "Get promotions by Ids ")
@@ -58,4 +63,9 @@ class PromotionController (
     fun delete (@PathVariable id :Long) : ResponseEntity<ResponseModel> {
         return ResponseEntity.ok(ResponseModel.success(promotionService.delete(id), "Delete Promotion Successfully"))
     }
+
+    @Operation(summary = "Get total promotions")
+    @GetMapping("/counts")
+    fun getCounts(): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(mapOf("total" to promotionService.count()), "Fetched promotion count"))
 }

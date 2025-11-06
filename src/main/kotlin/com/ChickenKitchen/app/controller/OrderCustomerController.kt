@@ -1,8 +1,10 @@
 package com.ChickenKitchen.app.controller
 
 import com.ChickenKitchen.app.enums.OrderStatus
-import com.ChickenKitchen.app.model.dto.request.CreateDishRequest
+import com.ChickenKitchen.app.model.dto.request.CreateCustomDishRequest
+import com.ChickenKitchen.app.model.dto.request.CreateExistingDishRequest
 import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
+import com.ChickenKitchen.app.model.dto.request.OrderCancelledRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
 import com.ChickenKitchen.app.model.dto.response.DishDeleteResponse
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
@@ -16,12 +18,15 @@ import org.springframework.web.bind.annotation.*
 class OrderCustomerController(
     private val customerOrderService: CustomerOrderService
 ) {
-    @Operation(summary = "Add a dish to current NEW order (auto-create if none)")
-    @PostMapping("/current/dishes")
-    fun addDishToCurrentOrder(@RequestBody req: CreateDishRequest): ResponseEntity<ResponseModel> {
-        val result = customerOrderService.addDishToCurrentOrder(req)
-        return ResponseEntity.ok(ResponseModel.success(result, "Dish added to order"))
-    }
+    @Operation(summary = "Add an existing dish (non-custom) to current NEW order with quantity")
+    @PostMapping("/current/dishes/existing")
+    fun addExistingDish(@RequestBody req: CreateExistingDishRequest): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(customerOrderService.addExistingDishToCurrentOrder(req), "Existing dish added"))
+
+    @Operation(summary = "Add a custom dish (by steps) to current NEW order")
+    @PostMapping("/current/dishes/custom")
+    fun addCustomDish(@RequestBody req: CreateCustomDishRequest): ResponseEntity<ResponseModel> =
+        ResponseEntity.ok(ResponseModel.success(customerOrderService.addCustomDishToCurrentOrder(req), "Custom dish added"))
 
     @Operation(summary = "Get or create NEW order by store; clear items if not in today's daily menu")
     @GetMapping("/current")
@@ -77,5 +82,19 @@ class OrderCustomerController(
         val result = customerOrderService.getFeedbackByOrder(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched feedback"))
     }
-}
 
+    @Operation(summary = "Track order progress by order id")
+    @GetMapping("/{orderId}/tracking")
+    fun getOrderTracking(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = customerOrderService.getOrderTracking(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched order tracking"))
+    }
+
+
+    @Operation(summary = "Cancelled Order (for customer)")
+    @PostMapping("/api/orders/cancel")
+    fun cancelOrder(@RequestBody req: OrderCancelledRequest): ResponseEntity<ResponseModel> {
+        val res = customerOrderService.customerCancelOrder(req.orderId,req.reason)
+        return ResponseEntity.ok(ResponseModel.success(res, "Order cancelled"))
+    }
+}

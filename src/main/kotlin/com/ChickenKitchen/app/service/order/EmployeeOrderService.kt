@@ -9,5 +9,6 @@ interface EmployeeOrderService {
     fun employeeAcceptOrder(orderId: Long): OrderBriefResponse
     fun employeeMarkReadyOrder(orderId: Long): OrderBriefResponse
     fun employeeCompleteOrder(orderId: Long): OrderBriefResponse
+    fun employeeCancelOrder(orderId: Long): OrderBriefResponse
 }
 
