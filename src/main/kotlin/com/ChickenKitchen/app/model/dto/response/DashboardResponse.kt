@@ -1,26 +1,37 @@
 package com.ChickenKitchen.app.model.dto.response
 
 
-// Nay` la tim kiem doanh thu theo 10 ngay gan nhat ne
-data class RevenueBy10NearestDay(
-    val date: String,
-    val revenue: Double
+import java.sql.Timestamp
+import java.util.Date
+
+data class StoreBestPerformance(
+    val storeId : Long,
+    val storeName : String,
+    val revenue : Long,
 )
 
-// Nay` la tim kiem store co doanh thu cao nhat ne
-data class StorePerformanceResponse(
-    val totalRevenue: Double,
-    val averageOrderValue: Double
+data class OrderPickupRevenueProjection(
+    val pickupTime: Timestamp?,
+    val totalPrice: Long?
+)
+
+data class UserGrowthProjection(
+    val createdDate: Date,
+    val totalUser: Long
+)
+
+data class ReportSummaryResponse(
+    val totalRevenue: Long,
+    val totalOrders: Long,
+    val totalCustomers: Long,
+    val averageOrderValue: Long
 )
 
 
-//Nay la so luong tang truong nguoi dung ne (6 thang)
-data class MonthlyUserGrowth(
-    val month: String,
-    val newUsers: Int
-)
-
-data class UserGrowthResponse(
-    val totalNewUsers: Int,
-    val monthlyGrowth: List<MonthlyUserGrowth>
+data class PopularDishResponse(
+    val dishId: Long,
+    val name: String,
+    val quantitySold: Long,
+    val revenue: Long,
+    val category: String
 )

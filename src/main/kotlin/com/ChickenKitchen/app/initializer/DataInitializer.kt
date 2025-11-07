@@ -1688,6 +1688,8 @@ class DataInitializer {
             println("⏭ Recipes table not empty, skipping")
         }
 
+
+        // Orders Dummy Data
         run {
             val customer = userRepository.findByEmail("userTest01@gmail.com")
             val stores = storeRepository.findAll()
@@ -1696,18 +1698,29 @@ class DataInitializer {
             val paymentMethods = paymentMethodRepository.findAll()
 
             if (stores.isNotEmpty() && dishes.isNotEmpty() && wallet != null) {
-                println("Seeding 20 sample orders for userTest01@gmail.com...")
+                println("Seeding 50 diverse sample orders for userTest01@gmail.com...")
 
-                val statuses = listOf(OrderStatus.COMPLETED, OrderStatus.READY, OrderStatus.PROCESSING)
-                val now = java.sql.Timestamp(System.currentTimeMillis())
+                val statuses = listOf(
+                    OrderStatus.COMPLETED,
+                    OrderStatus.READY,
+                    OrderStatus.PROCESSING,
+                    OrderStatus.CANCELLED
+                )
+                val now = System.currentTimeMillis()
 
-                repeat(20) { index ->
-                    val createdAt = java.sql.Timestamp(System.currentTimeMillis() - (index * 86400000L)) // trừ ngày
-                    val pickupTime = java.sql.Timestamp(createdAt.time + (30 * 60 * 1000)) // cộng 30 phút
+                repeat(50) { index ->
+                    // Tạo thời gian ngẫu nhiên trong 90 ngày gần nhất
+                    val daysAgo = (0..90).random()
+                    val createdAt = java.sql.Timestamp(now - daysAgo * 86_400_000L)
+                    val pickupTime = java.sql.Timestamp(createdAt.time + (15..90).random() * 60 * 1000L)
+
+                    // Random trạng thái & cửa hàng
                     val status = statuses.random()
                     val store = stores.random()
-                    val totalPrice = (80_000..250_000).random()
-                    val discount = listOf(0, 5_000, 10_000, 15_000).random()
+
+                    // Random giá tiền và khuyến mãi
+                    val totalPrice = (50_000..400_000).random()
+                    val discount = listOf(0, 3_000, 5_000, 10_000, 15_000, 20_000).random()
                     val finalAmount = totalPrice - discount
 
                     // Tạo Order
@@ -1722,7 +1735,7 @@ class DataInitializer {
                         )
                     )
 
-                    // Tạo Payment (1-1 với Order)
+                    // Tạo Payment
                     val payment = paymentRepository.save(
                         Payment(
                             user = customer,
@@ -1735,19 +1748,19 @@ class DataInitializer {
                         )
                     )
 
-                    // Thêm món ăn
-                    val selectedDishes = dishes.shuffled().take((1..3).random())
+                    // Thêm món ăn (1-5 món mỗi đơn)
+                    val selectedDishes = dishes.shuffled().take((1..5).random())
                     selectedDishes.forEach { dish ->
                         orderDishRepository.save(
                             OrderDish(
                                 order = order,
                                 dish = dish,
-                                quantity = (1..3).random()
+                                quantity = (1..4).random()
                             )
                         )
                     }
 
-                    // Chọn payment method MoMo (id=2) hoặc VNPay (id=3)
+                    // Chọn payment method (MoMo, VNPay, hoặc random)
                     val method = paymentMethods.firstOrNull { it.id == 2L || it.id == 3L } ?: paymentMethods.random()
 
                     // Giao dịch DEBIT
@@ -1762,7 +1775,7 @@ class DataInitializer {
                         )
                     )
 
-                    // Giao dịch CREDIT (chỉ nếu có khuyến mãi)
+                    // Giao dịch CREDIT (nếu có khuyến mãi)
                     if (discount > 0) {
                         transactionRepository.save(
                             Transaction(
@@ -1777,7 +1790,7 @@ class DataInitializer {
                     }
                 }
 
-                println("✓ 20 sample orders, payments, and transactions seeded for ${customer.email}")
+                println("✓ 50 sample orders, payments, and transactions seeded for ${customer.email}")
             } else {
                 println("⚠️ Cannot seed sample orders: missing user/stores/dishes/wallet")
             }

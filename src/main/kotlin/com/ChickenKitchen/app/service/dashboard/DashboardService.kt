@@ -1,17 +1,22 @@
 package com.ChickenKitchen.app.service.dashboard
 
-import com.ChickenKitchen.app.model.dto.response.RevenueBy10NearestDay
-import com.ChickenKitchen.app.model.dto.response.StorePerformanceResponse
-import com.ChickenKitchen.app.model.dto.response.UserGrowthResponse
+import com.ChickenKitchen.app.model.dto.response.OrderPickupRevenueProjection
+import com.ChickenKitchen.app.model.dto.response.PopularDishResponse
+import com.ChickenKitchen.app.model.dto.response.ReportSummaryResponse
+import com.ChickenKitchen.app.model.dto.response.StoreBestPerformance
+import com.ChickenKitchen.app.model.dto.response.UserGrowthProjection
+import java.sql.Timestamp
 
 interface DashboardService {
 
-    // Doanh thu theo 10 ngày gần nhất
-    fun getRevenueBy10NearestDays(): List<RevenueBy10NearestDay>
+    fun getBestStorePerformance () : List<StoreBestPerformance>
 
-    // Hiệu suất cửa hàng (top store có doanh thu cao nhất)
-    fun getTopStorePerformance(): StorePerformanceResponse
+    fun getRevenueTrend(dayNumber : Int) : List<OrderPickupRevenueProjection>
 
-    // Tăng trưởng người dùng (6 tháng gần nhất)
-    fun getUserGrowth(): UserGrowthResponse
+    fun getUserGrowthTrend(dayNumber: Int): List<UserGrowthProjection>
+
+    fun getSummary(startDate: Timestamp, endDate: Timestamp): ReportSummaryResponse
+
+    fun getPopularDishes(startDate: Timestamp, endDate: Timestamp, limit: Int): List<PopularDishResponse>
+
 }

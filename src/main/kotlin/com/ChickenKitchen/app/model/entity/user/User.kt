@@ -39,7 +39,7 @@ class User(
     @Column(length = 100)
     var phone: String? = null,
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     var createdAt: Timestamp? = null,
 
