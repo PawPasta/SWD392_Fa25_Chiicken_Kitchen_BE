@@ -1711,10 +1711,11 @@ class DataInitializer {
             val customer = userRepository.findByEmail("userTest01@gmail.com")
             val stores = storeRepository.findAll()
             val dishes = dishRepository.findAll()
-            val wallet = walletRepository.findByUser(customer!!)
             val paymentMethods = paymentMethodRepository.findAll()
 
-            if (stores.isNotEmpty() && dishes.isNotEmpty() && wallet != null) {
+            if (stores.isNotEmpty() && dishes.isNotEmpty() && customer != null) {
+                val wallet = walletRepository.findByUser(customer)
+                if (wallet != null) {
                 println("Seeding 50 diverse sample orders for userTest01@gmail.com...")
 
                 val statuses = listOf(
@@ -1808,6 +1809,9 @@ class DataInitializer {
                 }
 
                 println("✓ 50 sample orders, payments, and transactions seeded for ${customer.email}")
+                } else {
+                    println("⚠️ Cannot seed sample orders: missing wallet for user ${customer.email}")
+                }
             } else {
                 println("⚠️ Cannot seed sample orders: missing user/stores/dishes/wallet")
             }
