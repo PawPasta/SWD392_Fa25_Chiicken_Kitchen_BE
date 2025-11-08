@@ -55,17 +55,15 @@ class OrderEmployeeController(
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched employee detail"))
     }
 
-    @Operation(summary = "Employee: list orders in my store by status (excluding NEW), with pagination, search, and sort")
+    @Operation(summary = "Employee: list orders in my store by status (optional, excludes NEW); default by newest; supports pagination and keyword search")
     @GetMapping
     fun getOrdersByStatus(
-        @RequestParam status: String,
+        @RequestParam(required = false) status: String?,
         @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
         @RequestParam(name = "size", defaultValue = "10") size: Int,
-        @RequestParam(name = "sortBy", required = false) sortBy: String?,
-        @RequestParam(name = "direction", required = false) direction: String?,
         @RequestParam(name = "q", required = false) keyword: String?,
     ): ResponseEntity<ResponseModel> {
-        val result = employeeOrderService.getOrdersForEmployeeStoreByStatus(status, pageNumber, size, sortBy, direction, keyword)
+        val result = employeeOrderService.getOrdersForEmployeeStore(status, pageNumber, size, keyword)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched orders by status"))
     }
 

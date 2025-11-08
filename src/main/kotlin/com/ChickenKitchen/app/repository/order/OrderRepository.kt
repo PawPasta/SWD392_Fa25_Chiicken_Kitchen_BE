@@ -22,6 +22,7 @@ interface OrderRepository : JpaRepository<Order, Long>{
     ): List<Order>
 
     fun findAllByStoreIdAndStatus(storeId: Long, status: OrderStatus, pageable: Pageable): Page<Order>
+    fun findAllByStoreIdAndStatusNot(storeId: Long, status: OrderStatus, pageable: Pageable): Page<Order>
 
     @Query(
         "select o from Order o join o.user u " +
@@ -33,6 +34,20 @@ interface OrderRepository : JpaRepository<Order, Long>{
     fun searchAllByStoreIdAndStatus(
         @Param("storeId") storeId: Long,
         @Param("status") status: OrderStatus,
+        @Param("keyword") keyword: String,
+        pageable: Pageable
+    ): Page<Order>
+
+    @Query(
+        "select o from Order o join o.user u " +
+        "where o.store.id = :storeId and o.status <> :excluded and (" +
+        "lower(u.fullName) like lower(concat('%', :keyword, '%')) or " +
+        "lower(u.email) like lower(concat('%', :keyword, '%'))" +
+        ")"
+    )
+    fun searchAllByStoreIdAndStatusNot(
+        @Param("storeId") storeId: Long,
+        @Param("excluded") excluded: OrderStatus,
         @Param("keyword") keyword: String,
         pageable: Pageable
     ): Page<Order>

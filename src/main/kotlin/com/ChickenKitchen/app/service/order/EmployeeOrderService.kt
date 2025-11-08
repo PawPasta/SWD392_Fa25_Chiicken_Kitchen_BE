@@ -12,12 +12,10 @@ interface EmployeeOrderService {
     fun employeeCompleteOrder(orderId: Long): OrderBriefResponse
     fun employeeCancelOrder(orderId: Long): OrderBriefResponse
     fun getMyEmployeeDetail(): com.ChickenKitchen.app.model.dto.response.EmployeeDetailFullResponse
-    fun getOrdersForEmployeeStoreByStatus(
-        status: String,
+    fun getOrdersForEmployeeStore(
+        status: String?,
         pageNumber: Int,
         size: Int,
-        sortBy: String?,
-        direction: String?,
         keyword: String?
     ): com.ChickenKitchen.app.model.dto.response.EmployeeOrderListPageResponse
     fun getOrderDetailWithIngredients(orderId: Long): EmployeeOrderDetailResponse

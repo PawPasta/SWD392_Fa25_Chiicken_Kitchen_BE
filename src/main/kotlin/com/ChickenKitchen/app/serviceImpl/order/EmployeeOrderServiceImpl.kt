@@ -250,45 +250,45 @@ class EmployeeOrderServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getOrdersForEmployeeStoreByStatus(
-        status: String,
+    override fun getOrdersForEmployeeStore(
+        status: String?,
         pageNumber: Int,
         size: Int,
-        sortBy: String?,
-        direction: String?,
         keyword: String?
     ): com.ChickenKitchen.app.model.dto.response.EmployeeOrderListPageResponse {
         val user = currentUser()
         val detail = employeeDetailRepository.findByUser(user)
             ?: throw UserNotFoundException("Employee detail not found for user ${user.email}")
 
-        val parsed = try {
-            OrderStatus.valueOf(status.uppercase())
-        } catch (_: Exception) {
-            throw InvalidOrderStatusException("Invalid status: $status")
-        }
-
-        if (parsed == OrderStatus.NEW) {
-            throw InvalidOrderStatusException("Fetching NEW orders is not allowed")
-        }
-
         val storeId = detail.store.id ?: throw StoreNotFoundException("Store not found for employee ${user.email}")
 
         val safeSize = kotlin.math.max(size, 1)
         val safePage = kotlin.math.max(pageNumber, 1) - 1
-        val sortField = when ((sortBy ?: "createdAt").lowercase()) {
-            "createdat" -> "createdAt"
-            "pickuptime" -> "pickupTime"
-            "totalprice" -> "totalPrice"
-            else -> "createdAt"
-        }
-        val sortDir = if ((direction ?: "DESC").equals("ASC", true)) org.springframework.data.domain.Sort.Direction.ASC else org.springframework.data.domain.Sort.Direction.DESC
-        val pageable = org.springframework.data.domain.PageRequest.of(safePage, safeSize, org.springframework.data.domain.Sort.by(sortDir, sortField))
+        val pageable = org.springframework.data.domain.PageRequest.of(
+            safePage,
+            safeSize,
+            org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")
+        )
 
-        val page = if (!keyword.isNullOrBlank())
-            orderRepository.searchAllByStoreIdAndStatus(storeId, parsed, keyword.trim(), pageable)
-        else
-            orderRepository.findAllByStoreIdAndStatus(storeId, parsed, pageable)
+        val page = if (status.isNullOrBlank()) {
+            if (!keyword.isNullOrBlank())
+                orderRepository.searchAllByStoreIdAndStatusNot(storeId, OrderStatus.NEW, keyword.trim(), pageable)
+            else
+                orderRepository.findAllByStoreIdAndStatusNot(storeId, OrderStatus.NEW, pageable)
+        } else {
+            val parsed = try {
+                OrderStatus.valueOf(status.uppercase())
+            } catch (_: Exception) {
+                throw InvalidOrderStatusException("Invalid status: $status")
+            }
+            if (parsed == OrderStatus.NEW) {
+                throw InvalidOrderStatusException("Fetching NEW orders is not allowed")
+            }
+            if (!keyword.isNullOrBlank())
+                orderRepository.searchAllByStoreIdAndStatus(storeId, parsed, keyword.trim(), pageable)
+            else
+                orderRepository.findAllByStoreIdAndStatus(storeId, parsed, pageable)
+        }
 
         val items = page.content.map { o ->
             val dishes = dishRepository.findAllByOrderId(o.id!!)
