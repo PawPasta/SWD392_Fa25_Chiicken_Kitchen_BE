@@ -159,9 +159,9 @@ class DataInitializer {
 
             // Employee users
             val employeeData = listOf(
-                Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
+                Triple("employee-uid-001", "khiemngse182188@fpt.edu.vn", "Employee Khiem Jar"),
                 Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
-                Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
+                Triple("employee-uid-003", "baoltgse182138@fpt.edu.vn", "Employee Le"),
                 Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
                 Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
                 Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
@@ -1814,6 +1814,137 @@ class DataInitializer {
                 }
             } else {
                 println("⚠️ Cannot seed sample orders: missing user/stores/dishes/wallet")
+            }
+        }
+
+        // ==================== EXTRA: 20 USERS WITH ORDERS ====================
+        run {
+            val stores = storeRepository.findAll()
+            val dishesAll = dishRepository.findAll()
+            val paymentMethods = paymentMethodRepository.findAll()
+
+            if (stores.isEmpty() || dishesAll.isEmpty() || paymentMethods.isEmpty()) {
+                println("⚠️ Skip extra seeding: need stores, dishes, payment methods")
+            } else {
+                var createdUsers = 0
+                var createdOrders = 0
+
+                (1..20).forEach { idx ->
+                    val email = "seeduser%02d@chickenkitchen.com".format(idx)
+                    val existing = userRepository.findByEmail(email)
+                    val user = existing ?: userRepository.save(
+                        User(
+                            role = Role.USER,
+                            uid = "seed-uid-%03d".format(idx),
+                            email = email,
+                            isVerified = true,
+                            phone = "090200%04d".format(idx),
+                            isActive = true,
+                            fullName = "Seed User %02d".format(idx),
+                            provider = "seed",
+                            imageURL = null
+                        )
+                    ).also { createdUsers++ }
+
+                    // Ensure wallet
+                    var wallet = walletRepository.findByUser(user)
+                    if (wallet == null) {
+                        wallet = walletRepository.save(Wallet(user = user, balance = 500_000))
+                    }
+
+                    val statuses = listOf(
+                        OrderStatus.CONFIRMED, OrderStatus.CONFIRMED,
+                        OrderStatus.READY,
+                        OrderStatus.CANCELLED,
+                        OrderStatus.FAILED
+                    )
+
+                    statuses.forEach { st ->
+                        val now = System.currentTimeMillis()
+                        val daysAgo = (0..30).random()
+                        val createdAt = java.sql.Timestamp(now - daysAgo * 86_400_000L)
+                        val pickupTime = java.sql.Timestamp(createdAt.time + (15..90).random() * 60 * 1000L)
+
+                        val store = stores.random()
+                        val totalPrice = (80_000..300_000).random()
+                        val discount = listOf(0, 2_000, 5_000, 10_000).random()
+                        val finalAmount = (totalPrice - discount).coerceAtLeast(0)
+
+                        val order = orderRepository.save(
+                            Order(
+                                user = user,
+                                store = store,
+                                totalPrice = totalPrice,
+                                status = st,
+                                pickupTime = pickupTime,
+                                createdAt = createdAt
+                            )
+                        )
+
+                        // Link 1-3 dishes
+                        dishesAll.shuffled().take((1..3).random()).forEach { d ->
+                            orderDishRepository.save(
+                                OrderDish(
+                                    order = order,
+                                    dish = d,
+                                    quantity = (1..3).random()
+                                )
+                            )
+                        }
+
+                        // Create payment reflecting order status
+                        val payStatus = when (st) {
+                            OrderStatus.CANCELLED -> PaymentStatus.REFUNDED
+                            OrderStatus.FAILED -> PaymentStatus.PENDING
+                            else -> PaymentStatus.FINISHED
+                        }
+                        val payment = paymentRepository.save(
+                            Payment(
+                                user = user,
+                                order = order,
+                                discountAmount = discount,
+                                amount = totalPrice,
+                                finalAmount = finalAmount,
+                                status = payStatus,
+                                note = "Seed payment for ${st.name} order"
+                            )
+                        )
+
+                        // Record transactions where appropriate
+                        val method = paymentMethods.firstOrNull { it.name == "VNPay" || it.name == "MoMo" } ?: paymentMethods.first()
+                        when (st) {
+                            OrderStatus.CONFIRMED, OrderStatus.READY -> {
+                                transactionRepository.save(
+                                    Transaction(
+                                        payment = payment,
+                                        wallet = wallet,
+                                        paymentMethod = method,
+                                        transactionType = TransactionStatus.DEBIT,
+                                        amount = finalAmount,
+                                        note = "Seed debit for ${st.name}"
+                                    )
+                                )
+                            }
+                            OrderStatus.CANCELLED -> {
+                                transactionRepository.save(
+                                    Transaction(
+                                        payment = payment,
+                                        wallet = wallet,
+                                        paymentMethod = method,
+                                        transactionType = TransactionStatus.CREDIT,
+                                        amount = finalAmount,
+                                        note = "Seed refund for CANCELLED"
+                                    )
+                                )
+                            }
+                            else -> { /* no transaction for FAILED */ }
+                        }
+
+                        createdOrders++
+                    }
+                }
+
+                println("✓ Extra seeding: users=$createdUsers, orders=$createdOrders")
             }
         }
 
