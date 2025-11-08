@@ -1,5 +1,6 @@
 package com.ChickenKitchen.app.repository.step
 
+import com.ChickenKitchen.app.model.dto.response.PopularDishResponse
 import com.ChickenKitchen.app.model.entity.step.Dish
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
 
 @Repository
 interface DishRepository : JpaRepository<Dish, Long>, JpaSpecificationExecutor<Dish> {
@@ -89,4 +91,20 @@ interface DishRepository : JpaRepository<Dish, Long>, JpaSpecificationExecutor<D
         "where o.user.email = :email and d.isCustom = true order by d.createdAt desc"
     )
     fun findAllCustomByUserEmailOrderByCreatedAtDesc(@Param("email") email: String): List<Dish>
+
+    @Query("""
+    SELECT new com.ChickenKitchen.app.model.dto.response.PopularDishResponse(
+        d.id, d.name, COUNT(od.id), SUM(o.totalPrice), 'N/A'
+    )
+        FROM OrderDish od
+        JOIN od.dish d
+        JOIN od.order o
+        WHERE o.createdAt BETWEEN :startDate AND :endDate
+        GROUP BY d.id, d.name
+        ORDER BY SUM(o.totalPrice) DESC
+""")
+    fun findPopularDishes(
+        @Param("startDate") startDate: Timestamp,
+        @Param("endDate") endDate: Timestamp
+    ): List<PopularDishResponse>
 }

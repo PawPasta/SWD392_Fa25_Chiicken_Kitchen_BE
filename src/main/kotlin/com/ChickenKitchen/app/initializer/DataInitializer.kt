@@ -5,6 +5,9 @@ import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.enums.UnitType
 import com.ChickenKitchen.app.model.entity.category.Category
 import com.ChickenKitchen.app.enums.MenuCategory
+import com.ChickenKitchen.app.enums.OrderStatus
+import com.ChickenKitchen.app.enums.PaymentStatus
+import com.ChickenKitchen.app.enums.TransactionStatus
 import com.ChickenKitchen.app.model.entity.ingredient.Ingredient
 import com.ChickenKitchen.app.model.entity.ingredient.Recipe
 import com.ChickenKitchen.app.model.entity.ingredient.Store
@@ -12,12 +15,17 @@ import com.ChickenKitchen.app.model.entity.ingredient.StoreIngredientBatch
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.model.entity.menu.Nutrient
+import com.ChickenKitchen.app.model.entity.order.Order
+import com.ChickenKitchen.app.model.entity.order.OrderDish
+import com.ChickenKitchen.app.model.entity.payment.Payment
 import com.ChickenKitchen.app.model.entity.payment.PaymentMethod
+import com.ChickenKitchen.app.model.entity.payment.Transaction
 import com.ChickenKitchen.app.model.entity.promotion.Promotion
 import com.ChickenKitchen.app.model.entity.step.Step
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.user.User
 import com.ChickenKitchen.app.model.entity.user.EmployeeDetail
+import com.ChickenKitchen.app.model.entity.user.Wallet
 import com.ChickenKitchen.app.repository.category.CategoryRepository
 import com.ChickenKitchen.app.repository.ingredient.IngredientRepository
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
@@ -26,14 +34,19 @@ import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemNutrientRepository
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
 import com.ChickenKitchen.app.repository.menu.NutrientRepository
+import com.ChickenKitchen.app.repository.order.OrderDishRepository
+import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.promotion.PromotionRepository
 import com.ChickenKitchen.app.repository.step.StepRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.order.OrderStepItemRepository
+import com.ChickenKitchen.app.repository.payment.PaymentRepository
+import com.ChickenKitchen.app.repository.payment.TransactionRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
+import com.ChickenKitchen.app.repository.user.WalletRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -65,15 +78,20 @@ class DataInitializer {
         promotionRepository: PromotionRepository,
         paymentMethodRepository: PaymentMethodRepository,
         storeIngredientBatchRepository: StoreIngredientBatchRepository,
-        employeeDetailRepository: EmployeeDetailRepository
+        employeeDetailRepository: EmployeeDetailRepository,
+        walletRepository: WalletRepository,
+        orderDishRepository: OrderDishRepository,
+        orderRepository: OrderRepository,
+        paymentRepository: PaymentRepository,
+        transactionRepository: TransactionRepository,
     ) = CommandLineRunner {
 
         // ==================== USERS ====================
         if (userRepository.count() == 0L) {
-            println("Seeding users...")
+            println("Seeding users and wallets...")
 
             // Admin users
-            userRepository.save(User(
+            val admin1 = userRepository.save(User(
                 role = Role.ADMIN,
                 uid = "admin-uid-001",
                 email = "chickenkitchen785@gmail.com",
@@ -84,20 +102,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null,
             ))
+            walletRepository.save(Wallet(user = admin1, balance = 200000))
 
-            userRepository.save(User(
-                role = Role.ADMIN,
-                uid = "admin-uid-002",
-                email = "admin2@chickenkitchen.com",
-                isVerified = true,
-                phone = "0901234590",
-                isActive = true,
-                fullName = "Admin Nguyen Van A",
-                provider = "Google",
-                imageURL = "https://example.com/admin2.jpg"
-            ))
-
-            userRepository.save(User(
+            val admin3 = userRepository.save(User(
                 role = Role.ADMIN,
                 uid = "admin-uid-007",
                 email = "PhoenixZ3004@gmail.com",
@@ -108,9 +115,10 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null,
             ))
+            walletRepository.save(Wallet(user = admin3, balance = 200000))
 
             // Manager users
-            userRepository.save(User(
+            val manager1 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-001",
                 email = "khiem1371@gmail.com",
@@ -121,8 +129,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = null
             ))
+            walletRepository.save(Wallet(user = manager1, balance = 200000))
 
-            userRepository.save(User(
+            val manager2 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-002",
                 email = "manager2@chickenkitchen.com",
@@ -133,8 +142,9 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = "https://example.com/manager2.jpg"
             ))
+            walletRepository.save(Wallet(user = manager2, balance = 200000))
 
-            userRepository.save(User(
+            val manager3 = userRepository.save(User(
                 role = Role.MANAGER,
                 uid = "manager-uid-008",
                 email = "PhoenixZ3303@gmail.com",
@@ -145,19 +155,20 @@ class DataInitializer {
                 provider = "Local",
                 imageURL = "https://example.com/manager2.jpg"
             ))
+            walletRepository.save(Wallet(user = manager3, balance = 200000))
 
             // Employee users
             val employeeData = listOf(
-                Triple("employee-uid-001", "khiemngse182188@fpt.edu.vn", "Employee Khiem Jar"),
-                Triple("employee-uid-002", "baoltgse182138@fpt.edu.vn", "Employee Le"),
-                Triple("employee-uid-003", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
+                Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
+                Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
+                Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
                 Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
                 Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
                 Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
             )
 
             employeeData.forEachIndexed { idx, (uid, email, name) ->
-                userRepository.save(User(
+                val employee = userRepository.save(User(
                     role = Role.EMPLOYEE,
                     uid = uid,
                     email = email,
@@ -168,10 +179,11 @@ class DataInitializer {
                     provider = "Local",
                     imageURL = null
                 ))
+                walletRepository.save(Wallet(user = employee, balance = 200000))
             }
 
             // Store user
-            userRepository.save(User(
+            val storeUser = userRepository.save(User(
                 role = Role.STORE,
                 uid = "store-uid-002",
                 email = "letrangiabao2004@gmail.com",
@@ -196,6 +208,24 @@ class DataInitializer {
             ))
 
             println("✓ Users seeded: ${1 + 1 + employeeData.size + 1 + 2}")
+            walletRepository.save(Wallet(user = storeUser, balance = 200000))
+
+            // Customer user
+            val customer = userRepository.save(User(
+                role = Role.USER,
+                uid = "user-giabao-uid-002",
+                email = "userTest01@gmail.com",
+                isVerified = true,
+                phone = "0901334522",
+                isActive = true,
+                fullName = "Test User",
+                provider = "Local",
+                imageURL = null
+            ))
+            walletRepository.save(Wallet(user = customer, balance = 200000))
+
+            println("✓ Users seeded: ${3 + 3 + employeeData.size + 1 + 1}")
+            println("✓ Wallets seeded: ${3 + 3 + employeeData.size + 1 + 1}")
         } else {
             println("⏭ Users table not empty, skipping")
         }
@@ -384,9 +414,6 @@ class DataInitializer {
                 Triple("Chicken Kitchen Binh Thanh", "720A Điện Biên Phủ, Phường 22, Bình Thạnh, Thành phố Hồ Chí Minh", "0281234567"),
                 Triple("Chicken Kitchen High Technology bay", "Lô E2a-7, Đường D1, Khu Công nghệ cao, Phường Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh", "0281234568"),
                 Triple("Chicken Kitchen District 3", "643 Điện Biên Phủ, Quận 3, Thành phố Hồ Chí Minh.", "0281234569"),
-                Triple("Chicken Kitchen Binh Duong", "Đường Lưu Hữu Phước, phường Đông Hòa, thành phố Dĩ An, tỉnh Bình Dương", "0281234570"),
-                Triple("Chicken Kitchen Phu Nhuan", "124 Phan Xích Long, Phường 2, Phú Nhuận, Thành phố Hồ Chí Minh ", "0281234571"),
-                Triple("Chicken Kitchen Binh Chanh", "240-242 Phạm Văn Đồng, phường Hiệp Bình Chánh, quận Thủ Đức, Thành phố Hồ Chí Minh", "0281234572")
             )
 
             storesData.forEach { (name, address, phone) ->
@@ -1676,6 +1703,114 @@ class DataInitializer {
             }
         } else {
             println("⏭ Recipes table not empty, skipping")
+        }
+
+
+        // Orders Dummy Data
+        run {
+            val customer = userRepository.findByEmail("userTest01@gmail.com")
+            val stores = storeRepository.findAll()
+            val dishes = dishRepository.findAll()
+            val wallet = walletRepository.findByUser(customer!!)
+            val paymentMethods = paymentMethodRepository.findAll()
+
+            if (stores.isNotEmpty() && dishes.isNotEmpty() && wallet != null) {
+                println("Seeding 50 diverse sample orders for userTest01@gmail.com...")
+
+                val statuses = listOf(
+                    OrderStatus.COMPLETED,
+                    OrderStatus.READY,
+                    OrderStatus.PROCESSING,
+                    OrderStatus.CANCELLED
+                )
+                val now = System.currentTimeMillis()
+
+                repeat(50) { index ->
+                    // Tạo thời gian ngẫu nhiên trong 90 ngày gần nhất
+                    val daysAgo = (0..90).random()
+                    val createdAt = java.sql.Timestamp(now - daysAgo * 86_400_000L)
+                    val pickupTime = java.sql.Timestamp(createdAt.time + (15..90).random() * 60 * 1000L)
+
+                    // Random trạng thái & cửa hàng
+                    val status = statuses.random()
+                    val store = stores.random()
+
+                    // Random giá tiền và khuyến mãi
+                    val totalPrice = (50_000..400_000).random()
+                    val discount = listOf(0, 3_000, 5_000, 10_000, 15_000, 20_000).random()
+                    val finalAmount = totalPrice - discount
+
+                    // Tạo Order
+                    val order = orderRepository.save(
+                        Order(
+                            user = customer,
+                            store = store,
+                            totalPrice = totalPrice,
+                            status = status,
+                            pickupTime = pickupTime,
+                            createdAt = createdAt
+                        )
+                    )
+
+                    // Tạo Payment
+                    val payment = paymentRepository.save(
+                        Payment(
+                            user = customer,
+                            order = order,
+                            discountAmount = discount,
+                            amount = totalPrice,
+                            finalAmount = finalAmount,
+                            status = PaymentStatus.FINISHED,
+                            note = "Thanh toán đơn hàng #${index + 1}"
+                        )
+                    )
+
+                    // Thêm món ăn (1-5 món mỗi đơn)
+                    val selectedDishes = dishes.shuffled().take((1..5).random())
+                    selectedDishes.forEach { dish ->
+                        orderDishRepository.save(
+                            OrderDish(
+                                order = order,
+                                dish = dish,
+                                quantity = (1..4).random()
+                            )
+                        )
+                    }
+
+                    // Chọn payment method (MoMo, VNPay, hoặc random)
+                    val method = paymentMethods.firstOrNull { it.id == 2L || it.id == 3L } ?: paymentMethods.random()
+
+                    // Giao dịch DEBIT
+                    transactionRepository.save(
+                        Transaction(
+                            payment = payment,
+                            wallet = wallet,
+                            paymentMethod = method,
+                            transactionType = TransactionStatus.DEBIT,
+                            amount = finalAmount,
+                            note = "Thanh toán đơn hàng #${index + 1}"
+                        )
+                    )
+
+                    // Giao dịch CREDIT (nếu có khuyến mãi)
+                    if (discount > 0) {
+                        transactionRepository.save(
+                            Transaction(
+                                payment = payment,
+                                wallet = wallet,
+                                paymentMethod = method,
+                                transactionType = TransactionStatus.CREDIT,
+                                amount = discount,
+                                note = "Hoàn tiền khuyến mãi đơn hàng #${index + 1}"
+                            )
+                        )
+                    }
+                }
+
+                println("✓ 50 sample orders, payments, and transactions seeded for ${customer.email}")
+            } else {
+                println("⚠️ Cannot seed sample orders: missing user/stores/dishes/wallet")
+            }
         }
 
         println("\n" + "=".repeat(50))

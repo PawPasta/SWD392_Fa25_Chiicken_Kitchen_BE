@@ -49,7 +49,8 @@ class FilterConfig(
         "/api/notifications",
         "/api/payments/momo/test",
 
-        "/api/dishes"
+        "/api/dishes",
+        "/api/dashboard"
 
         // Broad allow for all APIs (temporary)
         // "/api" // uncomment to allow absolutely all under /api
