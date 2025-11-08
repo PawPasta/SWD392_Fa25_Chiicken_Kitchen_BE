@@ -8,8 +8,14 @@ import com.ChickenKitchen.app.handler.UserNotFoundException
 import com.ChickenKitchen.app.model.dto.response.CurrentDishResponse
 import com.ChickenKitchen.app.model.dto.response.CurrentStepItemResponse
 import com.ChickenKitchen.app.model.dto.response.CurrentStepResponse
+import com.ChickenKitchen.app.model.dto.response.EmployeeOrderListItemResponse
+import com.ChickenKitchen.app.model.dto.response.OrderCustomerResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
+import com.ChickenKitchen.app.model.dto.response.EmployeeOrderDetailResponse
+import com.ChickenKitchen.app.model.dto.response.DishWithIngredientsResponse
+import com.ChickenKitchen.app.model.dto.response.StepItemWithIngredientsResponse
+import com.ChickenKitchen.app.model.dto.response.StepWithIngredientsResponse
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
@@ -17,6 +23,8 @@ import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
 import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.order.EmployeeOrderService
 import com.ChickenKitchen.app.service.payment.PaymentService
+import com.ChickenKitchen.app.mapper.toEmployeeDetailFullResponse
+import com.ChickenKitchen.app.mapper.toIngredientResponse
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
@@ -47,30 +55,7 @@ class EmployeeOrderServiceImpl(
             ?: throw UserNotFoundException("User not found with email: $email")
     }
 
-    override fun getConfirmedOrdersForEmployeeStore(): List<OrderBriefResponse> {
-        val user = currentUser()
-        val detail = employeeDetailRepository.findByUser(user)
-            ?: throw UserNotFoundException("Employee detail not found for user ${user.email}")
-
-        val storeId = detail.store.id
-            ?: throw StoreNotFoundException("Store not found for employee ${user.email}")
-
-        val orders = orderRepository.findAllByStoreIdAndStatusOrderByCreatedAtDesc(
-            storeId,
-            OrderStatus.CONFIRMED
-        )
-
-        return orders.map { o ->
-            OrderBriefResponse(
-                orderId = o.id!!,
-                storeId = o.store.id!!,
-                status = o.status.name,
-                totalPrice = o.totalPrice,
-                createdAt = o.createdAt,
-                pickupTime = o.pickupTime
-            )
-        }
-    }
+    // Removed legacy confirmed list; superseded by pageable status endpoint
 
     override fun getConfirmedOrderDetailForEmployee(orderId: Long): OrderCurrentResponse {
         val user = currentUser()
@@ -253,6 +238,177 @@ class EmployeeOrderServiceImpl(
             totalPrice = order.totalPrice,
             createdAt = order.createdAt,
             pickupTime = order.pickupTime
+        )
+    }
+
+    @Transactional(readOnly = true)
+    override fun getMyEmployeeDetail(): com.ChickenKitchen.app.model.dto.response.EmployeeDetailFullResponse {
+        val user = currentUser()
+        val detail = employeeDetailRepository.findByUser(user)
+            ?: throw UserNotFoundException("Employee detail not found for user ${user.email}")
+        return detail.toEmployeeDetailFullResponse()
+    }
+
+    @Transactional(readOnly = true)
+    override fun getOrdersForEmployeeStoreByStatus(
+        status: String,
+        pageNumber: Int,
+        size: Int,
+        sortBy: String?,
+        direction: String?,
+        keyword: String?
+    ): com.ChickenKitchen.app.model.dto.response.EmployeeOrderListPageResponse {
+        val user = currentUser()
+        val detail = employeeDetailRepository.findByUser(user)
+            ?: throw UserNotFoundException("Employee detail not found for user ${user.email}")
+
+        val parsed = try {
+            OrderStatus.valueOf(status.uppercase())
+        } catch (_: Exception) {
+            throw InvalidOrderStatusException("Invalid status: $status")
+        }
+
+        if (parsed == OrderStatus.NEW) {
+            throw InvalidOrderStatusException("Fetching NEW orders is not allowed")
+        }
+
+        val storeId = detail.store.id ?: throw StoreNotFoundException("Store not found for employee ${user.email}")
+
+        val safeSize = kotlin.math.max(size, 1)
+        val safePage = kotlin.math.max(pageNumber, 1) - 1
+        val sortField = when ((sortBy ?: "createdAt").lowercase()) {
+            "createdat" -> "createdAt"
+            "pickuptime" -> "pickupTime"
+            "totalprice" -> "totalPrice"
+            else -> "createdAt"
+        }
+        val sortDir = if ((direction ?: "DESC").equals("ASC", true)) org.springframework.data.domain.Sort.Direction.ASC else org.springframework.data.domain.Sort.Direction.DESC
+        val pageable = org.springframework.data.domain.PageRequest.of(safePage, safeSize, org.springframework.data.domain.Sort.by(sortDir, sortField))
+
+        val page = if (!keyword.isNullOrBlank())
+            orderRepository.searchAllByStoreIdAndStatus(storeId, parsed, keyword.trim(), pageable)
+        else
+            orderRepository.findAllByStoreIdAndStatus(storeId, parsed, pageable)
+
+        val items = page.content.map { o ->
+            val dishes = dishRepository.findAllByOrderId(o.id!!)
+            val dishResponses = dishes.map { d ->
+                val steps = orderStepRepository.findAllByDishId(d.id!!)
+                val stepResponses = steps.map { st ->
+                    val itemResponses = st.items.map { link ->
+                        val mi = link.menuItem
+                        CurrentStepItemResponse(
+                            menuItemId = mi.id!!,
+                            menuItemName = mi.name,
+                            imageUrl = mi.imageUrl,
+                            quantity = link.quantity,
+                            price = mi.price,
+                            cal = mi.cal
+                        )
+                    }
+                    CurrentStepResponse(
+                        stepId = st.step.id!!,
+                        stepName = st.step.name,
+                        items = itemResponses
+                    )
+                }
+                CurrentDishResponse(
+                    dishId = d.id!!,
+                    name = d.name,
+                    isCustom = d.isCustom,
+                    note = d.note,
+                    price = d.price,
+                    cal = d.cal,
+                    updatedAt = d.updatedAt,
+                    steps = stepResponses
+                )
+            }
+
+            EmployeeOrderListItemResponse(
+                orderId = o.id!!,
+                status = o.status.name,
+                totalPrice = o.totalPrice,
+                createdAt = o.createdAt,
+                pickupTime = o.pickupTime,
+                customer = OrderCustomerResponse(
+                    id = o.user.id!!,
+                    fullName = o.user.fullName,
+                    email = o.user.email,
+                    imageURL = o.user.imageURL
+                ),
+                dishes = dishResponses
+            )
+        }
+        return com.ChickenKitchen.app.model.dto.response.EmployeeOrderListPageResponse(
+            items = items,
+            total = page.totalElements,
+            pageNumber = safePage + 1,
+            pageSize = safeSize,
+            totalPages = page.totalPages,
+        )
+    }
+
+    @Transactional(readOnly = true)
+    override fun getOrderDetailWithIngredients(orderId: Long): EmployeeOrderDetailResponse {
+        val user = currentUser()
+        val detail = employeeDetailRepository.findByUser(user)
+            ?: throw UserNotFoundException("Employee detail not found for user ${user.email}")
+
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.store.id != detail.store.id) {
+            throw StoreNotFoundException("Order does not belong to employee's store")
+        }
+
+        val dishes = dishRepository.findAllByOrderId(order.id!!)
+        val dishResponses = dishes.map { d ->
+            val steps = orderStepRepository.findAllByDishId(d.id!!)
+            val stepResponses = steps.map { st ->
+                val itemResponses = st.items.map { link ->
+                    val mi = link.menuItem
+                    val ingredients = mi.recipes.map { it.ingredient.toIngredientResponse() }
+                    StepItemWithIngredientsResponse(
+                        menuItemId = mi.id!!,
+                        menuItemName = mi.name,
+                        imageUrl = mi.imageUrl,
+                        quantity = link.quantity,
+                        price = mi.price,
+                        cal = mi.cal,
+                        ingredients = ingredients
+                    )
+                }
+                StepWithIngredientsResponse(
+                    stepId = st.step.id!!,
+                    stepName = st.step.name,
+                    items = itemResponses
+                )
+            }
+            DishWithIngredientsResponse(
+                dishId = d.id!!,
+                name = d.name,
+                isCustom = d.isCustom,
+                note = d.note,
+                price = d.price,
+                cal = d.cal,
+                updatedAt = d.updatedAt,
+                steps = stepResponses
+            )
+        }
+
+        return EmployeeOrderDetailResponse(
+            orderId = order.id!!,
+            status = order.status.name,
+            totalPrice = order.totalPrice,
+            createdAt = order.createdAt,
+            pickupTime = order.pickupTime,
+            customer = OrderCustomerResponse(
+                id = order.user.id!!,
+                fullName = order.user.fullName,
+                email = order.user.email,
+                imageURL = order.user.imageURL
+            ),
+            dishes = dishResponses
         )
     }
 }

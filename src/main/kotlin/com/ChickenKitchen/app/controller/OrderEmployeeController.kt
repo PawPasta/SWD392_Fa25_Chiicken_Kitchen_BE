@@ -11,12 +11,7 @@ import org.springframework.web.bind.annotation.*
 class OrderEmployeeController(
     private val employeeOrderService: EmployeeOrderService
 ) {
-    @Operation(summary = "Employee: list CONFIRMED orders in employee's store")
-    @GetMapping("/confirmed")
-    fun getConfirmedOrdersForEmployeeStore(): ResponseEntity<ResponseModel> {
-        val result = employeeOrderService.getConfirmedOrdersForEmployeeStore()
-        return ResponseEntity.ok(ResponseModel.success(result, "Fetched confirmed orders for employee store"))
-    }
+    // Removed legacy confirmed list endpoint
 
     @Operation(summary = "Employee: get CONFIRMED order detail by id")
     @GetMapping("/confirmed/{orderId}")
@@ -52,5 +47,32 @@ class OrderEmployeeController(
         val result = employeeOrderService.employeeCancelOrder(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Order cancelled"))
     }
-}
 
+    @Operation(summary = "Employee: get my employee detail with store and user info")
+    @GetMapping("/me")
+    fun getMyEmployeeDetail(): ResponseEntity<ResponseModel> {
+        val result = employeeOrderService.getMyEmployeeDetail()
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched employee detail"))
+    }
+
+    @Operation(summary = "Employee: list orders in my store by status (excluding NEW), with pagination, search, and sort")
+    @GetMapping
+    fun getOrdersByStatus(
+        @RequestParam status: String,
+        @RequestParam(name = "pageNumber", defaultValue = "1") pageNumber: Int,
+        @RequestParam(name = "size", defaultValue = "10") size: Int,
+        @RequestParam(name = "sortBy", required = false) sortBy: String?,
+        @RequestParam(name = "direction", required = false) direction: String?,
+        @RequestParam(name = "q", required = false) keyword: String?,
+    ): ResponseEntity<ResponseModel> {
+        val result = employeeOrderService.getOrdersForEmployeeStoreByStatus(status, pageNumber, size, sortBy, direction, keyword)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched orders by status"))
+    }
+
+    @Operation(summary = "Employee: get order detail with required ingredients by order id")
+    @GetMapping("/detail/{orderId}")
+    fun getOrderDetailWithIngredients(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
+        val result = employeeOrderService.getOrderDetailWithIngredients(orderId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched order detail with ingredients"))
+    }
+}

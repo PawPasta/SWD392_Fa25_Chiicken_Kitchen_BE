@@ -148,9 +148,9 @@ class DataInitializer {
 
             // Employee users
             val employeeData = listOf(
-                Triple("employee-uid-001", "baoltgse182138@fpt.edu.vn", "Employee Le"),
-                Triple("employee-uid-002", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
-                Triple("employee-uid-003", "employee3@chickenkitchen.com", "Employee Vo Minh C"),
+                Triple("employee-uid-001", "khiemngse182188@fpt.edu.vn", "Employee Khiem Jar"),
+                Triple("employee-uid-002", "baoltgse182138@fpt.edu.vn", "Employee Le"),
+                Triple("employee-uid-003", "thuantqse182998@fpt.edu.vn", "Employee Thuan"),
                 Triple("employee-uid-004", "employee4@chickenkitchen.com", "Employee Hoang Thi D"),
                 Triple("employee-uid-005", "employee5@chickenkitchen.com", "Employee Tran Van E"),
                 Triple("employee-uid-006", "employee6@chickenkitchen.com", "Employee Nguyen Thi F")
@@ -175,6 +175,18 @@ class DataInitializer {
                 role = Role.STORE,
                 uid = "store-uid-002",
                 email = "letrangiabao2004@gmail.com",
+                isVerified = true,
+                phone = "0901234570",
+                isActive = true,
+                fullName = "Store",
+                provider = "Local",
+                imageURL = null
+            ))
+
+            userRepository.save(User(
+                role = Role.STORE,
+                uid = "store-uid-001",
+                email = "khiem103204@gmail.com",
                 isVerified = true,
                 phone = "0901234570",
                 isActive = true,
