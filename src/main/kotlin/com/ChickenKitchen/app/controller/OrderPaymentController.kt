@@ -49,12 +49,5 @@ class OrderPaymentController(
         val result = momoService.callBack(payload)
         return ResponseEntity.ok(mapOf("message" to result))
     }
-
-    @Operation(summary = "VNPay IPN (server-to-server, auto-called by VNPay)")
-    @PostMapping("/api/payments/vnpay/ipn")
-    fun vnpayIpn(@RequestParam params: Map<String, String>): ResponseEntity<String> {
-        val result = vnPayService.callbackURL(params)
-        return ResponseEntity.ok(result)
-    }
 }
 

@@ -16,14 +16,18 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
+
 
 @Service
-class VNPayServiceImpl(
+class VNPayServiceImpl (
     private val vnPayConfig: VNPayConfig,
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
+
     private val transactionService: TransactionService,
     private val notificationService: NotificationService
 ) : VNPayService {
@@ -31,8 +35,8 @@ class VNPayServiceImpl(
     @Transactional
     override fun createVnPayURL(order: Order, channel: String?): String {
         val payment = paymentRepository.findByOrderId(order.id
-            ?: throw OrderNotFoundException("Payment with order id ${order.id} not found"))
-        val orderInfo = "Payment for order ${order.id}"
+            ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
+        val orderInfo = "Payment for order $order.id ${payment?.user?.id}"
         val vnpTxnRef = VNPayConfig.getRandomNumber(8)
 
         val returnUrlBase = when (channel?.lowercase()) {
@@ -52,8 +56,7 @@ class VNPayServiceImpl(
             "vnp_OrderType" to vnPayConfig.vnpOrderType,
             "vnp_Locale" to "vn",
             "vnp_ReturnUrl" to "$returnUrlBase?orderId=${order.id}",
-            "vnp_IpnUrl" to "${vnPayConfig.vnpIpnUrl}?orderId=${order.id}",
-            "vnp_IpAddr" to vnPayConfig.vnpIpAddr
+            "vnp_IpAddr" to vnPayConfig.vnpIpAddr,
         )
 
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"))
@@ -71,81 +74,65 @@ class VNPayServiceImpl(
         return "${vnPayConfig.vnpPayUrl}?$query&vnp_SecureHash=$vnpSecureHash"
     }
 
+
     override fun callbackURL(params: Map<String, String>): String {
-        try {
-            println("📥 [VNPay Callback/IPN] Received: $params")
 
+        val responseCode = params["vnp_ResponseCode"] ?: return "Missing response code"
+        val orderId = params["orderId"]?.toLongOrNull() ?: return "Invalid order ID"
+        val transactionStatus = params["vnp_TransactionStatus"]
+        val secureHash = params["vnp_SecureHash"]
+        val vnpAmount = params["vnp_Amount"]?.toLongOrNull()?.div(100)
+        val vnpTxnRef = params["vnp_TxnRef"]
+        val vnpBankCode = params["vnp_BankCode"]
+        val vnpTransactionNo = params["vnp_TransactionNo"]
+        val vnpPayDate = params["vnp_PayDate"]
 
-            val vnpSecureHash = params["vnp_SecureHash"] ?: return "RspCode=97&Message=MissingSecureHash"
-            val paramsWithoutHash = params.toMutableMap().apply {
-                remove("vnp_SecureHash")
-                remove("vnp_SecureHashType")
+        val order = orderRepository.findById(orderId.toLong())
+            .orElseThrow { OrderNotFoundException("Order not found with id $orderId") }
+
+        val payment = order.payment
+            ?: throw OrderNotFoundException("Payment not found for order $orderId")
+
+        val paymentMethod = paymentMethodRepository.findByName("VNPay")
+            ?: throw OrderNotFoundException("Payment method VNPaY not found")
+
+        return when (responseCode) {
+            "00" -> {
+                payment.status = PaymentStatus.FINISHED
+                order.status = OrderStatus.CONFIRMED
+                orderRepository.save(order)
+                paymentRepository.save(payment)
+
+                transactionService.createPaymentTransaction(payment,order,paymentMethod)
+
+                notificationService.sendToUser(SingleNotificationRequest (
+                    user = order.user,
+                    title = "Payment Successful",
+                    body = "Your payment for order ${order.id} was successful."
+                ))
+
+                return "Payment success and transactions created"
+
             }
+            "24" -> {
+                payment.status = PaymentStatus.PENDING
+                order.status = OrderStatus.FAILED
+                orderRepository.save(order)
+                paymentRepository.save(payment)
 
-            val sortedKeys = paramsWithoutHash.keys.sorted()
-            val data = sortedKeys.joinToString("&") { "$it=${paramsWithoutHash[it]}" }
-            val calculatedHash = VNPayConfig.hmacSHA512(vnPayConfig.vnpHashSecret, data)
-
-            if (!calculatedHash.equals(vnpSecureHash, ignoreCase = true)) {
-                return "RspCode=97&Message=Invalid checksum"
-            }
-
-
-            val responseCode = params["vnp_ResponseCode"] ?: return "RspCode=99&Message=Missing response code"
-            val transactionStatus = params["vnp_TransactionStatus"]
-            val vnpTxnRef = params["vnp_TxnRef"]
-            val orderId = params["orderId"]?.toLongOrNull()
-            val amount = params["vnp_Amount"]?.toLongOrNull()?.div(100)
-
-            if (orderId == null) return "RspCode=99&Message=Invalid orderId"
-
-            val order = orderRepository.findById(orderId)
-                .orElseThrow { OrderNotFoundException("Order not found with id $orderId") }
-
-            val payment = order.payment ?: throw OrderNotFoundException("Payment not found for order $orderId")
-            val paymentMethod = paymentMethodRepository.findByName("VNPay")
-                ?: throw OrderNotFoundException("Payment method VNPay not found")
-
-
-            return when (responseCode) {
-                "00" -> {
-                    payment.status = PaymentStatus.FINISHED
-                    order.status = OrderStatus.CONFIRMED
-                    paymentRepository.save(payment)
-                    orderRepository.save(order)
-                    transactionService.createPaymentTransaction(payment, order, paymentMethod)
-
-                    notificationService.sendToUser(
-                        SingleNotificationRequest(
-                            user = order.user,
-                            title = "Payment Successful",
-                            body = "Your VNPay payment for order ${order.id} was successful."
-                        )
+                notificationService.sendToUser(
+                    SingleNotificationRequest (
+                        user = order.user,
+                        title = "Payment Failed",
+                        body = "Your payment for order ${order.id} has failed."
                     )
+                )
 
-                    "RspCode=00&Message=Confirm Success"
-                }
-                else -> {
-                    payment.status = PaymentStatus.PENDING
-                    order.status = OrderStatus.FAILED
-                    paymentRepository.save(payment)
-                    orderRepository.save(order)
-
-                    notificationService.sendToUser(
-                        SingleNotificationRequest(
-                            user = order.user,
-                            title = "Payment Failed",
-                            body = "Your VNPay payment for order ${order.id} has failed."
-                        )
-                    )
-
-                    "RspCode=00&Message=Confirm Failed"
-                }
+                return "Payment Failed"
             }
-
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            return "RspCode=99&Message=Unknown error"
+            else ->{
+                "Payment failed"
+            }
         }
     }
 }
