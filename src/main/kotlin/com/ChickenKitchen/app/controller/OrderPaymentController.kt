@@ -42,5 +42,12 @@ class OrderPaymentController(
         val payUrl = momoService.createMomoURLTest(amount)
         return ResponseEntity.ok(ResponseModel.success(payUrl, "Sandbox payment URL created"))
     }
+
+    @Operation(summary = "MoMo IPN (server-to-server, auto called by MoMo)")
+    @PostMapping("/api/payments/momo/ipn")
+    fun momoIpn(@RequestBody payload: Map<String, Any>): ResponseEntity<Map<String, Any>> {
+        val result = momoService.callBack(payload)
+        return ResponseEntity.ok(mapOf("message" to result))
+    }
 }
 

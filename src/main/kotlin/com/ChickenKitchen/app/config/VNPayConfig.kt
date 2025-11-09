@@ -20,7 +20,8 @@ class VNPayConfig(
     @param:Value("\${vnpay.version}") val vnpVersion: String,
     @param:Value("\${vnpay.command}") val vnpCommand: String,
     @param:Value("\${vnpay.order-type}") val vnpOrderType: String,
-    @param:Value("\${vnpay.IpAddr}") val vnpIpAddr: String
+    @param:Value("\${vnpay.IpAddr}") val vnpIpAddr: String,
+    @param:Value("\${vnpay.vnpIpnUrl}")val vnpIpnUrl: String
 
 ) {
     companion object {

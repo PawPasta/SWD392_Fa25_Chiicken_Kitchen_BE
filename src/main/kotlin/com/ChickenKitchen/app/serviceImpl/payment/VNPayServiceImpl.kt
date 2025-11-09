@@ -35,7 +35,7 @@ class VNPayServiceImpl (
     @Transactional
     override fun createVnPayURL(order: Order, channel: String?): String {
         val payment = paymentRepository.findByOrderId(order.id
-        ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
+            ?: throw OrderNotFoundException("Payment with order id $order.id is null"))
         val orderInfo = "Payment for order $order.id ${payment?.user?.id}"
         val vnpTxnRef = VNPayConfig.getRandomNumber(8)
 
@@ -56,7 +56,7 @@ class VNPayServiceImpl (
             "vnp_OrderType" to vnPayConfig.vnpOrderType,
             "vnp_Locale" to "vn",
             "vnp_ReturnUrl" to "$returnUrlBase?orderId=${order.id}",
-            "vnp_IpAddr" to vnPayConfig.vnpIpAddr
+            "vnp_IpAddr" to vnPayConfig.vnpIpAddr,
         )
 
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"))
