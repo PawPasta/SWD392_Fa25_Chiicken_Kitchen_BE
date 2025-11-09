@@ -10,6 +10,7 @@ import com.ChickenKitchen.app.model.dto.response.FeedbackResponse
 import com.ChickenKitchen.app.model.dto.response.OrderBriefResponse
 import com.ChickenKitchen.app.model.dto.response.OrderCurrentResponse
 import com.ChickenKitchen.app.model.dto.response.OrderTrackingResponse
+import com.ChickenKitchen.app.model.dto.response.CurrentDishResponse
 
 interface CustomerOrderService {
     fun addExistingDishToCurrentOrder(req: CreateExistingDishRequest): AddDishResponse
@@ -26,5 +27,11 @@ interface CustomerOrderService {
 
     fun getOrderTracking(orderId: Long): OrderTrackingResponse
     fun customerCancelOrder(orderId: Long, reason : String?): OrderTrackingResponse?
+
+    // Previously ordered dishes for quick reorder (includes custom)
+    fun getPreviouslyOrderedDishes(storeId: Long): List<CurrentDishResponse>
+
+    // Update quantity for existing (non-custom) dish in current cart
+    fun updateExistingDishQuantity(dishId: Long, quantity: Int): AddDishResponse
 
 }

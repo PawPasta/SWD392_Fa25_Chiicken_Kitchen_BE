@@ -462,7 +462,13 @@ class CustomerOrderServiceImpl(
         val store =
             storeRepository.findById(storeId).orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
 
-        val statuses = listOf(OrderStatus.CONFIRMED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PROCESSING)
+        val statuses = listOf(
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.READY,
+            OrderStatus.COMPLETED,
+            OrderStatus.CANCELLED
+        )
         val list = orderRepository.findAllByUserEmailAndStoreIdAndStatusInOrderByCreatedAtDesc(
             user.email,
             store.id!!,
@@ -476,6 +482,54 @@ class CustomerOrderServiceImpl(
                 totalPrice = o.totalPrice,
                 createdAt = o.createdAt,
                 pickupTime = o.pickupTime
+            )
+        }
+    }
+
+    override fun getPreviouslyOrderedDishes(storeId: Long): List<CurrentDishResponse> {
+        val user = currentUser()
+        val store = storeRepository.findById(storeId)
+            .orElseThrow { StoreNotFoundException("Store with id $storeId not found") }
+
+        val statuses = listOf(
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.READY,
+            OrderStatus.COMPLETED,
+            OrderStatus.CANCELLED
+        )
+
+        val dishes = dishRepository.findAllByUserEmailAndStoreAndStatuses(user.email, store.id!!, statuses)
+
+        return dishes.map { d ->
+            val steps = orderStepRepository.findAllByDishId(d.id!!)
+            val stepResponses = steps.map { st ->
+                val itemResponses = st.items.map { link ->
+                    val mi = link.menuItem
+                    CurrentStepItemResponse(
+                        menuItemId = mi.id!!,
+                        menuItemName = mi.name,
+                        imageUrl = mi.imageUrl,
+                        quantity = link.quantity,
+                        price = mi.price,
+                        cal = mi.cal
+                    )
+                }
+                CurrentStepResponse(
+                    stepId = st.step.id!!,
+                    stepName = st.step.name,
+                    items = itemResponses
+                )
+            }
+            CurrentDishResponse(
+                dishId = d.id!!,
+                name = d.name,
+                isCustom = d.isCustom,
+                note = d.note,
+                price = d.price,
+                cal = d.cal,
+                updatedAt = d.updatedAt,
+                steps = stepResponses
             )
         }
     }
@@ -560,6 +614,39 @@ class CustomerOrderServiceImpl(
             dishId = dish.id!!,
             status = order.status.name,
             createdSteps = created
+        )
+    }
+
+    @Transactional
+    override fun updateExistingDishQuantity(dishId: Long, quantity: Int): AddDishResponse {
+        if (quantity <= 0) throw InvalidOrderStepException("Quantity must be greater than 0")
+
+        val user = currentUser()
+        val orderId = orderDishRepository.findOrderIdByDishId(dishId)
+            ?: throw OrderNotFoundException("Order for dish $dishId not found")
+        val order = orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+
+        if (order.user.id != user.id) throw OrderNotFoundException("You can only update dishes in your own order")
+        if (order.status != OrderStatus.NEW) throw InvalidOrderStatusException("Cannot update quantity when order is ${order.status}")
+
+        val link = orderDishRepository.findByOrderIdAndDishId(order.id!!, dishId)
+            ?: throw DishNotFoundException("Dish link not found in current order")
+
+        val dish = link.dish
+        if (dish.isCustom) throw InvalidOrderStepException("Quantity update only applies to existing (non-custom) dishes")
+
+        link.quantity = quantity
+        orderDishRepository.save(link)
+
+        recalcAndPersistOrderTotal(order)
+        syncPendingPaymentAmounts(order)
+
+        return AddDishResponse(
+            orderId = order.id!!,
+            dishId = dish.id!!,
+            status = order.status.name,
+            createdSteps = emptyList()
         )
     }
 

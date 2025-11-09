@@ -6,6 +6,7 @@ import com.ChickenKitchen.app.model.dto.request.CreateExistingDishRequest
 import com.ChickenKitchen.app.model.dto.request.CreateFeedbackRequest
 import com.ChickenKitchen.app.model.dto.request.OrderCancelledRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishRequest
+import com.ChickenKitchen.app.model.dto.request.UpdateDishQuantityRequest
 import com.ChickenKitchen.app.model.dto.response.DishDeleteResponse
 import com.ChickenKitchen.app.model.dto.response.ResponseModel
 import com.ChickenKitchen.app.service.order.CustomerOrderService
@@ -35,7 +36,7 @@ class OrderCustomerController(
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched current order for store"))
     }
 
-    @Operation(summary = "List user's orders (COMPLETED/CANCELLED/PROCESSING) by store")
+    @Operation(summary = "List user's orders (CONFIRMED/PROCESSING/READY/COMPLETED/CANCELLED) by store")
     @GetMapping("/history")
     fun getOrderHistory(@RequestParam storeId: Long): ResponseEntity<ResponseModel> {
         val result = customerOrderService.getOrdersHistory(storeId)
@@ -50,6 +51,16 @@ class OrderCustomerController(
     ): ResponseEntity<ResponseModel> {
         val result = customerOrderService.updateDish(dishId, req)
         return ResponseEntity.ok(ResponseModel.success(result, "Dish updated"))
+    }
+
+    @Operation(summary = "Update quantity for an existing (non-custom) dish in current NEW order")
+    @PutMapping("/dishes/{dishId}/quantity")
+    fun updateExistingDishQuantity(
+        @PathVariable dishId: Long,
+        @RequestBody req: UpdateDishQuantityRequest
+    ): ResponseEntity<ResponseModel> {
+        val result = customerOrderService.updateExistingDishQuantity(dishId, req.quantity)
+        return ResponseEntity.ok(ResponseModel.success(result, "Dish quantity updated"))
     }
 
     @Operation(summary = "Delete a dish from order")
@@ -88,6 +99,13 @@ class OrderCustomerController(
     fun getOrderTracking(@PathVariable orderId: Long): ResponseEntity<ResponseModel> {
         val result = customerOrderService.getOrderTracking(orderId)
         return ResponseEntity.ok(ResponseModel.success(result, "Fetched order tracking"))
+    }
+
+    @Operation(summary = "Get previously ordered dishes (including custom) for quick reorder")
+    @GetMapping("/previous-dishes")
+    fun getPreviouslyOrderedDishes(@RequestParam storeId: Long): ResponseEntity<ResponseModel> {
+        val result = customerOrderService.getPreviouslyOrderedDishes(storeId)
+        return ResponseEntity.ok(ResponseModel.success(result, "Fetched previously ordered dishes"))
     }
 
 

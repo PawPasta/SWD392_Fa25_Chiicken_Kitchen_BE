@@ -107,4 +107,15 @@ interface DishRepository : JpaRepository<Dish, Long>, JpaSpecificationExecutor<D
         @Param("startDate") startDate: Timestamp,
         @Param("endDate") endDate: Timestamp
     ): List<PopularDishResponse>
+
+    @Query(
+        "select distinct d from OrderDish od join od.dish d join od.order o " +
+        "where o.user.email = :email and o.store.id = :storeId and o.status in :statuses " +
+        "order by d.updatedAt desc"
+    )
+    fun findAllByUserEmailAndStoreAndStatuses(
+        @Param("email") email: String,
+        @Param("storeId") storeId: Long,
+        @Param("statuses") statuses: List<com.ChickenKitchen.app.enums.OrderStatus>
+    ): List<Dish>
 }
