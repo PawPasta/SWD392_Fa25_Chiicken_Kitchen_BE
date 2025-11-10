@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository
 interface OrderPromotionRepository : JpaRepository<OrderPromotion, Long> {
 
     fun deleteByOrderId(orderId: Long)
+
+    fun findAllByOrderId(orderId: Long): List<OrderPromotion>
 }
