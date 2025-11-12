@@ -713,6 +713,14 @@ class CustomerOrderServiceImpl(
             }
         }
 
+        notificationService.sendToUser(
+            SingleNotificationRequest(
+                user = order.user,
+                title = "Order Cancelled",
+                body = "Your order ${order.id} has been cancelled successfully."
+            )
+        )
+
         orderPromotionRepository.deleteByOrderId(orderId)
         orderRepository.delete(order)
 
