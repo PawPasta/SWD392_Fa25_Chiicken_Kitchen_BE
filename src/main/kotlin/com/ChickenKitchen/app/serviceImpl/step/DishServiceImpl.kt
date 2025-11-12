@@ -3,21 +3,20 @@ package com.ChickenKitchen.app.serviceImpl.step
 import com.ChickenKitchen.app.handler.DeleteDishFailedException
 import com.ChickenKitchen.app.handler.DishNotFoundException
 import com.ChickenKitchen.app.mapper.toDishDetailResponse
-import com.ChickenKitchen.app.mapper.toDishResponseList
+import com.ChickenKitchen.app.mapper.toDishResponse
 import com.ChickenKitchen.app.model.dto.request.CreateDishBaseRequest
 import com.ChickenKitchen.app.model.dto.request.UpdateDishBaseRequest
 import com.ChickenKitchen.app.model.dto.response.DishDetailResponse
-import com.ChickenKitchen.app.model.dto.response.MenuItemNutrientBriefResponse
 import com.ChickenKitchen.app.model.dto.response.DishResponse
 import com.ChickenKitchen.app.model.dto.response.DishSearchResponse
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.repository.order.OrderDishRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
-import com.ChickenKitchen.app.repository.menu.MenuItemNutrientRepository
 import com.ChickenKitchen.app.service.step.DishService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
+import jakarta.persistence.criteria.JoinType
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
@@ -29,7 +28,7 @@ class DishServiceImpl(
     private val dishRepository: DishRepository,
     private val orderDishRepository: OrderDishRepository,
     private val orderStepRepository: OrderStepRepository,
-    private val menuItemNutrientRepository: MenuItemNutrientRepository,
+    private val dishNutritionCacheService: DishNutritionCacheService,
 ) : DishService {
 
     private fun currentUserEmail(): String {
@@ -48,7 +47,7 @@ class DishServiceImpl(
     override fun getAll(): List<DishResponse>? {
         val list = dishRepository.findAllByIsCustomFalse(Sort.by(Sort.Direction.DESC, "createdAt"))
         if (list.isEmpty()) return null
-        return list.toDishResponseList()
+        return mapDishResponses(list)
     }
 
     override fun getAll(pageNumber: Int, size: Int): List<DishResponse>? {
@@ -57,50 +56,15 @@ class DishServiceImpl(
         val pageable = PageRequest.of(safePage - 1, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))
         val page = dishRepository.findAllByIsCustomFalse(pageable)
         if (page.isEmpty) return null
-        return page.content.toDishResponseList()
+        return mapDishResponses(page.content)
     }
 
     override fun getById(id: Long): DishDetailResponse {
         val dish = dishRepository.findById(id).orElseThrow { DishNotFoundException("Dish with id $id not found") }
-        val steps = orderStepRepository.findAllWithItemsByDishId(dish.id!!)
-        val sorted = steps.sortedBy { it.step.stepNumber }
-
-        // Aggregate nutrients from items
-        val itemLinks = sorted.flatMap { it.items }
-        val byMenuItem = itemLinks.groupBy { it.menuItem.id!! }
-
-        val totals = mutableMapOf<Long, java.math.BigDecimal>()
-        val meta = mutableMapOf<Long, Pair<String, com.ChickenKitchen.app.enums.UnitType>>()
-        byMenuItem.forEach { (miId, links) ->
-            val factor = java.math.BigDecimal(links.sumOf { it.quantity })
-            menuItemNutrientRepository.findByMenuItemId(miId).forEach { nin ->
-                val nid = nin.nutrient.id!!
-                totals[nid] = (totals[nid] ?: java.math.BigDecimal.ZERO).add(nin.quantity.multiply(factor))
-                meta.putIfAbsent(nid, nin.nutrient.name to nin.nutrient.baseUnit)
-            }
-        }
-        val nutrientBriefs = totals.entries.map { (nid, qty) ->
-            val (name, unit) = meta[nid]!!
-            MenuItemNutrientBriefResponse(id = nid, name = name, quantity = qty, baseUnit = unit)
-        }.sortedBy { it.name }
-
-        if (dish.nutritionJson.isNullOrBlank()) {
-            val json = buildString {
-                append('[')
-                nutrientBriefs.forEachIndexed { idx, n ->
-                    if (idx > 0) append(',')
-                    append("{\"id\":").append(n.id)
-                    append(",\"name\":\"").append(n.name.replace("\"", "\\\""))
-                    append("\",\"quantity\":").append(n.quantity.toPlainString())
-                    append(",\"unit\":\"").append(n.baseUnit.name).append("\"}")
-                }
-                append(']')
-            }
-            dish.nutritionJson = json
-            dishRepository.save(dish)
-        }
-
-        return dish.toDishDetailResponse(sorted, nutrientBriefs)
+        val rawSteps = orderStepRepository.findAllWithItemsByDishId(dish.id!!)
+        val nutrients = dishNutritionCacheService.ensureSnapshot(dish, rawSteps)
+        val sorted = rawSteps.sortedBy { it.step.stepNumber }
+        return dish.toDishDetailResponse(sorted, nutrients)
     }
 
     override fun create(req: CreateDishBaseRequest): DishDetailResponse {
@@ -129,6 +93,7 @@ class DishServiceImpl(
             createdAt = current.createdAt,
             updatedAt = current.updatedAt,
             orderSteps = current.orderSteps,
+            nutrientJson = current.nutrientJson,
         )
         val saved = dishRepository.save(updated)
         return saved.toDishDetailResponse()
@@ -149,7 +114,7 @@ class DishServiceImpl(
         val email = currentUserEmail()
         val list = dishRepository.findAllCustomByUserEmailOrderByCreatedAtDesc(email)
         if (list.isEmpty()) return null
-        return list.toDishResponseList()
+        return mapDishResponses(list)
     }
 
     override fun searchByComponents(menuItemIds: List<Long>?, keyword: String?, pageNumber: Int, size: Int): DishSearchResponse? {
@@ -172,7 +137,7 @@ class DishServiceImpl(
             if (page.isEmpty) return DishSearchResponse(emptyList(), 0) else page.content to page.totalElements
         }
         if (items.isEmpty()) return DishSearchResponse(emptyList(), 0)
-        return DishSearchResponse(items.toDishResponseList(), total)
+        return DishSearchResponse(mapDishResponses(items), total)
     }
 
     override fun searchByCalories(minCal: Int?, maxCal: Int?, pageNumber: Int, size: Int): DishSearchResponse? {
@@ -198,7 +163,7 @@ class DishServiceImpl(
             if (page.isEmpty) return DishSearchResponse(emptyList(), 0) else page.content to page.totalElements
         }
         if (items.isEmpty()) return DishSearchResponse(emptyList(), 0)
-        return DishSearchResponse(items.toDishResponseList(), total)
+        return DishSearchResponse(mapDishResponses(items), total)
     }
 
     override fun searchByPrice(minPrice: Int?, maxPrice: Int?, pageNumber: Int, size: Int): DishSearchResponse? {
@@ -224,7 +189,7 @@ class DishServiceImpl(
             if (page.isEmpty) return DishSearchResponse(emptyList(), 0) else page.content to page.totalElements
         }
         if (items.isEmpty()) return DishSearchResponse(emptyList(), 0)
-        return DishSearchResponse(items.toDishResponseList(), total)
+        return DishSearchResponse(mapDishResponses(items), total)
     }
 
     override fun search(
@@ -237,22 +202,28 @@ class DishServiceImpl(
         pageNumber: Int,
         size: Int,
     ): DishSearchResponse? {
+        val keywordNormalized = keyword?.trim()?.lowercase()?.takeIf { it.isNotBlank() }
         val spec = Specification<Dish> { root, query, cb ->
             val preds = mutableListOf<jakarta.persistence.criteria.Predicate>()
             preds.add(cb.isFalse(root.get("isCustom")))
 
-            var joinedMi: jakarta.persistence.criteria.Path<*>? = null
-            if (!menuItemIds.isNullOrEmpty() || !keyword.isNullOrBlank()) {
-                val os = root.join<Any, Any>("orderSteps")
-                val it = os.join<Any, Any>("items")
-                val mi = it.join<Any, Any>("menuItem")
-                joinedMi = mi
-                if (!menuItemIds.isNullOrEmpty()) {
-                    preds.add(mi.get<Long>("id").`in`(menuItemIds))
-                } else if (!keyword.isNullOrBlank()) {
-                    preds.add(cb.like(cb.lower(mi.get("name")), "%${keyword!!.trim().lowercase()}%"))
-                }
+            var menuItemJoin: jakarta.persistence.criteria.Join<*, *>? = null
+            if (!menuItemIds.isNullOrEmpty() || keywordNormalized != null) {
+                val orderStepJoin = root.join<Any, Any>("orderSteps", JoinType.LEFT)
+                val itemJoin = orderStepJoin.join<Any, Any>("items", JoinType.LEFT)
+                menuItemJoin = itemJoin.join<Any, Any>("menuItem", JoinType.LEFT)
                 query?.distinct(true)
+            }
+
+            if (!menuItemIds.isNullOrEmpty() && menuItemJoin != null) {
+                preds.add(menuItemJoin.get<Long>("id").`in`(menuItemIds))
+            }
+
+            if (keywordNormalized != null) {
+                val likePattern = "%$keywordNormalized%"
+                val dishNamePredicate = cb.like(cb.lower(root.get("name")), likePattern)
+                val menuItemPredicate = menuItemJoin?.let { cb.like(cb.lower(it.get("name")), likePattern) }
+                preds.add(menuItemPredicate?.let { cb.or(dishNamePredicate, it) } ?: dishNamePredicate)
             }
 
             if (minCal != null) preds.add(cb.greaterThanOrEqualTo(root.get("cal"), minCal))
@@ -269,12 +240,18 @@ class DishServiceImpl(
         return if (pageNumber <= 0 || size <= 0) {
             val list = dishRepository.findAll(spec, sort)
             if (list.isEmpty()) DishSearchResponse(emptyList(), 0)
-            else DishSearchResponse(list.toDishResponseList(), list.size.toLong())
+            else DishSearchResponse(mapDishResponses(list), list.size.toLong())
         } else {
             val pageable = PageRequest.of(max(pageNumber, 1) - 1, max(size, 1), sort)
             val page = dishRepository.findAll(spec, pageable)
             if (page.isEmpty) DishSearchResponse(emptyList(), 0)
-            else DishSearchResponse(page.content.toDishResponseList(), page.totalElements)
+            else DishSearchResponse(mapDishResponses(page.content), page.totalElements)
         }
     }
+
+    private fun mapDishResponses(dishes: List<Dish>): List<DishResponse> =
+        dishes.map { dish ->
+            val nutrients = dishNutritionCacheService.ensureSnapshot(dish)
+            dish.toDishResponse(nutrients)
+        }
 }

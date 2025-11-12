@@ -8,7 +8,9 @@ import com.ChickenKitchen.app.model.dto.response.MenuItemNutrientBriefResponse
 import com.ChickenKitchen.app.model.entity.step.Dish
 import com.ChickenKitchen.app.model.entity.order.OrderStep
 
-fun Dish.toDishResponse(): DishResponse =
+fun Dish.toDishResponse(
+    nutrients: List<MenuItemNutrientBriefResponse> = emptyList()
+): DishResponse =
     DishResponse(
         id = this.id!!,
         name = this.name,
@@ -17,6 +19,7 @@ fun Dish.toDishResponse(): DishResponse =
         isCustom = this.isCustom,
         note = this.note,
         imageUrl = this.imageUrl,
+        nutrients = nutrients
     )
 
 fun Dish.toDishDetailResponse(): DishDetailResponse =

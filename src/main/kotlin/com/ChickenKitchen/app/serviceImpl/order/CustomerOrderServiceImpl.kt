@@ -45,6 +45,7 @@ import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.repository.ingredient.StoreRepository
 import com.ChickenKitchen.app.repository.promotion.OrderPromotionRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
+import com.ChickenKitchen.app.serviceImpl.step.DishNutritionCacheService
 import com.ChickenKitchen.app.service.order.CustomerOrderService
 import com.ChickenKitchen.app.service.payment.PaymentService
 import org.springframework.security.core.context.SecurityContextHolder
@@ -71,6 +72,7 @@ class CustomerOrderServiceImpl(
 
     private val paymentService: PaymentService,
     private val notificationService: NotificationService,
+    private val dishNutritionCacheService: DishNutritionCacheService,
 ) : CustomerOrderService {
 
     private fun recalcAndPersistOrderTotal(order: Order) {
@@ -219,6 +221,7 @@ class CustomerOrderServiceImpl(
         dish.price = totalPrice
         dish.cal = totalCal
         dishRepository.save(dish)
+        dishNutritionCacheService.refreshSnapshot(dish)
 
         recalcAndPersistOrderTotal(order)
         syncPendingPaymentAmounts(order)
@@ -318,6 +321,8 @@ class CustomerOrderServiceImpl(
         }
 
         val allDishes = dishRepository.findAllByOrderId(order.id!!)
+        // Preload quantities for dishes in this order
+        val qtyMap = orderDishRepository.findAllByOrderId(order.id!!).associateBy({ it.dish.id!! }, { it.quantity })
         val dishResponses = allDishes.map { d ->
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
@@ -341,6 +346,7 @@ class CustomerOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                quantity = qtyMap[d.id!!] ?: 1,
                 isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
@@ -422,6 +428,7 @@ class CustomerOrderServiceImpl(
             }
         }
 
+        val qtyMap = orderDishRepository.findAllByOrderId(order.id!!).associateBy({ it.dish.id!! }, { it.quantity })
         val dishResponses = allDishes.map { d ->
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
@@ -445,6 +452,7 @@ class CustomerOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                quantity = qtyMap[d.id!!] ?: 1,
                 isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
@@ -524,6 +532,7 @@ class CustomerOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                quantity = 1,
                 isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
@@ -603,6 +612,7 @@ class CustomerOrderServiceImpl(
         dish.price = totalPrice
         dish.cal = totalCal
         dishRepository.save(dish)
+        dishNutritionCacheService.refreshSnapshot(dish)
 
         // Recalculate and persist order total since dish changed
         recalcAndPersistOrderTotal(order)
@@ -618,26 +628,43 @@ class CustomerOrderServiceImpl(
     }
 
     @Transactional
-    override fun updateExistingDishQuantity(dishId: Long, quantity: Int): AddDishResponse {
-        if (quantity <= 0) throw InvalidOrderStepException("Quantity must be greater than 0")
+    override fun updateDishQuantity(dishId: Long, storeId: Long, quantity: Int): AddDishResponse {
+        if (quantity < 0) throw InvalidOrderStepException("Quantity must be greater than or equal to 0")
 
         val user = currentUser()
-        val orderId = orderDishRepository.findOrderIdByDishId(dishId)
-            ?: throw OrderNotFoundException("Order for dish $dishId not found")
-        val order = orderRepository.findById(orderId)
-            .orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
+        val order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
+            user.email, storeId, OrderStatus.NEW
+        ) ?: throw OrderNotFoundException("No current NEW order found for this store")
 
         if (order.user.id != user.id) throw OrderNotFoundException("You can only update dishes in your own order")
         if (order.status != OrderStatus.NEW) throw InvalidOrderStatusException("Cannot update quantity when order is ${order.status}")
+        if (order.store.id != storeId) throw StoreNotFoundException("Order does not belong to provided store")
 
         val link = orderDishRepository.findByOrderIdAndDishId(order.id!!, dishId)
             ?: throw DishNotFoundException("Dish link not found in current order")
 
         val dish = link.dish
-        if (dish.isCustom) throw InvalidOrderStepException("Quantity update only applies to existing (non-custom) dishes")
-
-        link.quantity = quantity
-        orderDishRepository.save(link)
+        if (quantity == 0) {
+            if (dish.isCustom) {
+                // Remove all items and steps for this custom dish, then remove ALL links and the dish entity
+                try {
+                    orderStepItemRepository.deleteByDishId(dishId)
+                    orderStepRepository.deleteByDishId(dishId)
+                    // Ensure all links referencing this dish are removed before deleting the dish entity
+                    orderDishRepository.deleteByDishId(dishId)
+                    dishRepository.delete(dish)
+                } catch (ex: Exception) {
+                    throw DeleteDishFailedException("Failed to delete dish with id $dishId: ${ex.message}")
+                }
+            } else {
+                // Existing (non-custom): remove only the link
+                orderDishRepository.delete(link)
+            }
+        } else {
+            // Update quantity for both custom and existing dishes
+            link.quantity = quantity
+            orderDishRepository.save(link)
+        }
 
         recalcAndPersistOrderTotal(order)
         syncPendingPaymentAmounts(order)
@@ -669,6 +696,31 @@ class CustomerOrderServiceImpl(
         val order = orderRepository.findById(orderId).orElseThrow { OrderNotFoundException("Order with id $orderId not found") }
         recalcAndPersistOrderTotal(order)
         return orderId
+    }
+
+    @Transactional
+    override fun deleteExistingDishLink(storeId: Long, dishId: Long): Long {
+        val user = currentUser()
+        val order = orderRepository.findFirstByUserEmailAndStoreIdAndStatusOrderByCreatedAtDesc(
+            user.email, storeId, OrderStatus.NEW
+        ) ?: throw OrderNotFoundException("No current NEW order found for this store")
+
+        val link = orderDishRepository.findByOrderIdAndDishId(order.id!!, dishId)
+            ?: throw DishNotFoundException("Dish link not found in current order")
+
+        val dish = link.dish
+        if (dish.isCustom) {
+            throw InvalidOrderStatusException("This endpoint only removes existing (non-custom) dish links. Use the custom delete endpoint for custom dishes.")
+        }
+
+        // Remove only the link, keep the dish entity
+        orderDishRepository.delete(link)
+
+        // Recalculate totals and sync pending payment if any
+        recalcAndPersistOrderTotal(order)
+        syncPendingPaymentAmounts(order)
+
+        return order.id!!
     }
 
     @Transactional

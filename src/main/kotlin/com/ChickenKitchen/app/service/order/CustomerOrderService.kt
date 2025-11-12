@@ -19,6 +19,8 @@ interface CustomerOrderService {
     fun getOrdersHistory(storeId: Long): List<OrderBriefResponse>
     fun updateDish(dishId: Long, req: UpdateDishRequest): AddDishResponse
     fun deleteDish(dishId: Long): Long
+    // Remove link of an existing (non-custom) dish from current NEW order in a store
+    fun deleteExistingDishLink(storeId: Long, dishId: Long): Long
 
     fun getAllOrderStatuses(): List<OrderStatus>
 
@@ -31,7 +33,7 @@ interface CustomerOrderService {
     // Previously ordered dishes for quick reorder (includes custom)
     fun getPreviouslyOrderedDishes(storeId: Long): List<CurrentDishResponse>
 
-    // Update quantity for existing (non-custom) dish in current cart
-    fun updateExistingDishQuantity(dishId: Long, quantity: Int): AddDishResponse
+    // Update quantity for a dish (custom or existing) in current cart, scoped by store
+    fun updateDishQuantity(dishId: Long, storeId: Long, quantity: Int): AddDishResponse
 
 }

@@ -53,13 +53,14 @@ class OrderCustomerController(
         return ResponseEntity.ok(ResponseModel.success(result, "Dish updated"))
     }
 
-    @Operation(summary = "Update quantity for an existing (non-custom) dish in current NEW order")
+    @Operation(summary = "Update quantity for a dish (custom or existing) in current NEW order for a store; quantity=0 will remove the dish from the order")
     @PutMapping("/dishes/{dishId}/quantity")
     fun updateExistingDishQuantity(
         @PathVariable dishId: Long,
+        @RequestParam storeId: Long,
         @RequestBody req: UpdateDishQuantityRequest
     ): ResponseEntity<ResponseModel> {
-        val result = customerOrderService.updateExistingDishQuantity(dishId, req.quantity)
+        val result = customerOrderService.updateDishQuantity(dishId, storeId, req.quantity)
         return ResponseEntity.ok(ResponseModel.success(result, "Dish quantity updated"))
     }
 
@@ -68,6 +69,16 @@ class OrderCustomerController(
     fun deleteDish(@PathVariable dishId: Long): ResponseEntity<ResponseModel> {
         val orderId = customerOrderService.deleteDish(dishId)
         return ResponseEntity.ok(ResponseModel.success(DishDeleteResponse(orderId, dishId), "Dish deleted"))
+    }
+
+    @Operation(summary = "Remove an existing (non-custom) dish link from current NEW order for a store")
+    @DeleteMapping("/current/dishes/existing/{dishId}")
+    fun deleteExistingDishLink(
+        @PathVariable dishId: Long,
+        @RequestParam storeId: Long
+    ): ResponseEntity<ResponseModel> {
+        val orderId = customerOrderService.deleteExistingDishLink(storeId, dishId)
+        return ResponseEntity.ok(ResponseModel.success(DishDeleteResponse(orderId, dishId), "Existing dish link deleted"))
     }
 
     @Operation(summary = "List all order statuses")

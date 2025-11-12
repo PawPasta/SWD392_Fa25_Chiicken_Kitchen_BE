@@ -8,6 +8,7 @@ data class DishResponse(
     val isCustom: Boolean,
     val note: String?,
     val imageUrl: String?,
+    val nutrients: List<MenuItemNutrientBriefResponse> = emptyList()
 )
 
 data class DishDetailResponse(

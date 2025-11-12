@@ -17,6 +17,7 @@ import com.ChickenKitchen.app.model.dto.response.DishWithIngredientsResponse
 import com.ChickenKitchen.app.model.dto.response.StepItemWithIngredientsResponse
 import com.ChickenKitchen.app.model.dto.response.StepWithIngredientsResponse
 import com.ChickenKitchen.app.repository.order.OrderRepository
+import com.ChickenKitchen.app.repository.order.OrderDishRepository
 import com.ChickenKitchen.app.repository.order.OrderStepRepository
 import com.ChickenKitchen.app.repository.step.DishRepository
 import com.ChickenKitchen.app.repository.user.EmployeeDetailRepository
@@ -37,6 +38,7 @@ class EmployeeOrderServiceImpl(
     private val dishRepository: DishRepository,
     private val userRepository: UserRepository,
     private val employeeDetailRepository: EmployeeDetailRepository,
+    private val orderDishRepository: OrderDishRepository,
 
     private val paymentService: PaymentService,
 ) : EmployeeOrderService {
@@ -74,6 +76,7 @@ class EmployeeOrderServiceImpl(
         }
 
         val dishes = dishRepository.findAllByOrderId(order.id!!)
+        val qtyMap = orderDishRepository.findAllByOrderId(order.id!!).associateBy({ it.dish.id!! }, { it.quantity })
         val dishResponses = dishes.map { d ->
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
@@ -97,6 +100,7 @@ class EmployeeOrderServiceImpl(
             CurrentDishResponse(
                 dishId = d.id!!,
                 name = d.name,
+                quantity = qtyMap[d.id!!] ?: 1,
                 isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,
@@ -292,6 +296,7 @@ class EmployeeOrderServiceImpl(
 
         val items = page.content.map { o ->
             val dishes = dishRepository.findAllByOrderId(o.id!!)
+            val qtyMap = orderDishRepository.findAllByOrderId(o.id!!).associateBy({ it.dish.id!! }, { it.quantity })
             val dishResponses = dishes.map { d ->
                 val steps = orderStepRepository.findAllByDishId(d.id!!)
                 val stepResponses = steps.map { st ->
@@ -315,6 +320,7 @@ class EmployeeOrderServiceImpl(
                 CurrentDishResponse(
                     dishId = d.id!!,
                     name = d.name,
+                    quantity = qtyMap[d.id!!] ?: 1,
                     isCustom = d.isCustom,
                     note = d.note,
                     price = d.price,
@@ -362,6 +368,7 @@ class EmployeeOrderServiceImpl(
         }
 
         val dishes = dishRepository.findAllByOrderId(order.id!!)
+        val qtyMap = orderDishRepository.findAllByOrderId(order.id!!).associateBy({ it.dish.id!! }, { it.quantity })
         val dishResponses = dishes.map { d ->
             val steps = orderStepRepository.findAllByDishId(d.id!!)
             val stepResponses = steps.map { st ->
@@ -387,6 +394,7 @@ class EmployeeOrderServiceImpl(
             DishWithIngredientsResponse(
                 dishId = d.id!!,
                 name = d.name,
+                quantity = qtyMap[d.id!!] ?: 1,
                 isCustom = d.isCustom,
                 note = d.note,
                 price = d.price,

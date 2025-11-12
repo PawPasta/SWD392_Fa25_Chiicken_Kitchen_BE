@@ -42,6 +42,6 @@ class Dish(
     @OneToMany(mappedBy = "dish")
     val orderSteps: MutableList<OrderStep> = mutableListOf(),
 
-    @Column(name = "nutrition_json", columnDefinition = "TEXT")
-    var nutritionJson: String? = null
+    @Column(name = "nutrient_json", columnDefinition = "TEXT")
+    var nutrientJson: String? = null
 )

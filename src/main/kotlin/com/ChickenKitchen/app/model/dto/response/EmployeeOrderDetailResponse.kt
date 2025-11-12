@@ -21,6 +21,7 @@ data class StepWithIngredientsResponse(
 data class DishWithIngredientsResponse(
     val dishId: Long,
     val name: String,
+    val quantity: Int,
     val isCustom: Boolean,
     val note: String?,
     val price: Int,
@@ -38,4 +39,3 @@ data class EmployeeOrderDetailResponse(
     val customer: OrderCustomerResponse,
     val dishes: List<DishWithIngredientsResponse>
 )
-

@@ -44,6 +44,8 @@ interface DishRepository : JpaRepository<Dish, Long>, JpaSpecificationExecutor<D
     fun findAllByIsCustomFalse(sort: Sort): List<Dish>
     fun findAllByIsCustomFalse(pageable: Pageable): Page<Dish>
 
+    fun findFirstByIsCustomFalseAndNameIgnoreCase(name: String): Dish?
+
     // By components (menu items)
     @Query(
         "select distinct d from Dish d join d.orderSteps os join os.items it join it.menuItem mi " +

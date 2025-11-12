@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface MenuItemRepository : JpaRepository<MenuItem, Long> , JpaSpecificationExecutor<MenuItem>{
+    fun findFirstByNameIgnoreCase(name: String): MenuItem?
 }

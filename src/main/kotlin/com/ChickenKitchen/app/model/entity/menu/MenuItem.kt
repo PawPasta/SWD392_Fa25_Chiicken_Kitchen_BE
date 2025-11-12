@@ -41,5 +41,8 @@ data class MenuItem(
     var description: String? = null,
 
     @OneToMany(mappedBy = "menuItem")
-    val recipes: MutableList<Recipe> = mutableListOf()
+    val recipes: MutableList<Recipe> = mutableListOf(),
+
+    @Column(name = "nutrient_json", columnDefinition = "TEXT")
+    var nutrientJson: String? = null
 )

@@ -10,6 +10,7 @@ import com.ChickenKitchen.app.model.dto.request.UpdateMenuItemRequest
 import com.ChickenKitchen.app.model.dto.response.MenuItemDetailResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemSearchResponse
 import com.ChickenKitchen.app.model.dto.response.MenuItemResponse
+import com.ChickenKitchen.app.model.dto.response.MenuItemNutrientBriefResponse
 import com.ChickenKitchen.app.model.entity.menu.MenuItem
 import com.ChickenKitchen.app.model.entity.menu.MenuItemNutrient
 import com.ChickenKitchen.app.repository.menu.MenuItemRepository
@@ -24,6 +25,7 @@ import com.ChickenKitchen.app.mapper.toMenuItemResponseList
 import com.ChickenKitchen.app.mapper.toBriefResponses
 import com.ChickenKitchen.app.mapper.toRecipeBriefResponse
 import com.ChickenKitchen.app.repository.ingredient.RecipeRepository
+import com.ChickenKitchen.app.util.NutrientJsonUtil
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -90,8 +92,11 @@ class MenuItemServiceImpl(
                     )
                 }
                 menuItemNutrientRepository.saveAll(links)
+                refreshMenuItemNutrientCache(saved, links)
+            } else {
+                refreshMenuItemNutrientCache(saved, emptyList())
             }
-        }
+        } ?: refreshMenuItemNutrientCache(saved)
 
         return buildDetail(saved)
     }
@@ -127,7 +132,10 @@ class MenuItemServiceImpl(
                     .orElseThrow { NutrientNotFoundException("Nutrient with id ${input.nutrientId} not found") }
                 MenuItemNutrient(menuItem = item, nutrient = nutrient, quantity = input.quantity)
             }
-            if (newLinks.isNotEmpty()) menuItemNutrientRepository.saveAll(newLinks)
+            if (newLinks.isNotEmpty()) {
+                menuItemNutrientRepository.saveAll(newLinks)
+            }
+            refreshMenuItemNutrientCache(item, newLinks)
         }
 
         return buildDetail(item)
@@ -162,16 +170,32 @@ class MenuItemServiceImpl(
     override fun count(): Long = menuItemRepository.count()
 
     private fun buildDetail(item: MenuItem): MenuItemDetailResponse {
-        val nutrientLinks = menuItemNutrientRepository.findByMenuItemId(item.id!!)
-        val nutrientBriefs = nutrientLinks.toBriefResponses()
-
-        val recipes = recipeRepository.findByMenuItemId(item.id!!)
-        val recipeBriefs = recipes.toRecipeBriefResponse()
+        val nutrientBriefs = getCachedMenuItemNutrients(item)
+        val recipeBriefs = recipeRepository.findByMenuItemId(item.id!!).toRecipeBriefResponse()
 
         return item.toMenuItemDetailResponse(
             nutrients = nutrientBriefs,
             recipes = recipeBriefs
         )
+    }
+
+    private fun getCachedMenuItemNutrients(item: MenuItem): List<MenuItemNutrientBriefResponse> {
+        val cached = NutrientJsonUtil.parse(item.nutrientJson)
+        return if (cached.isNotEmpty()) cached else refreshMenuItemNutrientCache(item)
+    }
+
+    private fun refreshMenuItemNutrientCache(
+        item: MenuItem,
+        links: List<MenuItemNutrient>? = null
+    ): List<MenuItemNutrientBriefResponse> {
+        val source = links ?: run {
+            val id = item.id ?: return emptyList()
+            menuItemNutrientRepository.findByMenuItemId(id)
+        }
+        val nutrientBriefs = source.toBriefResponses()
+        item.nutrientJson = NutrientJsonUtil.toJson(nutrientBriefs)
+        menuItemRepository.save(item)
+        return nutrientBriefs
     }
 
     override fun search(name: String?, categoryId: Long?, sortBy: String, direction: String): List<MenuItemResponse> {
