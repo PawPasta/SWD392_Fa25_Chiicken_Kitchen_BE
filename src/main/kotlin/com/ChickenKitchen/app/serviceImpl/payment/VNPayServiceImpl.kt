@@ -3,12 +3,15 @@ package com.ChickenKitchen.app.serviceImpl.payment
 import com.ChickenKitchen.app.config.VNPayConfig
 import com.ChickenKitchen.app.enums.OrderStatus
 import com.ChickenKitchen.app.enums.PaymentStatus
+import com.ChickenKitchen.app.enums.Role
 import com.ChickenKitchen.app.handler.OrderNotFoundException
+import com.ChickenKitchen.app.model.dto.request.MultipleNotificationRequest
 import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
 import com.ChickenKitchen.app.model.entity.order.Order
 import com.ChickenKitchen.app.repository.order.OrderRepository
 import com.ChickenKitchen.app.repository.payment.PaymentMethodRepository
 import com.ChickenKitchen.app.repository.payment.PaymentRepository
+import com.ChickenKitchen.app.repository.user.UserRepository
 import com.ChickenKitchen.app.service.notification.NotificationService
 import com.ChickenKitchen.app.service.payment.TransactionService
 import com.ChickenKitchen.app.service.payment.VNPayService
@@ -27,6 +30,7 @@ class VNPayServiceImpl (
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
+    private val userRepository: UserRepository,
 
     private val transactionService: TransactionService,
     private val notificationService: NotificationService
@@ -110,6 +114,14 @@ class VNPayServiceImpl (
                     title = "Payment Successful",
                     body = "Your payment for order ${order.id} was successful."
                 ))
+
+                notificationService.sendToUsers(
+                    MultipleNotificationRequest(
+                        title = "New Order From User",
+                        body = "Order #${order.id} has been paid via MoMo.",
+                    ),
+                    users = userRepository.findAllByRole(Role.EMPLOYEE)
+                )
 
                 return "Payment success and transactions created"
 

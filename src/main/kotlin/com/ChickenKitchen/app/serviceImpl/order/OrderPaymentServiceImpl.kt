@@ -92,46 +92,70 @@ class OrderPaymentServiceImpl(
         ensureOrderTotalUpToDate(order)
 
         val existingPayment = paymentRepository.findByOrderId(order.id!!)
+        // If there's an existing successful payment we disallow re-confirm here (requires refund path).
+        if (existingPayment != null && existingPayment.status == PaymentStatus.FINISHED) {
+            throw OrderNotFoundException("Order already has a successful payment. Please refund/cancel before reconfirming.")
+        }
+
+        // If there is an existing pending/failed payment and user wants to confirm again,
+        // remove old payment and rollback any applied promotions so we can create a fresh payment.
+        if (existingPayment != null && existingPayment.status != PaymentStatus.PENDING) {
+            // remove applied promotions and restore promotion quantity
+            rollbackPromotionsForOrder(order)
+            paymentRepository.delete(existingPayment)
+        }
+
         val (discountAmount, finalAmount) = when {
             existingPayment != null && existingPayment.status == PaymentStatus.PENDING -> {
-                // keep existing discount, update amounts to reflect current total
-                val discount = existingPayment.discountAmount
+                // Nếu user cung cấp promotion mới → rollback promo cũ và áp dụng lại
+                val existingPromos = orderPromotionRepository.findAllByOrderId(order.id!!)
+                val existingPromoId = existingPromos.firstOrNull()?.promotion?.id
+
+                val newDiscount = if (req.promotionId != null && req.promotionId != existingPromoId) {
+                    rollbackPromotionsForOrder(order)
+                    applyPromotion(req.promotionId, order, user)
+                } else {
+                    existingPayment.discountAmount
+                }
+
                 existingPayment.amount = order.totalPrice
-                existingPayment.finalAmount = (order.totalPrice - discount).coerceAtLeast(0)
+                existingPayment.discountAmount = newDiscount
+                existingPayment.finalAmount = (order.totalPrice - newDiscount).coerceAtLeast(0)
                 paymentRepository.save(existingPayment)
-                discount to existingPayment.finalAmount
+
+                newDiscount to existingPayment.finalAmount
             }
+
             else -> {
                 val discount = req.promotionId?.let { applyPromotion(it, order, user) } ?: 0
                 val final = (order.totalPrice - discount).coerceAtLeast(0)
-                when {
-                    existingPayment != null && order.status == OrderStatus.FAILED -> {
-                        existingPayment.amount = order.totalPrice
-                        existingPayment.discountAmount = discount
-                        existingPayment.finalAmount = final
-                        existingPayment.status = PaymentStatus.PENDING
-                        paymentRepository.save(existingPayment)
-                    }
-                    existingPayment == null -> {
-                        paymentRepository.save(
-                            Payment(
-                                user = user,
-                                order = order,
-                                amount = order.totalPrice,
-                                discountAmount = discount,
-                                finalAmount = final,
-                                status = PaymentStatus.PENDING
-                            )
-                        )
-                    }
-                    else -> throw InvalidOrderStepException("This order already has a payment and cannot be confirmed again.")
-                }
+                paymentRepository.save(
+                    Payment(
+                        user = user,
+                        order = order,
+                        amount = order.totalPrice,
+                        discountAmount = discount,
+                        finalAmount = final,
+                        status = PaymentStatus.PENDING
+                    )
+                )
                 discount to final
             }
         }
 
         validateFinalAmount(finalAmount)
         return processPayment(order, paymentMethod, finalAmount, req.channel)
+    }
+
+    private fun rollbackPromotionsForOrder(order: Order) {
+
+        val appliedPromos = orderPromotionRepository.findAllByOrderId(order.id!!)
+        for (op in appliedPromos) {
+            val promo = op.promotion
+            promo.quantity += 1
+            promotionRepository.save(promo)
+            orderPromotionRepository.delete(op)
+        }
     }
 
     private fun ensureOrderTotalUpToDate(order: Order) {

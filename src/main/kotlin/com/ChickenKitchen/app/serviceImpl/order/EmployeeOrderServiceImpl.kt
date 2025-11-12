@@ -26,6 +26,8 @@ import com.ChickenKitchen.app.service.order.EmployeeOrderService
 import com.ChickenKitchen.app.service.payment.PaymentService
 import com.ChickenKitchen.app.mapper.toEmployeeDetailFullResponse
 import com.ChickenKitchen.app.mapper.toIngredientResponse
+import com.ChickenKitchen.app.model.dto.request.SingleNotificationRequest
+import com.ChickenKitchen.app.service.notification.NotificationService
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
@@ -41,6 +43,7 @@ class EmployeeOrderServiceImpl(
     private val orderDishRepository: OrderDishRepository,
 
     private val paymentService: PaymentService,
+    private val notificationService: NotificationService,
 ) : EmployeeOrderService {
 
     private fun currentUser() : com.ChickenKitchen.app.model.entity.user.User {
@@ -137,6 +140,14 @@ class EmployeeOrderServiceImpl(
         order.status = OrderStatus.PROCESSING
         orderRepository.save(order)
 
+        notificationService.sendToUser(
+            SingleNotificationRequest(
+                user = order.user,
+                title = "Order Processing",
+                body = "Your order #${order.id} is now being processed.",
+            )
+        )
+
         return OrderBriefResponse(
             orderId = order.id!!,
             storeId = order.store.id!!,
@@ -145,6 +156,8 @@ class EmployeeOrderServiceImpl(
             createdAt = order.createdAt,
             pickupTime = order.pickupTime
         )
+
+
     }
 
     override fun employeeMarkReadyOrder(orderId: Long): OrderBriefResponse {
@@ -165,6 +178,14 @@ class EmployeeOrderServiceImpl(
 
         order.status = OrderStatus.READY
         orderRepository.save(order)
+
+        notificationService.sendToUser(
+            SingleNotificationRequest(
+                user = order.user,
+                title = "Order Ready",
+                body = "Your order #${order.id} is now being Ready, please pick it up soon.",
+            )
+        )
 
         return OrderBriefResponse(
             orderId = order.id!!,
@@ -194,6 +215,14 @@ class EmployeeOrderServiceImpl(
 
         order.status = OrderStatus.COMPLETED
         orderRepository.save(order)
+
+        notificationService.sendToUser(
+            SingleNotificationRequest(
+                user = order.user,
+                title = "Order Completed",
+                body = "Thank you for picking up your order #${order.id}. Enjoy your meal!",
+            )
+        )
 
         return OrderBriefResponse(
             orderId = order.id!!,
@@ -234,6 +263,14 @@ class EmployeeOrderServiceImpl(
                 throw InvalidOrderStatusException("Order cannot be cancelled in status ${order.status}")
             }
         }
+
+        notificationService.sendToUser(
+            SingleNotificationRequest(
+                user = order.user,
+                title = "Order Cancelled",
+                body = "Your order #${order.id} has been cancelled by the store. A refund has been processed if applicable.",
+            )
+        )
 
         return OrderBriefResponse(
             orderId = order.id!!,
